@@ -1,0 +1,74 @@
+.container {
+  background-color: white;
+  box-sizing: border-box;
+  padding-block: 25px;
+}
+
+.box {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  max-width: 1280px;
+  margin-inline: auto;
+}
+
+.logoImg {
+}
+
+.appNameText {
+  font-size: 1.2rem;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.appNameText1 {
+  color: #f17228;
+}
+
+.appNameText2 {
+  color: #ffb20e;
+}
+
+.brandSection {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.userSection {
+  display: flex;
+  gap: 20px;
+}
+
+.currencySection {
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+}
+
+.accountButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: white;
+  box-shadow: 3px 5px 16px -3px rgba(255, 161, 1, 0.78);
+  -webkit-box-shadow: 3px 5px 16px -3px rgba(255, 161, 1, 0.78);
+  -moz-box-shadow: 3px 5px 16px -3px rgba(255, 161, 1, 0.78);
+  color: rgba(255, 161, 1);
+  box-sizing: border-box;
+  padding-block: 0.8em;
+  padding-inline: 1.2em;
+  border-radius: 5px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.accountButton > span {
+}
+
+.registerButton {
+}
+
+.loginButton {
+}
