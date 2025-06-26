@@ -1,15 +1,15 @@
 .container {
   background-color: white;
   box-sizing: border-box;
-  padding-block: 25px;
+  padding-block: 15px;
 }
 
 .box {
   display: flex;
-  justify-content: space-around;
-  align-items: center;
+  justify-content: space-between;
   max-width: 1280px;
   margin-inline: auto;
+  padding-inline: 20px;
 }
 
 .logoImg {
