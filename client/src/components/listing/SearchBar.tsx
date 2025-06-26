@@ -27,6 +27,7 @@ export default function SearchBar() {
           placeholder='Guest count'
         />
       </div>
+      <button className={styles.searchButton}>Find Hotels</button>
     </div>
   );
 }
