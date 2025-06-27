@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ChangeEvent } from 'react';
 import inputStyles from './inputbox.module.css';
 import styles from './destinationinput.module.css';
 import { type Destination } from '../../../../../types/Destination';
+import { useDebounceAsync } from '../../../hooks/useDebounceAsync';
 
 // TODO: replace onMouseDown
 
@@ -10,6 +11,7 @@ export default function DestinationInput() {
   const dests: Destination[] = useMemo(
     () => [
       {
+        id: 1,
         term: 't',
         lat: 1.1,
         lng: 1.1,
@@ -18,6 +20,7 @@ export default function DestinationInput() {
         state: 'Singapore, Singapore',
       },
       {
+        id: 2,
         term: 't2',
         lat: 1.1,
         lng: 1.1,
@@ -39,6 +42,19 @@ export default function DestinationInput() {
     setShowSuggestions(false);
   }
 
+  const debouncedFetch = useDebounceAsync(async (userInput: string) => {
+    const res = await fetch(`/api/destination/like/${userInput}`, {
+      method: 'GET',
+    });
+    const dests: Destination[] = await res.json();
+    return dests;
+  }, 300);
+  async function handleOnChange(e: ChangeEvent<HTMLInputElement>) {
+    setUserDest(e.target.value);
+    const dests = await debouncedFetch(e.target.value);
+    setSuggestedDests(dests);
+  }
+
   return (
     <div className={inputStyles.inputWrapper}>
       <img src='/listing/destination_red.svg' />
@@ -49,18 +65,18 @@ export default function DestinationInput() {
         type='text'
         placeholder='Destination'
         value={userDest}
-        onChange={(e) => setUserDest(e.target.value)}
+        onChange={handleOnChange}
       />
       {showSuggestions && (
         <ul className={styles.suggestionContainer}>
           {suggestedDests.map((dest, i) => (
             <li
               key={`dest-${i}`}
-              onMouseDown={() => setUserDest(dest.state)}
+              onMouseDown={() => setUserDest(dest.term)}
               className={styles.suggestionItem}>
               <img src='/listing/destination_gray.svg' />
               <div className={styles.itemTextSection}>
-                <span className={styles.itemDestName}>{dest.state}</span>
+                <span className={styles.itemDestName}>{dest.term}</span>
                 <span className={styles.itemDestType}>{dest.type}</span>
               </div>
             </li>
