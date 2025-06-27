@@ -107,13 +107,11 @@ async function like(
 
     if (rows.length < returnCount) {
       const allRows = await all();
-      let i = 0;
       const textParts = text.toLowerCase().split(/[\s,]+/);
-      while (i < allRows.length && rows.length < returnCount) {
+      for (let i = 0; i < allRows.length && rows.length < returnCount; i++) {
         const row = allRows[i];
         const included = rows.some((r) => r.id === row.id);
         if (!row.term || included) {
-          i++;
           continue;
         }
 
@@ -129,7 +127,6 @@ async function like(
         if (isFuzzyMatch) {
           rows.push(row);
         }
-        i++;
       }
     }
 
