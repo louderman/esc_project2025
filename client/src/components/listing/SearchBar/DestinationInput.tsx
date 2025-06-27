@@ -57,8 +57,7 @@ export default function DestinationInput() {
             <li
               key={`dest-${i}`}
               onMouseDown={() => setUserDest(dest.state)}
-              className={styles.suggestionItem}
-            >
+              className={styles.suggestionItem}>
               <img src='/listing/destination_gray.svg' />
               <div className={styles.itemTextSection}>
                 <span className={styles.itemDestName}>{dest.state}</span>
