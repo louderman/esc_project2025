@@ -1,4 +1,5 @@
 type Destination = {
+  id: number;
   term: string;
   uid: string;
   lat: number;
