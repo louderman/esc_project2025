@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs';
 import { pool } from './db';
 import { type Destination } from '../../types/Destination';
+import { sync } from '../models/destination';
 
 const DESTINATION_JSON_PATH = './public/destinations.json';
 
@@ -9,22 +10,27 @@ const obj: Destination[] = JSON.parse(raw);
 console.log(obj.length);
 
 async function seed() {
+  // Create table if not exists
+  await sync();
+
+  // Remove all rows
   await pool.query(`TRUNCATE TABLE Destination`);
 
+  // Seed the table with destinations
   for (let o of obj) {
     await pool.query(
       `
-        INSERT INTO Destination (dest_id, term, lat, lng, type) VALUES (?, ?, ?, ?, ?)
+        INSERT INTO Destination (dest_id, term, lat, lng, type, state) VALUES (?, ?, ?, ?, ?, ?)
         `,
-      [o.uid, o.term, o.lat, o.lng, o.type]
+      [o.uid, o.term, o.lat, o.lng, o.type, o.state]
     );
   }
 
   console.log('Seed succeed.');
+  process.exit();
 }
 
-// CREATE TABLE Destination (id INT AUTO_INCREMENT PRIMARY KEY, dest_id VARCHAR(4), term VARCHAR(255), lat FLOAT, lng FLOAT, type VARCHAR(100));
 seed().catch((err) => {
   console.error('Seeding failed:', err);
-  process.exit(1);
+  process.exit();
 });
