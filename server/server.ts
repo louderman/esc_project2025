@@ -5,15 +5,19 @@ import { cleanup } from './database/db';
 
 import { router as destRouter } from './routes/destination';
 
+import { sync as syncDest } from './models/destination';
+
 process.on('SIGINT', cleanup);
 process.on('SIGTERM', cleanup);
+
+syncDest();
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-app.use('/destination', destRouter);
+app.use('/api/destination', destRouter);
 
 app.listen(5000, () => {
   console.log('Server listening on port 5000.');
