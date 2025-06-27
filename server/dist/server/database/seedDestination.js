@@ -38,6 +38,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var fs_1 = require("fs");
 var db_1 = require("./db");
+var destination_1 = require("../models/destination");
 var DESTINATION_JSON_PATH = './public/destinations.json';
 var raw = (0, fs_1.readFileSync)(DESTINATION_JSON_PATH, 'utf-8');
 var obj = JSON.parse(raw);
@@ -47,29 +48,31 @@ function seed() {
         var _i, obj_1, o;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, db_1.pool.query("TRUNCATE TABLE Destination")];
+                case 0: return [4 /*yield*/, (0, destination_1.sync)()];
                 case 1:
                     _a.sent();
-                    _i = 0, obj_1 = obj;
-                    _a.label = 2;
+                    return [4 /*yield*/, db_1.pool.query("TRUNCATE TABLE Destination")];
                 case 2:
-                    if (!(_i < obj_1.length)) return [3 /*break*/, 5];
-                    o = obj_1[_i];
-                    return [4 /*yield*/, db_1.pool.query("\n        INSERT INTO Destination (dest_id, term, lat, lng, type) VALUES (?, ?, ?, ?, ?)\n        ", [o.uid, o.term, o.lat, o.lng, o.type])];
-                case 3:
                     _a.sent();
-                    _a.label = 4;
+                    _i = 0, obj_1 = obj;
+                    _a.label = 3;
+                case 3:
+                    if (!(_i < obj_1.length)) return [3 /*break*/, 6];
+                    o = obj_1[_i];
+                    return [4 /*yield*/, db_1.pool.query("\n        INSERT INTO Destination (dest_id, term, lat, lng, type, state) VALUES (?, ?, ?, ?, ?, ?)\n        ", [o.uid, o.term, o.lat, o.lng, o.type, o.state])];
                 case 4:
-                    _i++;
-                    return [3 /*break*/, 2];
+                    _a.sent();
+                    _a.label = 5;
                 case 5:
+                    _i++;
+                    return [3 /*break*/, 3];
+                case 6:
                     console.log('Seed succeed.');
                     return [2 /*return*/];
             }
         });
     });
 }
-// CREATE TABLE Destination (id INT AUTO_INCREMENT PRIMARY KEY, dest_id VARCHAR(4), term VARCHAR(255), lat FLOAT, lng FLOAT, type VARCHAR(100));
 seed().catch(function (err) {
     console.error('Seeding failed:', err);
     process.exit(1);

@@ -38,7 +38,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.pool = void 0;
 exports.cleanup = cleanup;
-exports.sync = sync;
 // const mysql = require('mysql2');
 var mysql2_1 = require("mysql2");
 var pool = (0, mysql2_1.createPool)({
@@ -59,11 +58,6 @@ function cleanup() {
             }
         });
     });
-}
-function sync() {
-    return __awaiter(this, void 0, void 0, function () { return __generator(this, function (_a) {
-        return [2 /*return*/];
-    }); });
 }
 // CREATE USER 'your_username'@'your_host' IDENTIFIED BY 'your_password';
 // GRANT ALL PRIVILEGES ON db_name.* TO 'your_username'@'localhost';

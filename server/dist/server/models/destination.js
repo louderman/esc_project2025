@@ -36,41 +36,40 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var fs_1 = require("fs");
-var db_1 = require("./db");
-var DESTINATION_JSON_PATH = './public/destinations.json';
-var raw = (0, fs_1.readFileSync)(DESTINATION_JSON_PATH, 'utf-8');
-var obj = JSON.parse(raw);
-console.log(obj.length);
-function seed() {
+exports.sync = sync;
+exports.all = all;
+var db_1 = require("../database/db");
+var tableName = 'destination';
+// CREATE TABLE Destination (id INT AUTO_INCREMENT PRIMARY KEY, dest_id VARCHAR(4), term VARCHAR(255), lat FLOAT, lng FLOAT, type VARCHAR(100));
+function sync() {
     return __awaiter(this, void 0, void 0, function () {
-        var _i, obj_1, o;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, db_1.pool.query("TRUNCATE TABLE Destination")];
+                case 0: return [4 /*yield*/, db_1.pool.query("CREATE TABLE IF NOT EXISTS ".concat(tableName, " (\n        id INT AUTO_INCREMENT PRIMARY KEY, \n        dest_id VARCHAR(4), \n        term VARCHAR(255), \n        lat FLOAT, \n        lng FLOAT, \n        type VARCHAR(100), \n        state VARCHAR(100)\n    );"))];
                 case 1:
                     _a.sent();
-                    _i = 0, obj_1 = obj;
-                    _a.label = 2;
-                case 2:
-                    if (!(_i < obj_1.length)) return [3 /*break*/, 5];
-                    o = obj_1[_i];
-                    return [4 /*yield*/, db_1.pool.query("\n        INSERT INTO Destination (dest_id, term, lat, lng, type) VALUES (?, ?, ?, ?, ?)\n        ", [o.uid, o.term, o.lat, o.lng, o.type])];
-                case 3:
-                    _a.sent();
-                    _a.label = 4;
-                case 4:
-                    _i++;
-                    return [3 /*break*/, 2];
-                case 5:
-                    console.log('Seed succeed.');
                     return [2 /*return*/];
             }
         });
     });
 }
-// CREATE TABLE Destination (id VARCHAR(4), term VARCHAR(255), lat FLOAT, lng FLOAT, type VARCHAR(100), PRIMARY KEY(id, term, type));
-seed().catch(function (err) {
-    console.error('Seeding failed:', err);
-    process.exit(1);
-});
+function all() {
+    return __awaiter(this, void 0, void 0, function () {
+        var rows, e_1;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 2, , 3]);
+                    return [4 /*yield*/, db_1.pool.query("\n      SELECT * FROM ".concat(tableName, ";\n      "))];
+                case 1:
+                    rows = (_a.sent())[0];
+                    return [2 /*return*/, rows];
+                case 2:
+                    e_1 = _a.sent();
+                    console.error(e_1);
+                    return [3 /*break*/, 3];
+                case 3: return [2 /*return*/];
+            }
+        });
+    });
+}
