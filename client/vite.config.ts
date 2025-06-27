@@ -9,6 +9,15 @@ export default defineConfig({
       '@types': path.resolve(__dirname, '../types'),
     } as AliasOptions,
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 });
 
 // npm install -D eslint-import-resolver-alias
