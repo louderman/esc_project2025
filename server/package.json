@@ -9,7 +9,7 @@
     "build": "npx tsc",
     "start": "tsc -w & node dist/server.js",
     "dev": "ts-node-dev ./server.ts",
-    "seed:dest": "tsc database/seedDestination.ts --outDir dist && node dist/seedDestination.js"
+    "seed:dest": "tsc database/seedDestination.ts --outDir dist && node dist/server/database/seedDestination.js"
   },
   "keywords": [],
   "author": "",
