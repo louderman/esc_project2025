@@ -1,0 +1,51 @@
+.suggestionContainer {
+  position: absolute;
+  bottom: 0;
+  transform: translateY(102%);
+  min-width: 100%;
+  list-style: none;
+  padding-left: 0;
+  border-radius: 5px;
+  box-shadow: 1px 1px 23px 0px rgba(110, 110, 110, 0.49);
+  -webkit-box-shadow: 1px 1px 23px 0px rgba(110, 110, 110, 0.49);
+  -moz-box-shadow: 1px 1px 23px 0px rgba(110, 110, 110, 0.49);
+}
+
+.suggestionItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding-inline: 15px;
+  padding-block: 10px;
+  background-color: white;
+}
+
+.suggestionItem:hover {
+  background-color: rgb(235, 235, 235);
+}
+
+.suggestionItem:not(:last-of-type) {
+  border-bottom: 1px solid rgb(240, 240, 240);
+}
+
+.suggestionItem:first-of-type {
+  border-radius: 5px 5px 0 0;
+}
+
+.suggestionItem:last-of-type {
+  border-radius: 0 0 5px 5px;
+}
+
+.itemTextSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.itemDestName {
+}
+
+.itemDestType {
+  font-size: 0.8rem;
+  color: gray;
+}
