@@ -1,4 +1,4 @@
-import SearchBar from '../components/listing/SearchBar';
+import SearchBar from '../components/listing/SearchBar/SearchBar';
 import styles from './listingpage.module.css';
 export default function ListingPage() {
   return (
@@ -6,7 +6,10 @@ export default function ListingPage() {
       <div className={styles.searchbarSection}>
         <SearchBar />
       </div>
-      <div className={styles.contentSection}></div>
+      <div className={styles.contentSection}>
+        <div className={styles.toolbarSection}></div>
+        <div className={styles.listingSection}></div>
+      </div>
     </div>
   );
 }

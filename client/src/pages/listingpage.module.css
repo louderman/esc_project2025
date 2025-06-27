@@ -5,6 +5,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 20px;
-  background-color: #ffca0b;
+  padding: 30px;
+  /* background-color: #ffca0b; */
+  background-image: url('/listing/lobby_tint.png');
+  background-size: cover;
+  background-position: 50% 60%;
+  background-repeat: no-repeat;
 }
