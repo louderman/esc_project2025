@@ -1,16 +1,8 @@
 import { readFileSync } from 'fs';
 import { pool } from './db';
+import { type Destination } from '../../types/Destination';
 
 const DESTINATION_JSON_PATH = './public/destinations.json';
-
-type Destination = {
-  term: string;
-  uid: string;
-  lat: number;
-  lng: number;
-  type: string;
-  state: string;
-};
 
 const raw = readFileSync(DESTINATION_JSON_PATH, 'utf-8');
 const obj: Destination[] = JSON.parse(raw);
