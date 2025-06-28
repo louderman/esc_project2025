@@ -59,7 +59,12 @@ export default function Calendar({
   }, [curDate]);
 
   let nightCount;
-  if (stayDates.startDate && !stayDates.endDate) {
+  if (
+    stayDates.startDate &&
+    !stayDates.endDate &&
+    hoverDate &&
+    hoverDate.getTime() >= stayDates.startDate.getTime()
+  ) {
     nightCount = calcNights(stayDates.startDate, hoverDate);
   } else {
     nightCount = calcNights(stayDates.startDate, stayDates.endDate);
