@@ -1,10 +1,10 @@
-import { useState, type ChangeEvent } from 'react';
+import { useEffect, useState, type ChangeEvent } from 'react';
 import inputStyles from '../inputbox.module.css';
 import styles from './destinationinput.module.css';
 import { type Destination } from '../../../../../../types/Destination';
 import { useDebounceAsync } from '../../../../hooks/useDebounceAsync';
 
-// TODO: replace onMouseDown
+// TODO: replace onMouseDown?
 
 export default function DestinationInput() {
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -19,8 +19,19 @@ export default function DestinationInput() {
     setShowSuggestions(false);
   }
 
+  useEffect(() => {
+    async function fetchRandomDest() {
+      const res = await fetch(`/api/destination/random?count=5`, {
+        method: 'GET',
+      });
+      const dests: Destination[] = await res.json();
+      setSuggestedDests(dests);
+    }
+    fetchRandomDest();
+  }, []);
+
   const debouncedFetch = useDebounceAsync(async (userInput: string) => {
-    const res = await fetch(`/api/destination/like/${userInput}`, {
+    const res = await fetch(`/api/destination/query/${userInput}?count=10`, {
       method: 'GET',
     });
     const dests: Destination[] = await res.json();
