@@ -129,11 +129,11 @@ export default function CalendarPage({
                       const hoverTime = hoverDate?.getTime();
 
                       if (endTime) {
-                        return startTime <= dayTime && dayTime <= endTime;
+                        return startTime < dayTime && dayTime < endTime;
                       }
 
                       if (hoverTime) {
-                        return startTime <= dayTime && dayTime <= hoverTime;
+                        return startTime < dayTime && dayTime < hoverTime;
                       }
 
                       return false;
@@ -161,7 +161,7 @@ export default function CalendarPage({
                         }}
                         className={tdClassName}
                         key={`cal-cell-${date.getMonth()}-${i}-${j}`}>
-                        {dayCal?.getDate()}
+                        <div>{dayCal?.getDate()}</div>
                       </td>
                     );
                   })}

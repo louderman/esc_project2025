@@ -18,7 +18,6 @@
 
 .table th,
 .table td {
-  padding: 12px;
   font-weight: 400;
   text-align: center;
 }
@@ -28,11 +27,18 @@
 }
 
 .table td {
+  min-height: 1px;
   border-style: solid;
   border-color: white;
   border-width: 4px 0;
   font-weight: 700;
   color: #363636;
+}
+
+.table td > div {
+  padding: 12px;
+  width: 100%;
+  height: 100%;
 }
 
 .table td.hasContent {
@@ -51,17 +57,17 @@
   background-color: #ececec;
 }
 
-.table td.isStart,
-.table td.isEnd {
+.table td.isStart > div,
+.table td.isEnd > div {
   background-color: #d36464;
   color: white;
 }
 
-.table td.isStart {
+.table td.isStart > div {
   border-radius: 5px 0 0 5px;
 }
 
-.table td.isEnd {
+.table td.isEnd > div {
   border-radius: 0 5px 5px 0;
 }
 
