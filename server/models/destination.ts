@@ -59,7 +59,7 @@ async function all() {
   }
 }
 
-async function like(
+async function query(
   text: string,
   distanceThresh: number = 2,
   returnCount: number = 10
@@ -137,4 +137,4 @@ async function like(
   }
 }
 
-export { sync, all, like };
+export { sync, all, query };
