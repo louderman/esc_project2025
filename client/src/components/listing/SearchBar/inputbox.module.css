@@ -11,6 +11,8 @@
   top: 50%;
   left: 15px;
   transform: translateY(-50%);
+  user-select: none;
+  cursor: pointer;
 }
 
 .inputBox {
