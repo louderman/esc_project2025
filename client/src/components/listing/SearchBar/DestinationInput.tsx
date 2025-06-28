@@ -1,4 +1,4 @@
-import { useMemo, useState, type ChangeEvent } from 'react';
+import { useState, type ChangeEvent } from 'react';
 import inputStyles from './inputbox.module.css';
 import styles from './destinationinput.module.css';
 import { type Destination } from '../../../../../types/Destination';
@@ -8,30 +8,7 @@ import { useDebounceAsync } from '../../../hooks/useDebounceAsync';
 
 export default function DestinationInput() {
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const dests: Destination[] = useMemo(
-    () => [
-      {
-        id: 1,
-        term: 't',
-        lat: 1.1,
-        lng: 1.1,
-        type: 'city',
-        uid: 'uid1',
-        state: 'Singapore, Singapore',
-      },
-      {
-        id: 2,
-        term: 't2',
-        lat: 1.1,
-        lng: 1.1,
-        type: 'airport',
-        uid: 'uid2',
-        state: 'Malaysia, Johor Bahru',
-      },
-    ],
-    []
-  );
-  const [suggestedDests, setSuggestedDests] = useState<Destination[]>(dests);
+  const [suggestedDests, setSuggestedDests] = useState<Destination[]>([]);
   const [userDest, setUserDest] = useState<string>('');
 
   function handleOnFocus() {
