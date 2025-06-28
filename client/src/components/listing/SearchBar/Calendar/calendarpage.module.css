@@ -1,0 +1,70 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.dateHeader {
+  margin: 10px;
+  align-self: center;
+  font-weight: 600;
+}
+
+.table {
+  border-collapse: collapse;
+  /* border-spacing: 4px; */
+  user-select: none;
+}
+
+.table th,
+.table td {
+  padding: 12px;
+  font-weight: 400;
+  text-align: center;
+}
+
+.table th {
+  color: #464646;
+}
+
+.table td {
+  border-style: solid;
+  border-color: white;
+  border-width: 4px 0;
+  font-weight: 700;
+  color: #363636;
+}
+
+.table td.hasContent {
+  cursor: pointer;
+}
+
+.table td.disabled {
+  color: #a5a5a5;
+}
+
+.table td.isToday {
+  color: #9e4f4f;
+}
+
+.table td.isBetween {
+  background-color: #ececec;
+}
+
+.table td.isStart,
+.table td.isEnd {
+  background-color: #d36464;
+  color: white;
+}
+
+.table td.isStart {
+  border-radius: 5px 0 0 5px;
+}
+
+.table td.isEnd {
+  border-radius: 0 5px 5px 0;
+}
+
+.table td.hasContent:hover {
+  background-color: #ffd1d1;
+}
