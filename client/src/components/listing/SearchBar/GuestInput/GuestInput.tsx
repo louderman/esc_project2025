@@ -1,9 +1,27 @@
 import inputStyles from '../inputbox.module.css';
+import Counter from './Counter';
 import styles from './guestinput.module.css';
 import { useEffect, useRef, useState } from 'react';
 
+type OccupancyState = {
+  adults: number;
+  children: number;
+  rooms: number;
+};
+
+const MIN_VALUE: Record<keyof OccupancyState, number> = {
+  adults: 1,
+  children: 0,
+  rooms: 1,
+};
+
 export default function GuestInput() {
   const [showPanel, setShowPanel] = useState(false);
+  const [occupancy, setOccupancy] = useState<OccupancyState>({
+    adults: 1,
+    children: 0,
+    rooms: 1,
+  });
 
   const panelWrapperRef = useRef<HTMLDivElement>(null);
 
@@ -27,11 +45,28 @@ export default function GuestInput() {
       <button
         className={`${inputStyles.inputBox} ${styles.button}`}
         onClick={() => setShowPanel(true)}>
-        0 adult · 0 children · 0 room
+        {occupancy.adults} adult{occupancy.adults > 1 && 's'} ·{' '}
+        {occupancy.children} child{occupancy.children > 1 && 'ren'} ·{' '}
+        {occupancy.rooms} room{occupancy.rooms > 1 && 's'}
       </button>
       {showPanel && (
         <div ref={panelWrapperRef} className={styles.panelSection}>
-          <div className={styles.panelContainer}>panel</div>
+          <div className={styles.panelContainer}>
+            {(Object.keys(occupancy) as Array<keyof OccupancyState>).map(
+              (info) => (
+                <div key={`info-${info}`} className={styles.rowContainer}>
+                  <span>{info}</span>
+                  <Counter
+                    count={occupancy[info]}
+                    minValue={MIN_VALUE[info]}
+                    onChange={(val: number) => {
+                      setOccupancy((prev) => ({ ...prev, [info]: val }));
+                    }}
+                  />
+                </div>
+              )
+            )}
+          </div>
         </div>
       )}
     </div>

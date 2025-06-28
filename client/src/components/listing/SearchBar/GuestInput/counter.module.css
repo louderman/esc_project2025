@@ -1,0 +1,39 @@
+.container {
+  display: flex;
+  align-items: center;
+  border: 1px solid gray;
+  border-radius: 5px;
+  width: 160px;
+}
+
+.container > span {
+  text-align: center;
+  flex: 1;
+}
+
+.container > button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  padding: 15px;
+  background-color: white;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: inherit;
+  color: #fa6c6c;
+}
+
+.container > button:not(:disabled):hover {
+  background-color: #ffd1d1;
+}
+
+.container > button:disabled > .counterIcon {
+  fill: rgb(167, 167, 167);
+}
+
+.counterIcon {
+  fill: #fa6c6c;
+  width: 24px;
+  height: 24px;
+}

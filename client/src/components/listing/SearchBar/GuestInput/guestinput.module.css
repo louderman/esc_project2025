@@ -1,10 +1,11 @@
 .button {
-  color: #808080;
   text-align: start;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .panelSection {
+  min-width: 100%;
   position: absolute;
   bottom: -13px;
   transform: translateY(100%);
@@ -12,9 +13,18 @@
 
 .panelContainer {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
   background-color: white;
   padding: 20px;
   box-shadow: 1px 1px 23px 0px rgba(110, 110, 110, 0.49);
   -webkit-box-shadow: 1px 1px 23px 0px rgba(110, 110, 110, 0.49);
   -moz-box-shadow: 1px 1px 23px 0px rgba(110, 110, 110, 0.49);
+}
+
+.rowContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
 }
