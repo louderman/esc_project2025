@@ -59,6 +59,23 @@ async function all() {
   }
 }
 
+async function random(count: number) {
+  try {
+    const [rows] = await pool.query(
+      `
+      SELECT * FROM ${tableName}
+      ORDER BY RAND()
+      LIMIT ?;
+      `,
+      [count]
+    );
+    return rows as Destination[];
+  } catch (e) {
+    console.error(e);
+    return [];
+  }
+}
+
 async function query(
   text: string,
   distanceThresh: number = 2,
@@ -137,4 +154,4 @@ async function query(
   }
 }
 
-export { sync, all, query };
+export { sync, all, random, query };

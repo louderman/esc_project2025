@@ -1,5 +1,5 @@
 import express from 'express';
-import { all, query } from '../models/destination';
+import { all, query, random } from '../models/destination';
 const router = express.Router();
 
 router.get('/all/', async function (req, res) {
@@ -7,9 +7,23 @@ router.get('/all/', async function (req, res) {
   res.send(dests);
 });
 
-router.get(['/query/:text', '/query/'], async function (req, res) {
-  const RETURN_COUNT = 10;
-  const DISTANCE_THRESH = 2;
+router.get('/random{/:count}', async function (req, res) {
+  const countRaw = Number(req.query.count);
+  const count = isNaN(countRaw) ? 10 : countRaw;
+
+  if (count === 0) {
+    res.send([]);
+    return;
+  }
+
+  const dests = await random(count);
+  res.send(dests);
+});
+
+router.get(['/query/:text{/:count}', '/query/'], async function (req, res) {
+  const countRaw = Number(req.query.count);
+  const count = isNaN(countRaw) ? 10 : countRaw;
+  const DISTANCE_THRESH = 2; // Max edit distance, expose to client input?
 
   const text = req.params.text;
   console.log(text);
@@ -18,7 +32,7 @@ router.get(['/query/:text', '/query/'], async function (req, res) {
     return;
   }
 
-  const rows = await query(text, DISTANCE_THRESH, RETURN_COUNT);
+  const rows = await query(text, DISTANCE_THRESH, count);
 
   res.send(rows);
 });
