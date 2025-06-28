@@ -1,6 +1,6 @@
-import DateInput from './DateInput';
-import DestinationInput from './DestinationInput';
-import GuestInput from './GuestInput';
+import DateInput from './DateInput/DateInput';
+import DestinationInput from './DestinationInput/DestinationInput';
+import GuestInput from './GuestInput/GuestInput';
 import styles from './searchbar.module.css';
 
 export default function SearchBar() {

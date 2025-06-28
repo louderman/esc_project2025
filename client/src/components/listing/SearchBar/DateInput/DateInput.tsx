@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import inputStyles from './inputbox.module.css';
+import inputStyles from '../inputbox.module.css';
 import styles from './dateinput.module.css';
 import Calendar from './Calendar/Calendar';
 
@@ -63,7 +63,9 @@ export default function DateInput() {
         className={`${inputStyles.inputBox} ${styles.button} ${
           stayDates.startDate ? styles.hasDate : ''
         }`}>
-        {!stayDates.startDate && `Stay period`}
+        {!stayDates.startDate && (
+          <>select check in &nbsp;&nbsp;&mdash;&nbsp;&nbsp; check out date</>
+        )}
         {stayDates.startDate && (
           <>
             {formatDate(stayDates.startDate)}

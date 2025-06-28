@@ -1,8 +1,8 @@
 import { useState, type ChangeEvent } from 'react';
-import inputStyles from './inputbox.module.css';
+import inputStyles from '../inputbox.module.css';
 import styles from './destinationinput.module.css';
-import { type Destination } from '../../../../../types/Destination';
-import { useDebounceAsync } from '../../../hooks/useDebounceAsync';
+import { type Destination } from '../../../../../../types/Destination';
+import { useDebounceAsync } from '../../../../hooks/useDebounceAsync';
 
 // TODO: replace onMouseDown
 
