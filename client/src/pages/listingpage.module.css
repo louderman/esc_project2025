@@ -12,3 +12,15 @@
   background-position: 50% 60%;
   background-repeat: no-repeat;
 }
+
+.mainSection {
+  margin-inline: auto;
+  max-width: 1280px;
+  padding: 30px 20px;
+  display: flex;
+  gap: 50px;
+  flex-wrap: nowrap;
+}
+
+.filterSection {
+}
