@@ -30,10 +30,12 @@ export default function ListingPage() {
         />
       </div>
       <div className={styles.mainSection}>
-        <div className={styles.filterSection}>
-          <FilterPanel />
+        <div className={styles.mainBox}>
+          <div className={styles.filterSection}>
+            <FilterPanel />
+          </div>
+          <div className={styles.listingSection}>Listing Page Here</div>
         </div>
-        <div className={styles.listingSection}>Listing Page Here</div>
       </div>
     </div>
   );
