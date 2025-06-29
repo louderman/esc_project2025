@@ -3,7 +3,7 @@ import Counter from './Counter';
 import styles from './guestinput.module.css';
 import { useEffect, useRef, useState } from 'react';
 
-type OccupancyState = {
+export type OccupancyState = {
   adults: number;
   children: number;
   rooms: number;
@@ -15,14 +15,14 @@ const MIN_VALUE: Record<keyof OccupancyState, number> = {
   rooms: 1,
 };
 
-export default function GuestInput() {
+export default function GuestInput({
+  occupancy,
+  setOccupancy,
+}: {
+  occupancy: OccupancyState;
+  setOccupancy: React.Dispatch<React.SetStateAction<OccupancyState>>;
+}) {
   const [showPanel, setShowPanel] = useState(false);
-  const [occupancy, setOccupancy] = useState<OccupancyState>({
-    adults: 1,
-    children: 0,
-    rooms: 1,
-  });
-
   const panelWrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

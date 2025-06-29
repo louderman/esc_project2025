@@ -31,12 +31,15 @@ function calcNights(startDate: Date | null, endDate: Date | null) {
   );
 }
 
-export default function DateInput() {
+export default function DateInput({
+  stayDates,
+  setStayDates,
+}: {
+  stayDates: StayDatesState;
+  setStayDates: React.Dispatch<React.SetStateAction<StayDatesState>>;
+}) {
   const [showCal, setShowCal] = useState(false);
-  const [stayDates, setStayDates] = useState<StayDatesState>({
-    startDate: null,
-    endDate: null,
-  });
+
   const nightCount = calcNights(stayDates.startDate, stayDates.endDate);
 
   const calWrapperRef = useRef<HTMLDivElement>(null);

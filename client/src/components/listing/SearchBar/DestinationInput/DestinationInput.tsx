@@ -6,10 +6,15 @@ import { useDebounceAsync } from '../../../../hooks/useDebounceAsync';
 
 // TODO: replace onMouseDown?
 
-export default function DestinationInput() {
+export default function DestinationInput({
+  userDest,
+  setUserDest,
+}: {
+  userDest: string;
+  setUserDest: React.Dispatch<React.SetStateAction<string>>;
+}) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestedDests, setSuggestedDests] = useState<Destination[]>([]);
-  const [userDest, setUserDest] = useState<string>('');
 
   function handleOnFocus() {
     setShowSuggestions(true);
