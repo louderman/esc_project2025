@@ -4,6 +4,7 @@ import styles from './listingpage.module.css';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
 import type { OccupancyState } from '../components/listing/SearchBar/GuestInput/GuestInput';
 import FilterPanel from '../components/listing/ListingControl/FilterPanel';
+import Listings from '../components/listing/Listings/Listings';
 
 export default function ListingPage() {
   const [userDest, setUserDest] = useState<string>('');
@@ -34,7 +35,9 @@ export default function ListingPage() {
           <div className={styles.filterSection}>
             <FilterPanel />
           </div>
-          <div className={styles.listingSection}>Listing Page Here</div>
+          <div className={styles.listingSection}>
+            <Listings />
+          </div>
         </div>
       </div>
     </div>

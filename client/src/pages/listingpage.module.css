@@ -13,9 +13,13 @@
 }
 
 .mainSection {
-  padding: 20px;
+  padding: 30px 20px;
 }
 
+/* Need .mainBox to fix padding issue
+   smaller screen padding works fine, but for bigger screen, 
+   padding is inconsistent.
+*/
 .mainBox {
   display: flex;
   max-width: 1280px;
@@ -25,4 +29,8 @@
 }
 
 .filterSection {
+}
+
+.listingSection {
+  flex: 1;
 }
