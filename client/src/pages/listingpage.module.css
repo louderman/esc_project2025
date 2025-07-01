@@ -1,0 +1,36 @@
+.container {
+}
+
+.searchbarSection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px 20px;
+  background-image: url('/listing/lobby_tint.png');
+  background-size: cover;
+  background-position: 50% 60%;
+  background-repeat: no-repeat;
+}
+
+.mainSection {
+  padding: 30px 20px;
+}
+
+/* Need .mainBox to fix padding issue
+   smaller screen padding works fine, but for bigger screen, 
+   padding is inconsistent.
+*/
+.mainBox {
+  display: flex;
+  max-width: 1280px;
+  margin-inline: auto;
+  gap: 30px;
+  flex-wrap: nowrap;
+}
+
+.filterSection {
+}
+
+.listingSection {
+  flex: 1;
+}
