@@ -1,4 +1,5 @@
 import type { Hotel } from '../../../../../types/Hotel';
+import type { Price } from '../../../../../types/Price';
 import styles from './listingcard.module.css';
 
 const AMENITY_TO_SVG = {
@@ -17,7 +18,11 @@ const AMENITY_TO_SVG = {
   kitchen: 'kitchen.svg',
 };
 
-export default function ListingCard({ hotel }: { hotel: Hotel }) {
+export default function ListingCard({
+  hotel,
+}: {
+  hotel: Hotel & Partial<Price>;
+}) {
   return (
     <div className={styles.container}>
       {hotel.imageCount > 0 ? (
@@ -61,7 +66,12 @@ export default function ListingCard({ hotel }: { hotel: Hotel }) {
         </div>
         <div className={styles.infoRightSection}>
           <div className={styles.priceSection}>
-            <span className={styles.priceText}>SGD 128</span>
+            <span className={styles.priceText}>
+              SGD{' '}
+              {hotel.price?.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+              }) ?? '...'}
+            </span>
             <span className={styles.stayInfoText}>1 room, 1 night</span>
           </div>
           <button className={styles.viewButton}>View</button>
