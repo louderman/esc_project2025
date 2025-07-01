@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-export default function ListingPage() {
-  return <div>Listing Page</div>;
-=======
 import { useState } from 'react';
 import SearchBar from '../components/listing/SearchBar/SearchBar';
 import styles from './listingpage.module.css';
@@ -46,5 +42,4 @@ export default function ListingPage() {
       </div>
     </div>
   );
->>>>>>> oldrepo/master
 }

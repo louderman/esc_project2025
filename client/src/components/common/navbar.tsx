@@ -17,8 +17,7 @@ export default function NavBar() {
             <img src='/navbar/user.svg' /> <span>Login</span>
           </button>
           <button
-            className={`${styles.accountButton} ${styles.registerButton}`}
-          >
+            className={`${styles.accountButton} ${styles.registerButton}`}>
             <img src='/navbar/user.svg' />
             <span>Register</span>
           </button>
