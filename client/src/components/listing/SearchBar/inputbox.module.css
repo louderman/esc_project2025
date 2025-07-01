@@ -24,3 +24,6 @@
   border-radius: 10px;
   font-weight: 600;
 }
+
+.inputBox:is(button):active {
+}

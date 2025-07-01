@@ -94,13 +94,11 @@ export default function CalendarPage({
           </tr>
         </thead>
         <tbody>
-          {calArray.map(
-            (weekArr, i) =>
-              // Sry code too messy :), TODO: separate calendar cell into another component
-              weekArr.some((dayCal) => dayCal !== null) && (
-                <tr key={`cal-row-${date.getMonth()}-${i}`}>
-                  {weekArr.map((dayCal, j) => {
-                    /** Couples of styling here:
+          {calArray.map((weekArr, i) => (
+            // Sry code too messy :), TODO: separate calendar cell into another component
+            <tr key={`cal-row-${date.getMonth()}-${i}`}>
+              {weekArr.map((dayCal, j) => {
+                /** Couples of styling here:
                     1. hasContent: is current cell empty
                     2. disabled: is date of current cell >= today and date <= maxDate
                     3. isToday: is today
@@ -108,66 +106,62 @@ export default function CalendarPage({
                     5. isEnd: is checkout day
                     6. isBetween: is between checkin and checkout day or is between startDate and hoverDate
                     */
-                    const isToday =
-                      dayCal?.getTime() === getTodayDate().getTime();
-                    const isDisabled =
-                      dayCal &&
-                      (dayCal.getTime() < getTodayDate().getTime() ||
-                        dayCal.getTime() > maxDate.getTime());
-                    const isStart =
-                      dayCal &&
-                      stayDates.startDate?.getTime() === dayCal.getTime();
-                    const isEnd =
-                      dayCal &&
-                      stayDates.endDate?.getTime() === dayCal.getTime();
-                    const isBetween = (() => {
-                      if (!dayCal || !stayDates.startDate) return false;
+                const isToday = dayCal?.getTime() === getTodayDate().getTime();
+                const isDisabled =
+                  dayCal &&
+                  (dayCal.getTime() < getTodayDate().getTime() ||
+                    dayCal.getTime() > maxDate.getTime());
+                const isStart =
+                  dayCal && stayDates.startDate?.getTime() === dayCal.getTime();
+                const isEnd =
+                  dayCal && stayDates.endDate?.getTime() === dayCal.getTime();
+                const isBetween = (() => {
+                  if (!dayCal || !stayDates.startDate) return false;
 
-                      const dayTime = dayCal.getTime();
-                      const startTime = stayDates.startDate.getTime();
-                      const endTime = stayDates.endDate?.getTime();
-                      const hoverTime = hoverDate?.getTime();
+                  const dayTime = dayCal.getTime();
+                  const startTime = stayDates.startDate.getTime();
+                  const endTime = stayDates.endDate?.getTime();
+                  const hoverTime = hoverDate?.getTime();
 
-                      if (endTime) {
-                        return startTime < dayTime && dayTime < endTime;
-                      }
+                  if (endTime) {
+                    return startTime < dayTime && dayTime < endTime;
+                  }
 
-                      if (hoverTime) {
-                        return startTime < dayTime && dayTime < hoverTime;
-                      }
+                  if (hoverTime) {
+                    return startTime < dayTime && dayTime < hoverTime;
+                  }
 
-                      return false;
-                    })();
-                    const tdClassName = [
-                      dayCal && styles.hasContent,
-                      isDisabled && styles.disabled,
-                      isToday && styles.isToday,
-                      isStart && styles.isStart,
-                      isEnd && styles.isEnd,
-                      isBetween && styles.isBetween,
-                    ]
-                      .filter(Boolean)
-                      .join(' ');
+                  return false;
+                })();
+                const tdClassName = [
+                  dayCal && styles.hasContent,
+                  isDisabled && styles.disabled,
+                  isToday && styles.isToday,
+                  isStart && styles.isStart,
+                  isEnd && styles.isEnd,
+                  isBetween && styles.isBetween,
+                ]
+                  .filter(Boolean)
+                  .join(' ');
 
-                    return (
-                      <td
-                        onMouseEnter={() => setHoverDate(dayCal)}
-                        onMouseLeave={() => {
-                          if (hoverDate?.getTime() === dayCal?.getTime())
-                            setHoverDate(null);
-                        }}
-                        onClick={(e) => {
-                          if (!isDisabled) handleOnClick(e, dayCal);
-                        }}
-                        className={tdClassName}
-                        key={`cal-cell-${date.getMonth()}-${i}-${j}`}>
-                        <div>{dayCal?.getDate()}</div>
-                      </td>
-                    );
-                  })}
-                </tr>
-              )
-          )}
+                return (
+                  <td
+                    onMouseEnter={() => setHoverDate(dayCal)}
+                    onMouseLeave={() => {
+                      if (hoverDate?.getTime() === dayCal?.getTime())
+                        setHoverDate(null);
+                    }}
+                    onClick={(e) => {
+                      if (!isDisabled) handleOnClick(e, dayCal);
+                    }}
+                    className={tdClassName}
+                    key={`cal-cell-${date.getMonth()}-${i}-${j}`}>
+                    <div>{dayCal?.getDate()}</div>
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>

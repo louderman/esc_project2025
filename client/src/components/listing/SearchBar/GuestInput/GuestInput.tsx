@@ -24,12 +24,12 @@ export default function GuestInput({
 }) {
   const [showPanel, setShowPanel] = useState(false);
   const panelWrapperRef = useRef<HTMLDivElement>(null);
-
+  const inputButtonRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     function handleClickOutside(ev: MouseEvent) {
       if (
-        panelWrapperRef.current &&
-        !panelWrapperRef.current.contains(ev.target as Node)
+        !panelWrapperRef.current?.contains(ev.target as Node) &&
+        !inputButtonRef.current?.contains(ev.target as Node)
       ) {
         setShowPanel(false);
       }
@@ -43,8 +43,9 @@ export default function GuestInput({
     <div className={inputStyles.inputWrapper}>
       <img src='/listing/guest.svg' />
       <button
+        ref={inputButtonRef}
         className={`${inputStyles.inputBox} ${styles.button}`}
-        onClick={() => setShowPanel(true)}>
+        onClick={() => setShowPanel((prev) => !prev)}>
         {occupancy.adults} adult{occupancy.adults > 1 && 's'} ·{' '}
         {occupancy.children} child{occupancy.children > 1 && 'ren'} ·{' '}
         {occupancy.rooms} room{occupancy.rooms > 1 && 's'}

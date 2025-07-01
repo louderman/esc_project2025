@@ -43,12 +43,13 @@ export default function DateInput({
   const nightCount = calcNights(stayDates.startDate, stayDates.endDate);
 
   const calWrapperRef = useRef<HTMLDivElement>(null);
+  const inputButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     function handleClickOutside(ev: MouseEvent) {
       if (
-        calWrapperRef.current &&
-        !calWrapperRef.current.contains(ev.target as Node)
+        !calWrapperRef.current?.contains(ev.target as Node) &&
+        !inputButtonRef.current?.contains(ev.target as Node)
       ) {
         setShowCal(false);
       }
@@ -62,7 +63,8 @@ export default function DateInput({
     <div className={inputStyles.inputWrapper}>
       <img src='/listing/calendar.svg' />
       <button
-        onClick={() => setShowCal(true)}
+        ref={inputButtonRef}
+        onClick={() => setShowCal((prev) => !prev)}
         className={`${inputStyles.inputBox} ${styles.button} ${
           stayDates.startDate ? styles.hasDate : ''
         }`}>
