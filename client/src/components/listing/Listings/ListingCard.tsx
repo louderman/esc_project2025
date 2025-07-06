@@ -45,7 +45,10 @@ export default function ListingCard({
           <span className={styles.addrText}>{hotel.address}</span>
           <div className={styles.starsSection}>
             {Array.from({ length: hotel.rating }).map((_, i) => (
-              <img src='/listing/star.svg' key={`${hotel.id}-star-${i}`} />
+              <img
+                src='/listing/stars/star_full.svg'
+                key={`${hotel.id}-star-${i}`}
+              />
             ))}
           </div>
           <div className={styles.amenitiesSection}>
