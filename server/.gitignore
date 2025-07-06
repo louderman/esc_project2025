@@ -2,6 +2,6 @@
 .vscode/*
 !.vscode/extensions.json
 node_modules/
-dist
+dist/
 *.local
 *.log
