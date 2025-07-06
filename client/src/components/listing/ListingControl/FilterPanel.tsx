@@ -1,26 +1,42 @@
-import PriceRange from './FilterOptions/PriceRange';
+import type {
+  ListingAction,
+  ListingState,
+} from '../../../reducers/listingReducer';
+import PriceRange from './FilterOptions/PriceRange/PriceRange';
 import Rating from './FilterOptions/Rating';
 import styles from './filterpanel.module.css';
 
-export default function FilterPanel() {
+export default function FilterPanel({
+  listingState,
+  listingDispatch,
+}: {
+  listingState: ListingState;
+  listingDispatch: React.ActionDispatch<[action: ListingAction]>;
+}) {
   return (
     <div className={styles.container}>
       <div className={styles.section}>
-        <span className={styles.sectionTitle}>Filter by</span>
+        <div className={styles.filterHeader}>
+          <span className={styles.sectionTitle}>Filter by</span>
+          <button className={styles.resetButton}>
+            <img src='/listing/reset.svg' /> Reset filter
+          </button>
+        </div>
       </div>
       <div className={styles.section}>
         <span className={styles.sectionTitle}>Rating</span>
         <div className={styles.ratingSection}>
-          <Rating />
-          <Rating />
+          {['Star ratings', 'Guest ratings'].map((rating, i) => (
+            <div key={`rating-${i}`} className={styles.ratingSubsection}>
+              <span>{rating}</span>
+              <Rating groupId={i} />
+            </div>
+          ))}
         </div>
       </div>
       <div className={styles.section}>
         <span className={styles.sectionTitle}>Price range</span>
         <PriceRange />
-      </div>
-      <div className={styles.section}>
-        <button className={styles.resetButton}>Reset</button>
       </div>
     </div>
   );
