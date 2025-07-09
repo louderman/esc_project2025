@@ -5,7 +5,7 @@ export default function Rating({ groupId }: { groupId: number | string }) {
   const [activeRatings, setActiveRatings] = useState<number[]>([]);
   const ratings = [5, 4, 3, 2, 1];
 
-  function selectRating(rating: number) {
+  function handleSelectRating(rating: number) {
     setActiveRatings((prev) =>
       prev.includes(rating)
         ? prev.filter((p) => p !== rating)
@@ -19,7 +19,8 @@ export default function Rating({ groupId }: { groupId: number | string }) {
         <div
           className={styles.row}
           key={`group-${groupId}row-${rating}`}
-          onClick={() => selectRating(rating)}>
+          onClick={() => handleSelectRating(rating)}
+        >
           <label className={styles.inputContainer}>
             <input
               type='checkbox'
