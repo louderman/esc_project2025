@@ -1,0 +1,11 @@
+type Destination = {
+  id: number;
+  term: string;
+  uid: string;
+  lat: number;
+  lng: number;
+  type: string;
+  state: string;
+};
+
+export type { Destination };

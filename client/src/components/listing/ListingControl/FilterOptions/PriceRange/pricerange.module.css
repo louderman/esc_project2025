@@ -1,0 +1,66 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* .sliderSection {
+} */
+
+.inputboxSection {
+  display: flex;
+  gap: 10px;
+}
+
+.inputbox {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100px;
+  position: relative;
+  border: 1px solid #dddddd;
+  border-radius: 8px;
+  padding-top: 5px;
+  font-size: 0.75rem;
+  transition: border-color 0.2s;
+}
+
+.inputbox:focus-within {
+  border-color: #ffb800;
+  border-width: 2px;
+}
+
+.inputbox > span {
+  color: gray;
+  padding-left: 10px;
+}
+
+.inputGroup {
+  padding: 5px 10px 5px 10px;
+  display: flex;
+  align-items: baseline;
+  box-sizing: border-box;
+  gap: 2px;
+  font-size: 0.95rem;
+  color: #363636;
+}
+
+.inputGroup input {
+  font-size: 1rem;
+  width: 100%;
+  height: 70%;
+  border-radius: inherit;
+  border: none;
+  color: inherit;
+}
+
+.inputGroup input::-webkit-outer-spin-button,
+.inputGroup input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.inputGroup input:focus {
+  border: none;
+  outline: none;
+}

@@ -2,10 +2,11 @@
 import { createPool } from 'mysql2';
 
 const pool = createPool({
-  host: 'localhost',
-  user: '[YourUserName]',
-  password: '[YourPassword]',
-  database: '[YourDbName]',
+  host: 'back.r3po.org',
+  port: 53042,
+  user: 'pub',
+  password: 'asbestosSnOrter8&',
+  database: 'hotel',
 }).promise();
 
 async function cleanup() {
@@ -13,3 +14,7 @@ async function cleanup() {
 }
 
 export { pool, cleanup };
+
+// CREATE USER 'your_username'@'your_host' IDENTIFIED BY 'your_password';
+// GRANT ALL PRIVILEGES ON db_name.* TO 'your_username'@'localhost';
+// FLUSH PRIVILEGES;
