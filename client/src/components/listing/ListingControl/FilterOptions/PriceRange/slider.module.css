@@ -1,10 +1,23 @@
-.container {
+/* .container {
+} */
+
+.barchartContainer {
+  width: 100%;
+  display: flex;
+  gap: 2px;
+  /* need to adjust padding-inline to prevent bar off-by-1 px difference */
+  padding-inline: 13px;
+}
+
+.bar {
+  flex: 1;
+  align-self: flex-end;
+  background-color: #ffb3b3;
 }
 
 .sliderContainer {
   position: relative;
-  height: 20px;
-  width: 100%;
+  height: 10px;
 }
 
 .slider {
@@ -17,16 +30,16 @@
   outline: none;
   background: none;
   border-radius: 5px;
+  z-index: 2;
 }
 
-.slider_primary {
-  background-color: #c0dbfb;
+/* .sliderPrimary {
 }
 
 .slider:hover {
-}
+} */
 
-.slider_secondary::-webkit-slider-runnable-track {
+.sliderSecondary::-webkit-slider-runnable-track {
   appearance: none;
   background: none;
   pointer-events: none;
@@ -34,35 +47,40 @@
 
 .slider::-webkit-slider-thumb {
   appearance: none;
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
   border: 2px solid white;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
-  z-index: 5;
+  box-sizing: border-box;
 }
 
-.slider_primary::-webkit-slider-thumb {
+.sliderPrimary::-webkit-slider-thumb {
   background-color: #ff7373;
 }
 
-.slider_secondary::-webkit-slider-thumb {
-  background-color: blue;
+.sliderSecondary::-webkit-slider-thumb {
+  background-color: #ff7373;
+}
+
+.sliderTracker {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 5px;
+  width: 100%;
+  background-color: #c0dbfb;
+  border-radius: 5px;
+  z-index: 0;
 }
 
 .activeSliderTrack {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 5px;
+  /* width: 5px; */
   height: 5px;
-  background-color: red;
+  background-color: #ff7373;
+  pointer-events: none;
+  z-index: 1;
 }
-
-/* 
-.slider::-moz-range-thumb {
-  width: 25px;
-  height: 25px;
-  background-color: aqua;
-  cursor: pointer;
-} */
