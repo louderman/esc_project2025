@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import SearchBar from '../components/listing/SearchBar/SearchBar';
 import styles from './listingpage.module.css';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
@@ -11,6 +11,7 @@ import {
 } from '../reducers/listingReducer';
 import type { Hotel } from '../../../types/Hotel';
 import type { Price, PriceResponse } from '../../../types/Price';
+import { usePollingAsync } from '../hooks/usePollingAsync';
 
 export default function ListingPage() {
   const [userDest, setUserDest] = useState<string>('');
@@ -23,7 +24,7 @@ export default function ListingPage() {
     children: 0,
     rooms: 1,
   });
-  const [hotels, setHotels] = useState<Hotel[]>(INIT_HOTELS);
+  const [hotels, setHotels] = useState<Hotel[]>([]);
   const [prices, setPrices] = useState<Price[]>([]);
   const [listingState, listingDispatch] = useReducer(
     listingReducer,
@@ -45,18 +46,34 @@ export default function ListingPage() {
     }
     return data.completed;
   }, []);
-  //   usePollingAsync(fetchPrice, 5000);
+  usePollingAsync(fetchPrice, 5000);
 
   const fetchHotel = useCallback(async () => {
     console.log('fetching hotel');
+    // setHotels(INIT_HOTELS);
+    // return;
     const response = await fetch(`/api/hotel/query/RsBU`);
     const data: Hotel[] = await response.json();
     setHotels(data);
     setLoading((prev) => ({ ...prev, hotel: false }));
   }, []);
   useEffect(() => {
-    // fetchHotel();
+    fetchHotel();
   }, []);
+
+  console.log(hotels);
+  console.log(prices);
+
+  const hotelsWithPrice = useMemo(() => {
+    // TODO: Enhance the algorithm
+    // return INIT_HOTELS;
+    console.log('trying to stitch hotel + price...');
+    return prices.flatMap((price) => {
+      const hotel = hotels.find((h) => h.id === price.id);
+      return hotel ? [{ ...hotel, ...price }] : [];
+    });
+  }, [hotels, prices]);
+  console.log(hotelsWithPrice);
 
   return (
     <div className={styles.container}>
@@ -74,12 +91,13 @@ export default function ListingPage() {
         <div className={styles.mainBox}>
           <div className={styles.filterSection}>
             <FilterPanel
+              hotels={hotelsWithPrice}
               listingState={listingState}
               listingDispatch={listingDispatch}
             />
           </div>
           <div className={styles.listingSection}>
-            <Listings hotels={hotels} prices={prices} loading={loading} />
+            <Listings hotels={hotelsWithPrice} loading={loading} />
           </div>
         </div>
       </div>
@@ -87,7 +105,7 @@ export default function ListingPage() {
   );
 }
 
-const INIT_HOTELS: Hotel[] = [
+const INIT_HOTELS: (Hotel & Price)[] = [
   {
     id: '050G',
     imageCount: 62,
@@ -198,6 +216,26 @@ const INIT_HOTELS: Hotel[] = [
     imgix_url: 'https://kaligo-web-expedia.imgix.net',
     cloudflare_image_url: 'https://www.kaligo-staging.xyz/images/new',
     checkin_time: '3:00 PM',
+    searchRank: 0.93,
+    price_type: 'multi',
+    free_cancellation: false,
+    rooms_available: 29994,
+    max_cash_payment: 3988.13,
+    coverted_max_cash_payment: 5206.27,
+    points: 130150,
+    bonuses: 0,
+    bonus_programs: [],
+    bonus_tiers: [],
+    lowest_price: 3988.13,
+    price: 5206.27,
+    converted_price: 5206.27,
+    lowest_converted_price: 5206.27,
+    market_rates: [
+      {
+        rate: 0,
+        supplier: '',
+      },
+    ],
   },
   {
     id: '0dAF',
@@ -310,5 +348,25 @@ const INIT_HOTELS: Hotel[] = [
     imgix_url: 'https://kaligo-web-old.imgix.net',
     cloudflare_image_url: 'https://www.kaligo-staging.xyz/images/new',
     checkin_time: '',
+    searchRank: 0.93,
+    price_type: 'multi',
+    free_cancellation: true,
+    rooms_available: 60,
+    max_cash_payment: 2396.52,
+    coverted_max_cash_payment: 3128.52,
+    points: 78200,
+    bonuses: 0,
+    bonus_programs: [],
+    bonus_tiers: [],
+    lowest_price: 2396.52,
+    price: 3128.52,
+    converted_price: 3128.52,
+    lowest_converted_price: 3128.52,
+    market_rates: [
+      {
+        rate: 0,
+        supplier: '',
+      },
+    ],
   },
 ];
