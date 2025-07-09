@@ -46,12 +46,12 @@ export default function ListingPage() {
     }
     return data.completed;
   }, []);
-  usePollingAsync(fetchPrice, 5000);
+  // usePollingAsync(fetchPrice, 5000);
 
   const fetchHotel = useCallback(async () => {
     console.log('fetching hotel');
-    // setHotels(INIT_HOTELS);
-    // return;
+    setHotels(INIT_HOTELS);
+    return;
     const response = await fetch(`/api/hotel/query/RsBU`);
     const data: Hotel[] = await response.json();
     setHotels(data);
@@ -66,7 +66,7 @@ export default function ListingPage() {
 
   const hotelsWithPrice = useMemo(() => {
     // TODO: Enhance the algorithm
-    // return INIT_HOTELS;
+    return INIT_HOTELS;
     console.log('trying to stitch hotel + price...');
     return prices.flatMap((price) => {
       const hotel = hotels.find((h) => h.id === price.id);

@@ -41,10 +41,15 @@ export default function FilterPanel({
       <div className={styles.section}>
         <span className={styles.sectionTitle}>Price range</span>
         <div className={styles.pricerangeSection}>
-          {/* <PriceRange data={hotels.map((h) => h.price)} /> */}
           <PriceRange
-            data={Array.from({ length: 100 }, () => Math.random() * 10000)}
+            data={hotels.map((h) => Math.round(h.price * 100) / 100)}
           />
+          {/* <PriceRange
+            data={Array.from(
+              { length: 100 },
+              () => Math.round(Math.random() * 1000000) / 100
+            )}
+          /> */}
         </div>
       </div>
     </div>

@@ -4,8 +4,8 @@ import Slider from './Slider';
 
 export default function PriceRange({ data }: { data: number[] }) {
   const rangeBoundary = useMemo(() => {
-    const min = Math.min(...data);
-    const max = Math.max(...data);
+    const min = Math.floor(Math.min(...data));
+    const max = Math.ceil(Math.max(...data));
     return [min, max];
   }, [data]);
   useEffect(() => {
@@ -23,7 +23,7 @@ export default function PriceRange({ data }: { data: number[] }) {
   ]);
   function handleChangePrice(ev: React.ChangeEvent<HTMLInputElement>) {
     const name = ev.currentTarget.name;
-    let value = parseFloat(ev.currentTarget.value.replace(/,/g, ''));
+    let value = parseFloat(ev.currentTarget.value.replace(/[,-]/g, ''));
     if (isNaN(value)) value = 0;
 
     setPriceRange((prev) =>

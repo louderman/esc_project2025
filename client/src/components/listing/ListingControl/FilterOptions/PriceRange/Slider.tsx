@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import styles from './slider.module.css';
 
 export default function Slider({
@@ -11,8 +11,8 @@ export default function Slider({
   setSelectedRange: React.Dispatch<React.SetStateAction<number[]>>;
 }) {
   const rangeBoundary = useMemo(() => {
-    const min = Math.min(...data);
-    const max = Math.max(...data);
+    const min = Math.floor(Math.min(...data));
+    const max = Math.ceil(Math.max(...data));
     return [min, max];
   }, [data]);
 
@@ -32,25 +32,50 @@ export default function Slider({
    * Reference: https://css-tricks.com/multi-thumb-sliders-particular-two-thumb-case/
    * Setup the track color between two thumbs
    *
-   * TODO: fix marginLeft and width of active tracker still buggy when width of slider is large...
+   * Variables:
+   * 1. usefulWidth: the full width between two thumbs
+   * 2. thumbDiameter: the diameter of the two thumbs
+   * 3. fillWidth: the width of the active tracker
+   * 4. marginLeft: the left margin of the active tracker
+   * 5. dif: the range, upper_range_boundary - lower_range_boundary
+   * Note: active tracker is the pink portion in between two thumbs
+   *
    */
   const sliderRef = useRef<HTMLDivElement>(null);
   const thumbDiameter = 14;
   const [usefulWidth, setUsefulWidth] = useState(0);
-  useLayoutEffect(() => {
+  useEffect(() => {
+    // Using resizeObserver to get the width of the slider
+    // to calculate the `usefulWidth`, which is used to determine the active tracker width.
     if (!sliderRef.current) return;
-    setUsefulWidth(sliderRef.current.offsetWidth - thumbDiameter);
-  }, []);
+    const element = sliderRef.current;
+    const resizeObserver = new ResizeObserver(() => {
+      setUsefulWidth(element.offsetWidth - thumbDiameter * 2);
+    });
+    resizeObserver.observe(element);
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [thumbDiameter]);
   const dif = rangeBoundary[1] - rangeBoundary[0];
   const marginLeft =
-    thumbDiameter + ((selectedRange[0] - rangeBoundary[0]) / dif) * usefulWidth;
+    thumbDiameter +
+    ((Math.min(selectedRange[0], rangeBoundary[1]) - rangeBoundary[0]) / dif) *
+      usefulWidth;
   const fillWidth =
     selectedRange[0] <= selectedRange[1]
-      ? ((selectedRange[1] - selectedRange[0]) / dif) * usefulWidth
+      ? ((Math.min(selectedRange[1], rangeBoundary[1]) -
+          Math.max(selectedRange[0], rangeBoundary[0])) /
+          dif) *
+        usefulWidth
       : 0;
 
   /**
    * Barchart bar setup
+   *
+   * Variables:
+   * 1. BAR_COUNT: the bar count in the bar chart
+   * 2. MAX_HEIGHT: the maximum height of the bar chart
    *
    */
   const BAR_COUNT = 30;
@@ -91,15 +116,6 @@ export default function Slider({
 
   return (
     <div className={styles.container}>
-      {usefulWidth}, {(selectedRange[1] - selectedRange[0]) / dif}
-      <div
-        style={{
-          marginLeft: `${thumbDiameter}px`,
-          height: '2px',
-          width: usefulWidth,
-          backgroundColor: 'blue',
-        }}
-      ></div>
       <div className={styles.barchartContainer}>
         {cntPerInterval.map((count, i) => {
           const height = (MAX_HEIGHT * count) / cntMax;
