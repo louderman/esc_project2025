@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Hotel } from '../../../../../types/Hotel';
 import ListingCard from './ListingCard';
 import styles from './listings.module.css';
@@ -8,31 +8,18 @@ const ITEMS_PER_PAGE = 10;
 
 export default function Listings({
   hotels,
-  prices,
   loading,
 }: {
-  hotels: Hotel[];
-  prices: Price[];
+  hotels: (Hotel & Price)[];
   loading: { hotel: boolean; price: boolean };
 }) {
   const [page, setPage] = useState(1);
-
-  const hotelsWithPrice = useMemo(() => {
-    // TODO: Enhance the algorithm
-    return hotels;
-    console.log('trying to stitch hotel + price...');
-    return prices.flatMap((price) => {
-      const hotel = hotels.find((h) => h.id === price.id);
-      return hotel ? [{ ...hotel, ...price }] : [];
-    });
-  }, [hotels, prices]);
-  console.log(hotelsWithPrice);
 
   useEffect(() => {
     function handleScroll() {
       if (
         Object.values(loading).some(Boolean) ||
-        page * ITEMS_PER_PAGE > hotelsWithPrice.length
+        page * ITEMS_PER_PAGE > hotels.length
       ) {
         return;
       }
@@ -47,11 +34,11 @@ export default function Listings({
     }
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [page, hotelsWithPrice]);
+  }, [page, hotels]);
 
   return (
     <div className={styles.container}>
-      {hotelsWithPrice.slice(0, page * ITEMS_PER_PAGE).map((hotel) => (
+      {hotels.slice(0, page * ITEMS_PER_PAGE).map((hotel) => (
         <ListingCard key={`listing-card-${hotel.id}`} hotel={hotel} />
       ))}
     </div>
