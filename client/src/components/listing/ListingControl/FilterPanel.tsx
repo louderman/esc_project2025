@@ -1,3 +1,5 @@
+import type { Hotel } from '../../../../../types/Hotel';
+import type { Price } from '../../../../../types/Price';
 import type {
   ListingAction,
   ListingState,
@@ -7,9 +9,11 @@ import Rating from './FilterOptions/Rating';
 import styles from './filterpanel.module.css';
 
 export default function FilterPanel({
+  hotels,
   listingState,
   listingDispatch,
 }: {
+  hotels: (Hotel & Price)[];
   listingState: ListingState;
   listingDispatch: React.ActionDispatch<[action: ListingAction]>;
 }) {
@@ -17,7 +21,7 @@ export default function FilterPanel({
     <div className={styles.container}>
       <div className={styles.section}>
         <div className={styles.filterHeader}>
-          <span className={styles.sectionTitle}>Filter by</span>
+          <span>Filter by</span>
           <button className={styles.resetButton}>
             <img src='/listing/reset.svg' /> Reset filter
           </button>
@@ -36,7 +40,12 @@ export default function FilterPanel({
       </div>
       <div className={styles.section}>
         <span className={styles.sectionTitle}>Price range</span>
-        <PriceRange />
+        <div className={styles.pricerangeSection}>
+          {/* <PriceRange data={hotels.map((h) => h.price)} /> */}
+          <PriceRange
+            data={Array.from({ length: 100 }, () => Math.random() * 10000)}
+          />
+        </div>
       </div>
     </div>
   );
