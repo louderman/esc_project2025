@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { pool } from './db';
 import { type Destination } from '../../types/Destination';
-import { sync } from '../models/destination';
+import { sync, tableName } from '../models/destination';
 
 const DESTINATION_JSON_PATH = './public/destinations.json';
 
@@ -14,13 +14,13 @@ async function seed() {
   await sync();
 
   // Remove all rows
-  await pool.query(`TRUNCATE TABLE Destination`);
+  await pool.query(`TRUNCATE TABLE ${tableName}`);
 
   // Seed the table with destinations
   for (let o of obj) {
     await pool.query(
       `
-        INSERT INTO Destination (dest_id, term, lat, lng, type, state) VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO ${tableName} (dest_id, term, lat, lng, type, state) VALUES (?, ?, ?, ?, ?, ?)
         `,
       [o.uid, o.term, o.lat, o.lng, o.type, o.state]
     );

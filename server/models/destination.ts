@@ -2,7 +2,7 @@ import { pool } from '../database/db';
 import { type Destination } from '../../types/Destination';
 import { FieldPacket } from 'mysql2';
 
-const tableName = 'destination';
+export const tableName = 'destination';
 // CREATE TABLE Destination (id INT AUTO_INCREMENT PRIMARY KEY, dest_id VARCHAR(4), term VARCHAR(255), lat FLOAT, lng FLOAT, type VARCHAR(100));
 
 function editDistance(a: string, b: string): number {
