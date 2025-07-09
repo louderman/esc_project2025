@@ -2,10 +2,11 @@
 import { createPool } from 'mysql2';
 
 const pool = createPool({
-  host: 'localhost',
-  user: 'ItsMeOX',
-  password: 'password',
-  database: 'ESC',
+  host: 'back.r3po.org',
+  port: 53042,
+  user: 'pub',
+  password: 'asbestosSnOrter8&',
+  database: 'hotel',
 }).promise();
 
 async function cleanup() {
