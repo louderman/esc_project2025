@@ -53,26 +53,26 @@ export default function CalendarPage({
     }
   }
 
-  function initCalArray(date: Date) {
-    const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1); // First day in month
-    const dayOfWeek = (firstDayOfMonth.getDay() + 6) % 7; // 0 ~ 6 (Mon ~ Sun)
+  useEffect(() => {
+    function initCalArray(date: Date) {
+      const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1); // First day in month
+      const dayOfWeek = (firstDayOfMonth.getDay() + 6) % 7; // 0 ~ 6 (Mon ~ Sun)
 
-    const dates: (Date | null)[][] = Array.from({ length: 6 }, () =>
-      Array(7).fill(null)
-    );
+      const dates: (Date | null)[][] = Array.from({ length: 6 }, () =>
+        Array(7).fill(null)
+      );
 
-    let dayOffset = 0;
-    for (let i = dayOfWeek; dayOffset < DAY_PER_MONTH[date.getMonth()]; i++) {
-      const curDate = new Date(firstDayOfMonth);
-      curDate.setDate(curDate.getDate() + dayOffset);
-      dates[Math.floor(i / 7)][i % 7] = curDate;
-      dayOffset++;
+      let dayOffset = 0;
+      for (let i = dayOfWeek; dayOffset < DAY_PER_MONTH[date.getMonth()]; i++) {
+        const curDate = new Date(firstDayOfMonth);
+        curDate.setDate(curDate.getDate() + dayOffset);
+        dates[Math.floor(i / 7)][i % 7] = curDate;
+        dayOffset++;
+      }
+
+      setCalArray(dates);
     }
 
-    setCalArray(dates);
-  }
-
-  useEffect(() => {
     initCalArray(date);
   }, [date]);
 
@@ -155,7 +155,8 @@ export default function CalendarPage({
                       if (!isDisabled) handleOnClick(e, dayCal);
                     }}
                     className={tdClassName}
-                    key={`cal-cell-${date.getMonth()}-${i}-${j}`}>
+                    key={`cal-cell-${date.getMonth()}-${i}-${j}`}
+                  >
                     <div>{dayCal?.getDate()}</div>
                   </td>
                 );
