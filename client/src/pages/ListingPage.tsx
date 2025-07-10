@@ -51,7 +51,6 @@ export default function ListingPage() {
       const data: PriceResponse = await response.json();
       if (data.completed) {
         setPrices(data.hotels);
-        setLoading((prev) => ({ ...prev, price: false }));
       }
       return data.completed;
     } catch (err) {
@@ -59,6 +58,8 @@ export default function ListingPage() {
         console.error('Fetch hotel error: ', err);
       }
       return true; // stop polling if there is error
+    } finally {
+      setLoading((prev) => ({ ...prev, price: false }));
     }
   }, []);
   usePollingAsync(fetchPrice, 5000);
@@ -74,11 +75,12 @@ export default function ListingPage() {
       const response = await fetch(`/api/hotel/query/RsBU`, { signal });
       const data: Hotel[] = await response.json();
       setHotels(data);
-      setLoading((prev) => ({ ...prev, hotel: false }));
     } catch (err) {
       if (err instanceof Error && err.name !== 'AbortError') {
         console.error('Fetch hotel error: ', err);
       }
+    } finally {
+      setLoading((prev) => ({ ...prev, hotel: false }));
     }
   }, []);
   useEffect(() => {
