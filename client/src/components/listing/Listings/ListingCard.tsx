@@ -12,6 +12,7 @@ export default function ListingCard({
     <div className={styles.container}>
       {hotel.imageCount > 0 ? (
         <img
+          className={styles.image}
           src={`${hotel.image_details.prefix}0${hotel.image_details.suffix}`}
           alt='hotel img'
           onError={(e) => {
@@ -21,7 +22,11 @@ export default function ListingCard({
           }}
         />
       ) : (
-        <img src='/listing/hotel_img_placeholder.png' alt='hotel img' />
+        <img
+          className={styles.image}
+          src='/listing/hotel_img_placeholder.png'
+          alt='hotel img'
+        />
       )}
 
       <div className={styles.infoSection}>
