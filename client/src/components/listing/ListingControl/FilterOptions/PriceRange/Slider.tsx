@@ -1,14 +1,23 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type SetStateAction,
+} from 'react';
 import styles from './slider.module.css';
+import { initialListingState } from '../../../../../reducers/listingReducer';
 
 export default function Slider({
   data,
   selectedRange,
   setSelectedRange,
+  onBlur,
 }: {
   data: number[];
-  selectedRange: number[];
-  setSelectedRange: React.Dispatch<React.SetStateAction<number[]>>;
+  selectedRange: [number, number];
+  setSelectedRange: React.Dispatch<SetStateAction<[number, number]>>;
+  onBlur: () => void;
 }) {
   const rangeBoundary = useMemo(() => {
     const min = Math.floor(Math.min(...data));
@@ -21,7 +30,8 @@ export default function Slider({
     if (isNaN(value)) return;
 
     setSelectedRange((prev) =>
-      Math.abs(value - selectedRange[0]) <= Math.abs(value - selectedRange[1])
+      Math.abs(value - selectedRange[0]) <
+      Math.abs(value - Math.min(rangeBoundary[1], selectedRange[1]))
         ? [value, prev[1]]
         : [prev[0], value]
     );
@@ -58,17 +68,27 @@ export default function Slider({
     };
   }, [thumbDiameter]);
   const dif = rangeBoundary[1] - rangeBoundary[0];
+  // TODO: clean up this mess
+  // Math.max(Math.min(selectedRange[0], rangeBoundary[1]), rangeBoundary[0])...
+  // 1. Math.min(selectedRange[0], rangeBoundary[1]) is to avoid right overflow
+  // 2. Math.max([1.], rangeBoundary[0]) is to avoid left overflow
   const marginLeft =
     thumbDiameter +
-    ((Math.min(selectedRange[0], rangeBoundary[1]) - rangeBoundary[0]) / dif) *
+    ((Math.max(Math.min(selectedRange[0], rangeBoundary[1]), rangeBoundary[0]) -
+      rangeBoundary[0]) /
+      dif) *
       usefulWidth;
-  const fillWidth =
+  let fillWidth =
     selectedRange[0] <= selectedRange[1]
       ? ((Math.min(selectedRange[1], rangeBoundary[1]) -
           Math.max(selectedRange[0], rangeBoundary[0])) /
           dif) *
         usefulWidth
       : 0;
+  fillWidth = Math.min(
+    Math.max(0, fillWidth),
+    usefulWidth - (marginLeft - thumbDiameter)
+  ); // Making sure that fillWidth doesn't overflow
 
   /**
    * Barchart bar setup
@@ -89,8 +109,12 @@ export default function Slider({
   const { cntPerInterval, minPerInterval, maxPerInterval, cntMax }: BarStats =
     useMemo(() => {
       const cnt: number[] = Array(BAR_COUNT).fill(0);
-      const min: number[] = Array(BAR_COUNT).fill(Infinity);
-      const max: number[] = Array(BAR_COUNT).fill(-Infinity);
+      const min: number[] = Array(BAR_COUNT).fill(
+        initialListingState.filterBy.priceRange[1]
+      );
+      const max: number[] = Array(BAR_COUNT).fill(
+        initialListingState.filterBy.priceRange[0]
+      );
 
       data.forEach((d) => {
         const idx = Math.min(
@@ -106,7 +130,7 @@ export default function Slider({
         cntPerInterval: cnt,
         minPerInterval: min,
         maxPerInterval: max,
-        cntMax: Math.max(...cnt),
+        cntMax: Math.max(...cnt, 1),
       };
     }, [data, rangeBoundary]);
 
@@ -116,7 +140,7 @@ export default function Slider({
 
   return (
     <div className={styles.container}>
-      <div className={styles.barchartContainer}>
+      <div className={styles.barchartContainer} style={{ height: MAX_HEIGHT }}>
         {cntPerInterval.map((count, i) => {
           const height = (MAX_HEIGHT * count) / cntMax;
           const inRange = isBarInRange(
@@ -136,7 +160,11 @@ export default function Slider({
           );
         })}
       </div>
-      <div className={styles.sliderContainer} ref={sliderRef}>
+      <div
+        className={styles.sliderContainer}
+        ref={sliderRef}
+        onMouseUp={onBlur}
+      >
         <div className={styles.sliderTracker} />
         <div
           className={styles.activeSliderTrack}
