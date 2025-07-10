@@ -8,12 +8,19 @@ import Listings from '../components/listing/Listings/Listings';
 import {
   initialListingState,
   listingReducer,
+  type FilterByOptions,
 } from '../reducers/listingReducer';
 import type { Hotel } from '../../../types/Hotel';
 import type { Price, PriceResponse } from '../../../types/Price';
 import { usePollingAsync } from '../hooks/usePollingAsync';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import type { AmenityKey } from '../constants/amenities';
+import { usePricedHotels } from '../hooks/hotels/usePricedHotels';
+import { useFilteredHotels } from '../hooks/hotels/useFilteredHotels';
 
 export default function ListingPage() {
+  const navigate = useNavigate();
+
   const [userDest, setUserDest] = useState<string>('');
   const [stayDates, setStayDates] = useState<StayDatesState>({
     startDate: null,
@@ -46,12 +53,12 @@ export default function ListingPage() {
     }
     return data.completed;
   }, []);
-  // usePollingAsync(fetchPrice, 5000);
+  usePollingAsync(fetchPrice, 5000);
 
   const fetchHotel = useCallback(async () => {
     console.log('fetching hotel');
-    setHotels(INIT_HOTELS);
-    return;
+    // setHotels(INIT_HOTELS);
+    // return;
     const response = await fetch(`/api/hotel/query/RsBU`);
     const data: Hotel[] = await response.json();
     setHotels(data);
@@ -61,19 +68,78 @@ export default function ListingPage() {
     fetchHotel();
   }, []);
 
-  console.log(hotels);
-  console.log(prices);
+  // Stitch, filter, and sort the hotels here
+  const hotelsWithPrice = usePricedHotels(hotels, prices);
+  const filteredHotels = useFilteredHotels(
+    hotelsWithPrice,
+    listingState.filterBy
+  );
 
-  const hotelsWithPrice = useMemo(() => {
-    // TODO: Enhance the algorithm
-    return INIT_HOTELS;
-    console.log('trying to stitch hotel + price...');
-    return prices.flatMap((price) => {
-      const hotel = hotels.find((h) => h.id === price.id);
-      return hotel ? [{ ...hotel, ...price }] : [];
+  // console.log(hotels);
+  // console.log(prices);
+  // console.log(hotelsWithPrice);
+
+  /**
+   * Synchronize URL query parameters with internal filter state.
+   *
+   * There are two responsibilities:
+   * 1. On first load (component mount), read the current URL's query parameters
+   *    and populate `listingState.filterBy` using them.
+   * 2. After URL has been processed, whenever `listingState.filterBy` changes,
+   *    reflect those changes in the URL without causing a page reload.
+   *
+   * Variables:
+   * - `processedUrlParam`: Indicates whether we've completed reading the URL params
+   *   and applied them to the filter state. Prevents overwriting the URL with default
+   *   values on initial render.
+   */
+  const [processedUrlParam, setProcessedUrlParam] = useState(false);
+  const [searchParams] = useSearchParams();
+  useEffect(() => {
+    Object.keys(listingState.filterBy).forEach((filterName) => {
+      const filterRaw = searchParams.get(filterName);
+      if (filterRaw) {
+        try {
+          const filterParsed = JSON.parse(filterRaw);
+          listingDispatch({
+            type: 'SET_FILTER',
+            payload: {
+              [filterName]: filterParsed,
+            },
+          });
+        } catch (e) {
+          console.warn(`Error parsing url param ${filterName}: ${filterRaw}`);
+        }
+      }
     });
-  }, [hotels, prices]);
-  console.log(hotelsWithPrice);
+
+    setProcessedUrlParam(true);
+  }, []);
+
+  useEffect(() => {
+    if (!processedUrlParam) {
+      return;
+    }
+    const searchParams = new URLSearchParams(location.search);
+    let hasChanged = false;
+
+    Object.entries(listingState.filterBy).forEach(([filterName, value]) => {
+      const currentParam = searchParams.get(filterName);
+      const valueString = JSON.stringify(value);
+
+      if (currentParam !== valueString) {
+        const key = filterName as keyof FilterByOptions;
+        searchParams.set(key, valueString);
+        hasChanged = true;
+      }
+    });
+
+    if (hasChanged) {
+      navigate(`${location.pathname}?${searchParams.toString()}`, {
+        replace: true,
+      });
+    }
+  }, [listingState, processedUrlParam]);
 
   return (
     <div className={styles.container}>
@@ -97,7 +163,7 @@ export default function ListingPage() {
             />
           </div>
           <div className={styles.listingSection}>
-            <Listings hotels={hotelsWithPrice} loading={loading} />
+            <Listings hotels={filteredHotels} loading={loading} />
           </div>
         </div>
       </div>
