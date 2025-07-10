@@ -54,7 +54,6 @@ export default function PriceRange({
     const inRange = filterMin >= rangeMin && filterMax <= rangeMax;
     setLastValidRange(rangeBoundary);
 
-    console.log(filterMin, filterMax, rangeMin, rangeMax, inRange);
     if (inRange) {
       setPriceRange(listingState.filterBy.priceRange);
     } else {

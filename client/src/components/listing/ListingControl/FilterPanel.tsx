@@ -48,7 +48,7 @@ export default function FilterPanel({
 
   const prices = hotels.map((h) => h.price);
   const rangeBoundary: [number, number] = prices.length
-    ? [Math.floor(Math.min(...prices)), Math.round(Math.max(...prices))]
+    ? [Math.floor(Math.min(...prices)), Math.ceil(Math.max(...prices))]
     : initialListingState.filterBy.priceRange;
 
   /**
