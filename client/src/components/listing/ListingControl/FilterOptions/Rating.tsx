@@ -1,21 +1,57 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from './rating.module.css';
+import type {
+  ListingAction,
+  ListingState,
+} from '../../../../reducers/listingReducer';
 
-export default function Rating({ groupId }: { groupId: number | string }) {
-  const [activeRatings, setActiveRatings] = useState<number[]>([]);
-  const ratings = [5, 4, 3, 2, 1];
+export default function Rating({
+  data,
+  groupId,
+  listingState,
+  listingDispatch,
+}: {
+  data: number[];
+  groupId: number | string;
+  listingState: ListingState;
+  listingDispatch: React.ActionDispatch<[action: ListingAction]>;
+}) {
+  const activeStars = listingState.filterBy.stars;
+  const ratings = [5, 4, 3, 2, 1, 0];
+  const [ratingCount, setRatingCount] = useState(Array(ratings.length).fill(0));
+
+  useEffect(() => {
+    setRatingCount(Array(ratings.length).fill(0));
+
+    data.forEach((d) => {
+      let idx = Math.floor(d);
+      idx = Math.max(0, idx);
+      idx = Math.min(ratingCount.length - 1, idx);
+
+      setRatingCount((prev) => {
+        const newCounts = [...prev];
+        newCounts[idx]++;
+        return newCounts;
+      });
+    });
+  }, [data]);
 
   function handleSelectRating(rating: number) {
-    setActiveRatings((prev) =>
-      prev.includes(rating)
-        ? prev.filter((p) => p !== rating)
-        : [...prev, rating]
-    );
+    const newStars = activeStars.includes(rating)
+      ? activeStars.filter((p) => p !== rating)
+      : [...activeStars, rating];
+
+    listingDispatch({
+      type: 'SET_FILTER',
+      payload: {
+        stars: newStars,
+      },
+    });
   }
 
   return (
     <div className={styles.container}>
-      {ratings.map((rating) => (
+      {ratings.map((rating, i) => (
         <div
           className={styles.row}
           key={`group-${groupId}row-${rating}`}
@@ -24,13 +60,13 @@ export default function Rating({ groupId }: { groupId: number | string }) {
           <label className={styles.inputContainer}>
             <input
               type='checkbox'
-              checked={activeRatings.includes(rating)}
+              checked={activeStars.includes(rating)}
               readOnly={true}
             />
             <span className={styles.checkmark} />
           </label>
           <div className={styles.stars}>
-            {[...ratings].reverse().map((star) => (
+            {[1, 2, 3, 4, 5].map((star) => (
               <img
                 key={`group-${groupId}-star-${rating}-${star}`}
                 src={`/listing/stars/star_${
@@ -40,7 +76,9 @@ export default function Rating({ groupId }: { groupId: number | string }) {
               />
             ))}
           </div>
-          <span className={styles.ratingCount}>(11)</span>
+          <span className={styles.ratingCount}>
+            ({ratingCount[ratings.length - 1 - i]})
+          </span>
         </div>
       ))}
     </div>
