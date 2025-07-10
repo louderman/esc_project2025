@@ -9,7 +9,7 @@
 
 .inputboxSection {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .inputbox {
@@ -33,6 +33,7 @@
 .inputbox > span {
   color: gray;
   padding-left: 10px;
+  user-select: none;
 }
 
 .inputGroup {
