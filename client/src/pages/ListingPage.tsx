@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import { useCallback, useEffect, useReducer, useState } from 'react';
 import SearchBar from '../components/listing/SearchBar/SearchBar';
 import styles from './listingpage.module.css';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
@@ -14,7 +14,6 @@ import type { Hotel } from '../../../types/Hotel';
 import type { Price, PriceResponse } from '../../../types/Price';
 import { usePollingAsync } from '../hooks/usePollingAsync';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import type { AmenityKey } from '../constants/amenities';
 import { usePricedHotels } from '../hooks/hotels/usePricedHotels';
 import { useFilteredHotels } from '../hooks/hotels/useFilteredHotels';
 
@@ -45,13 +44,22 @@ export default function ListingPage() {
 
   const fetchPrice = useCallback(async () => {
     console.log('fetching price');
-    const response = await fetch(`/api/hotel-price/query/RsBU`);
-    const data: PriceResponse = await response.json();
-    if (data.completed) {
-      setPrices(data.hotels);
-      setLoading((prev) => ({ ...prev, price: false }));
+    const controller = new AbortController();
+    const signal = controller.signal;
+    try {
+      const response = await fetch(`/api/hotel-price/query/RsBU`, { signal });
+      const data: PriceResponse = await response.json();
+      if (data.completed) {
+        setPrices(data.hotels);
+        setLoading((prev) => ({ ...prev, price: false }));
+      }
+      return data.completed;
+    } catch (err) {
+      if (err instanceof Error && err.name !== 'AbortError') {
+        console.error('Fetch hotel error: ', err);
+      }
+      return true; // stop polling if there is error
     }
-    return data.completed;
   }, []);
   usePollingAsync(fetchPrice, 5000);
 
@@ -59,10 +67,19 @@ export default function ListingPage() {
     console.log('fetching hotel');
     // setHotels(INIT_HOTELS);
     // return;
-    const response = await fetch(`/api/hotel/query/RsBU`);
-    const data: Hotel[] = await response.json();
-    setHotels(data);
-    setLoading((prev) => ({ ...prev, hotel: false }));
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    try {
+      const response = await fetch(`/api/hotel/query/RsBU`, { signal });
+      const data: Hotel[] = await response.json();
+      setHotels(data);
+      setLoading((prev) => ({ ...prev, hotel: false }));
+    } catch (err) {
+      if (err instanceof Error && err.name !== 'AbortError') {
+        console.error('Fetch hotel error: ', err);
+      }
+    }
   }, []);
   useEffect(() => {
     fetchHotel();
