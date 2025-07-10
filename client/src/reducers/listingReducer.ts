@@ -1,8 +1,11 @@
+import type { AmenityKey } from '../constants/amenities';
+
 export type SortByOptions = 'default' | 'price' | 'rating' | 'popularity';
 
 export type FilterByOptions = {
-  priceRange: [number | null, number | null];
-  stars: number | null;
+  priceRange: [number, number];
+  stars: number[];
+  amenities: AmenityKey[];
 };
 
 export type ListingState = {
@@ -16,8 +19,9 @@ export type ListingAction =
   | { type: 'RESET_FILTERS' };
 
 const initialFilterBy: FilterByOptions = {
-  priceRange: [null, null],
-  stars: null,
+  priceRange: [-1, 1000000],
+  stars: [],
+  amenities: [],
 };
 
 const initialSortBy: SortByOptions = 'default';
