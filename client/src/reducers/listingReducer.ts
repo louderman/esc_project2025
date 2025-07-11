@@ -1,6 +1,15 @@
 import type { AmenityKey } from '../constants/amenities';
 
-export type SortByOptions = 'default' | 'price' | 'rating' | 'popularity';
+export const SORT_OPTIONS = {
+  DEFAULT: 'default',
+  PRICE_ASC: 'price-asc',
+  PRICE_DESC: 'price-desc',
+  RATING_ASC: 'rating-asc',
+  RATING_DESC: 'rating-desc',
+  POPULARITY_ASC: 'popularity-asc',
+  POPULARITY_DESC: 'popularity-desc',
+} as const;
+export type SortByOptions = (typeof SORT_OPTIONS)[keyof typeof SORT_OPTIONS];
 
 export type FilterByOptions = {
   priceRange: [number, number];
