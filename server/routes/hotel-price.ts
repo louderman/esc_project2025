@@ -13,7 +13,7 @@ router.get('/query/:dest_id', async (req, res) => {
 
   const response = await fetch(url);
   const data: PriceResponse = await response.json();
-  console.log(data);
+  // console.log(data);
 
   res.send(data);
 });

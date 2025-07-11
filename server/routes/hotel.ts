@@ -13,7 +13,8 @@ router.get('/query/:dest_id', async (req, res) => {
 
   const response = await fetch(url);
   const data: Hotel[] = await response.json();
-  console.log(data);
+  // console.log(data);
+  console.log('called');
 
   res.send(data);
 });
