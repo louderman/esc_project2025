@@ -16,6 +16,7 @@ import { usePollingAsync } from '../hooks/usePollingAsync';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePricedHotels } from '../hooks/hotels/usePricedHotels';
 import { useFilteredHotels } from '../hooks/hotels/useFilteredHotels';
+import SortPanel from '../components/listing/ListingControl/SortPanel';
 
 export default function ListingPage() {
   const navigate = useNavigate();
@@ -182,6 +183,15 @@ export default function ListingPage() {
             />
           </div>
           <div className={styles.listingSection}>
+            <div className={styles.listingTopSection}>
+              <span className={styles.hotelCountText}>
+                <span>{filteredHotels.length}</span> hotels found
+              </span>
+              <SortPanel
+                listingState={listingState}
+                listingDispatch={listingDispatch}
+              />
+            </div>
             <Listings hotels={filteredHotels} loading={loading} />
           </div>
         </div>
