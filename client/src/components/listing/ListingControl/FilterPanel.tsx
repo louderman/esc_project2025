@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+// import { useMemo } from 'react';
 import type { Hotel } from '../../../../../types/Hotel';
 import type { Price } from '../../../../../types/Price';
 import {
@@ -21,12 +21,12 @@ export default function FilterPanel({
   listingState: ListingState;
   listingDispatch: React.ActionDispatch<[action: ListingAction]>;
 }) {
-  const testData = useMemo(() => {
-    return Array.from(
-      { length: 100 },
-      () => Math.round(Math.random() * 1000000) / 100
-    );
-  }, []);
+  // const testData = useMemo(() => {
+  //   return Array.from(
+  //     { length: 100 },
+  //     () => Math.round(Math.random() * 1000000) / 100
+  //   );
+  // }, []);
 
   function onResetFilters() {
     listingDispatch({

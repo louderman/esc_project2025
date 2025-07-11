@@ -17,7 +17,6 @@ export default function Listings({
   const [page, setPage] = useState(1);
   const isLoading = Object.values(loading).some((l) => l);
   const hasHotel = hotels.length > 0;
-  console.log(isLoading);
 
   useEffect(() => {
     function handleScroll() {
