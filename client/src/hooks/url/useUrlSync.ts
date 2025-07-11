@@ -66,8 +66,8 @@ export function useUrlSync({
           );
         }
       }
-      setProcessedUrlParam(true);
     }
+    setProcessedUrlParam(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
