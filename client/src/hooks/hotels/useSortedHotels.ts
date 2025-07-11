@@ -20,9 +20,23 @@ export function useSortedHotels(
         hotelsCopy.sort((a, b) => b.price - a.price);
         break;
       case SORT_OPTIONS.RATING_ASC:
-        hotelsCopy.sort((a, b) => a.rating - b.rating);
+        hotelsCopy.sort((a, b) => {
+          const aRating = a.categories.overall?.score ?? -1;
+          const bRating = b.categories.overall?.score ?? -1;
+          return aRating - bRating;
+        });
         break;
       case SORT_OPTIONS.RATING_DESC:
+        hotelsCopy.sort((a, b) => {
+          const aRating = a.categories.overall?.score ?? -1;
+          const bRating = b.categories.overall?.score ?? -1;
+          return bRating - aRating;
+        });
+        break;
+      case SORT_OPTIONS.STAR_ASC:
+        hotelsCopy.sort((a, b) => a.rating - b.rating);
+        break;
+      case SORT_OPTIONS.STAR_DESC:
         hotelsCopy.sort((a, b) => b.rating - a.rating);
         break;
     }

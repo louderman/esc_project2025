@@ -12,8 +12,10 @@ const SORT_OPTION_LABELS: Record<SortByOptions, string> = {
   [SORT_OPTIONS.DEFAULT]: 'Default',
   [SORT_OPTIONS.PRICE_ASC]: 'Price (Low to High)',
   [SORT_OPTIONS.PRICE_DESC]: 'Price (High to Low)',
-  [SORT_OPTIONS.RATING_ASC]: 'Rating (Low to High)',
-  [SORT_OPTIONS.RATING_DESC]: 'Rating (High to Low)',
+  [SORT_OPTIONS.RATING_ASC]: 'User rating (Low to High)',
+  [SORT_OPTIONS.RATING_DESC]: 'User rating (High to Low)',
+  [SORT_OPTIONS.STAR_ASC]: 'Star rating (Low to High)',
+  [SORT_OPTIONS.STAR_DESC]: 'Star rating (High to Low)',
 };
 
 export default function SortPanel({
