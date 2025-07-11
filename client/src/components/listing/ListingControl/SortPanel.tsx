@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import styles from './sortpanel.module.css';
-import Chevron from '../../../assets/chevron';
+import Chevron from '../../../assets/Chevron';
 import {
   SORT_OPTIONS,
   type ListingAction,
@@ -60,8 +60,7 @@ export default function SortPanel({
       <div
         className={styles.selectBox}
         ref={selectBoxRef}
-        onClick={handleOnClick}
-      >
+        onClick={handleOnClick}>
         <img src='/listing/sort.svg' alt='sort' />
         <div className={styles.sortByTextBox}>
           <span>Sort by: </span>
@@ -79,8 +78,7 @@ export default function SortPanel({
                 sortOption === listingState.sortBy ? styles.selectedItem : ''
               }`}
               key={`sortByOption-${i}`}
-              onClick={() => handleOnSelectOption(sortOption)}
-            >
+              onClick={() => handleOnSelectOption(sortOption)}>
               {SORT_OPTION_LABELS[sortOption]}
               {sortOption === listingState.sortBy && (
                 <div className={styles.checkmark} />
