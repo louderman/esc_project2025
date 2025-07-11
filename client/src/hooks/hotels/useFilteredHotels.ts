@@ -14,11 +14,13 @@ export function useFilteredHotels(
       const inPriceRange = h.price >= priceRange[0] && h.price <= priceRange[1];
       const hasStar =
         stars.length === 0 || stars.includes(Math.floor(h.rating));
-      const hasAmenity =
-        amenities.length === 0 ||
-        (Object.keys(h.amenities) as AmenityKey[]).some(
-          (a) => h.amenities[a] && amenities.includes(a)
-        );
+      const hasAmenity = amenities.every((a) =>
+        Object.keys(h.amenities).includes(a)
+      );
+      // amenities.length === 0 ||
+      // (Object.keys(h.amenities) as AmenityKey[]).every(
+      //   (a) => h.amenities[a] && amenities.includes(a)
+      // );
 
       return inPriceRange && hasStar && hasAmenity;
     });
