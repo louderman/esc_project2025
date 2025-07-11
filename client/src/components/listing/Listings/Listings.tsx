@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, type SetStateAction } from 'react';
 import type { Hotel } from '../../../../../types/Hotel';
 import ListingCard from './ListingCard';
 import styles from './listings.module.css';
@@ -8,13 +8,16 @@ import ListingCardSkeleton from './ListingCardSkeleton';
 const ITEMS_PER_PAGE = 10;
 
 export default function Listings({
+  page,
+  setPage,
   hotels,
   loading,
 }: {
+  page: number;
+  setPage: React.Dispatch<SetStateAction<number>>;
   hotels: (Hotel & Price)[];
   loading: { hotel: boolean; price: boolean };
 }) {
-  const [page, setPage] = useState(1);
   const isLoading = Object.values(loading).some((l) => l);
   const hasHotel = hotels.length > 0;
 
@@ -37,7 +40,7 @@ export default function Listings({
     }
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [page, hotels, loading]);
+  }, [page, hotels, loading, setPage]);
 
   return (
     <div className={styles.container}>

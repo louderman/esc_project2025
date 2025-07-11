@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import SearchBar from '../components/listing/SearchBar/SearchBar';
 import styles from './listingpage.module.css';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
@@ -42,6 +42,7 @@ export default function ListingPage() {
     price: true,
     hotel: true,
   });
+  const [page, setPage] = useState(1);
 
   const fetchPrice = useCallback(async () => {
     console.log('fetching price');
@@ -107,6 +108,19 @@ export default function ListingPage() {
     navigate,
   });
 
+  // Scroll to top and set page to 1 when listing control state is changed
+  const prevListingState = useRef(listingState);
+  useEffect(() => {
+    const listingStateChanged =
+      JSON.stringify(prevListingState.current) !== JSON.stringify(listingState);
+
+    if (listingStateChanged && page > 1) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setPage(1);
+    }
+    prevListingState.current = listingState;
+  }, [listingState, page]);
+
   return (
     <div className={styles.container}>
       <div className={styles.searchbarSection}>
@@ -138,7 +152,12 @@ export default function ListingPage() {
                 listingDispatch={listingDispatch}
               />
             </div>
-            <Listings hotels={sortedHotels} loading={loading} />
+            <Listings
+              hotels={sortedHotels}
+              loading={loading}
+              page={page}
+              setPage={setPage}
+            />
           </div>
         </div>
       </div>

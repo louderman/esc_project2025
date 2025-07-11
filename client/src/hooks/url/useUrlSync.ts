@@ -54,7 +54,6 @@ export function useUrlSync({
 
       try {
         const parsed = JSON.parse(rawValue);
-        console.log(key, key in FILTER_OPTIONS, parsed);
         if (key === 'sortBy') {
           listingDispatch({ type: 'SET_SORT', payload: parsed });
         } else if (key in FILTER_OPTIONS) {
