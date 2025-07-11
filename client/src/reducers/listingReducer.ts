@@ -6,8 +6,6 @@ export const SORT_OPTIONS = {
   PRICE_DESC: 'price-desc',
   RATING_ASC: 'rating-asc',
   RATING_DESC: 'rating-desc',
-  POPULARITY_ASC: 'popularity-asc',
-  POPULARITY_DESC: 'popularity-desc',
 } as const;
 export type SortByOptions = (typeof SORT_OPTIONS)[keyof typeof SORT_OPTIONS];
 
