@@ -37,7 +37,7 @@ export default function Listings({
     }
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [page, hotels]);
+  }, [page, hotels, loading]);
 
   return (
     <div className={styles.container}>

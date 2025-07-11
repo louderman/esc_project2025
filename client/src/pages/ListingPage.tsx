@@ -12,11 +12,12 @@ import {
 import type { Hotel } from '../../../types/Hotel';
 import type { Price, PriceResponse } from '../../../types/Price';
 import { usePollingAsync } from '../hooks/usePollingAsync';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { usePricedHotels } from '../hooks/hotels/usePricedHotels';
 import { useFilteredHotels } from '../hooks/hotels/useFilteredHotels';
 import SortPanel from '../components/listing/ListingControl/SortPanel';
 import { useSortedHotels } from '../hooks/hotels/useSortedHotels';
+import { useUrlSync } from '../hooks/url/useUrlSync';
 
 export default function ListingPage() {
   const navigate = useNavigate();
@@ -37,7 +38,6 @@ export default function ListingPage() {
     listingReducer,
     initialListingState
   );
-
   const [loading, setLoading] = useState({
     price: true,
     hotel: true,
@@ -100,93 +100,12 @@ export default function ListingPage() {
   // console.log(prices);
   // console.log(hotelsWithPrice);
 
-  /**
-   * Synchronize URL query parameters with internal filter state.
-   *
-   * There are two responsibilities:
-   * 1. On first load (component mount), read the current URL's query parameters
-   *    and populate `listingState.filterBy` using them.
-   * 2. After URL has been processed, whenever `listingState.filterBy` changes,
-   *    reflect those changes in the URL without causing a page reload.
-   *
-   * Variables:
-   * - `processedUrlParam`: Indicates whether we've completed reading the URL params
-   *   and applied them to the filter state. Prevents overwriting the URL with default
-   *   values on initial render.
-   */
-  const [processedUrlParam, setProcessedUrlParam] = useState(false);
-  const [searchParams] = useSearchParams();
-  useEffect(() => {
-    Object.keys(listingState.filterBy).forEach((filterName) => {
-      const filterRaw = searchParams.get(filterName);
-      if (filterRaw) {
-        try {
-          const filterParsed = JSON.parse(filterRaw);
-          listingDispatch({
-            type: 'SET_FILTER',
-            payload: {
-              [filterName]: filterParsed,
-            },
-          });
-        } catch (e) {
-          if (e instanceof Error) {
-            console.error(e);
-          }
-          console.warn(`Error parsing url param ${filterName}: ${filterRaw}`);
-        }
-      }
-    });
-
-    const sortRaw = searchParams.get('sortBy');
-    if (sortRaw) {
-      try {
-        const sortParsed = JSON.parse(sortRaw);
-        listingDispatch({
-          type: 'SET_SORT',
-          payload: sortParsed,
-        });
-      } catch (e) {
-        if (e instanceof Error) {
-          console.error(e);
-        }
-      }
-    }
-
-    setProcessedUrlParam(true);
-    // We just want to get the parameters from URL once (on first load), disabling warning here
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!processedUrlParam) {
-      return;
-    }
-    const searchParams = new URLSearchParams(location.search);
-    let hasChanged = false;
-
-    Object.entries(listingState.filterBy).forEach(([filterName, value]) => {
-      const currentParam = searchParams.get(filterName);
-      const filterStateString = JSON.stringify(value);
-
-      if (currentParam !== filterStateString) {
-        searchParams.set(filterName, filterStateString);
-        hasChanged = true;
-      }
-    });
-
-    const sortbyStateString = JSON.stringify(listingState.sortBy);
-    const currentParam = searchParams.get('sortBy');
-    if (currentParam !== sortbyStateString) {
-      searchParams.set('sortBy', sortbyStateString);
-      hasChanged = true;
-    }
-
-    if (hasChanged) {
-      navigate(`${location.pathname}?${searchParams.toString()}`, {
-        replace: true,
-      });
-    }
-  }, [listingState, processedUrlParam, navigate]);
+  // Sync listing control states with URL, and vice-versa
+  useUrlSync({
+    listingState,
+    listingDispatch,
+    navigate,
+  });
 
   return (
     <div className={styles.container}>
