@@ -8,6 +8,8 @@ export default function ListingCard({
 }: {
   hotel: Hotel & Partial<Price>;
 }) {
+  const userRating = hotel.categories.overall?.score;
+
   return (
     <div className={styles.container}>
       {hotel.imageCount > 0 ? (
@@ -40,6 +42,7 @@ export default function ListingCard({
                 key={`${hotel.id}-star-${i}`}
               />
             ))}
+            {hotel.rating > 0 && <span>hotel</span>}
           </div>
           <div className={styles.amenitiesSection}>
             {Object.keys(hotel.amenities)
@@ -69,6 +72,16 @@ export default function ListingCard({
               }) ?? '...'}
             </span>
             <span className={styles.stayInfoText}>1 room, 1 night</span>
+            <div className={styles.userRatingBox}>
+              <span className={styles.userRatingText}>Rating</span>
+              <div
+                className={`${styles.userRatingNumber} ${
+                  (userRating === undefined || userRating === null) &&
+                  styles.noRating
+                }`}>
+                {userRating ? (userRating / 10).toFixed(1) : '-'}
+              </div>
+            </div>
           </div>
           <button className={styles.viewButton}>View</button>
         </div>
