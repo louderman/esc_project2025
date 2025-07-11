@@ -9,10 +9,16 @@ export const SORT_OPTIONS = {
 } as const;
 export type SortByOptions = (typeof SORT_OPTIONS)[keyof typeof SORT_OPTIONS];
 
+export const FILTER_OPTIONS = {
+  priceRange: 'priceRange',
+  stars: 'stars',
+  amenities: 'amenities',
+} as const;
+
 export type FilterByOptions = {
-  priceRange: [number, number];
-  stars: number[];
-  amenities: AmenityKey[];
+  [FILTER_OPTIONS.priceRange]: [number, number];
+  [FILTER_OPTIONS.stars]: number[];
+  [FILTER_OPTIONS.amenities]: AmenityKey[];
 };
 
 export type ListingState = {
