@@ -13,4 +13,5 @@
   position: absolute;
   bottom: -13px;
   transform: translateY(100%);
+  z-index: 99;
 }
