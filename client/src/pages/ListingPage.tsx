@@ -49,8 +49,13 @@ export default function ListingPage() {
     const controller = new AbortController();
     const signal = controller.signal;
     try {
-      const response = await fetch(`/api/hotel-price/query/RsBU`, { signal });
-      const data: PriceResponse = await response.json();
+      const response = await fetch(`/api/hotel-price/query/S60X`, { signal });
+      const data: PriceResponse | null = await response.json();
+      if (data === null) {
+        setLoading((prev) => ({ ...prev, price: false }));
+        return true;
+      }
+
       if (data.completed) {
         setPrices(data.hotels);
       }
@@ -64,7 +69,7 @@ export default function ListingPage() {
       return true; // stop polling if there is error
     }
   }, []);
-  usePollingAsync(fetchPrice, 5000);
+  usePollingAsync(fetchPrice, 2000);
 
   useEffect(() => {
     const fetchHotel = async () => {
@@ -75,8 +80,13 @@ export default function ListingPage() {
       const signal = controller.signal;
 
       try {
-        const response = await fetch(`/api/hotel/query/RsBU`, { signal });
+        const response = await fetch(`/api/hotel/query/S60X`, { signal });
         const data: Hotel[] = await response.json();
+        if (data === null) {
+          setLoading((prev) => ({ ...prev, hotel: false }));
+          return;
+        }
+
         setHotels(data);
       } catch (err) {
         if (err instanceof Error && err.name !== 'AbortError') {
