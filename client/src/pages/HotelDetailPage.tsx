@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import type { Hotel } from '/Users/mandarjoshi/Desktop/SUTD-Term-5/ElementsOfSoftwareConstruction/ProjectStuff/esc_project2025/types/Hotel.ts';
 import type { PriceResponse } from '/Users/mandarjoshi/Desktop/SUTD-Term-5/ElementsOfSoftwareConstruction/ProjectStuff/esc_project2025/types/Price.ts';
-import '/Users/mandarjoshi/Desktop/SUTD-Term-5/ElementsOfSoftwareConstruction/ProjectStuff/esc_project2025/client/src/pages/HotelDetailPage.css';
+import './HotelDetailPage.css';
 
 type HotelParams = {
   hotelId: string;
@@ -10,6 +10,7 @@ type HotelParams = {
 
 export default function HotelDetailPage() {
   const { hotelId } = useParams<HotelParams>();
+  const navigate = useNavigate();
   const [hotel, setHotel] = useState<Hotel | null>(null);
   const [prices, setPrices] = useState<PriceResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -83,6 +84,10 @@ export default function HotelDetailPage() {
 
   return (
     <div className="hotel-detail-container">
+      <button onClick={() => navigate(-1)} className="back-button">
+        ← Back to Hotels
+      </button>
+
       {/* Header with hotel name and rating */}
       <header className="hotel-header">
         <h1>{hotel.name}</h1>
