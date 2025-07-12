@@ -10,11 +10,15 @@ import { initialListingState } from '../../../../../reducers/listingReducer';
 
 export default function Slider({
   data,
+  setHoverCloserTo,
   selectedRange,
   setSelectedRange,
   onBlur,
 }: {
   data: number[];
+  setHoverCloserTo: React.Dispatch<
+    React.SetStateAction<'left' | 'right' | null>
+  >;
   selectedRange: [number, number];
   setSelectedRange: React.Dispatch<SetStateAction<[number, number]>>;
   onBlur: () => void;
@@ -36,6 +40,27 @@ export default function Slider({
         : [prev[0], value]
     );
   }
+  function handleMouseMove(ev: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+    const rect = sliderRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const hoverX = ev.clientX - rect.left;
+    const sliderWidth = rect.width;
+
+    const [rangeMin, rangeMax] = rangeBoundary;
+    const [leftVal, rightVal] = selectedRange;
+
+    const valueToX = (val: number) =>
+      ((val - rangeMin) / (rangeMax - rangeMin)) * sliderWidth;
+
+    const leftX = valueToX(leftVal);
+    const rightX = valueToX(rightVal);
+
+    const distToLeft = Math.abs(hoverX - leftX);
+    const distToRight = Math.abs(hoverX - rightX);
+
+    setHoverCloserTo(distToLeft <= distToRight ? 'left' : 'right');
+  }
 
   /**
    * Double-thumbed slider setup
@@ -51,6 +76,7 @@ export default function Slider({
    * Note: active tracker is the pink portion in between two thumbs
    *
    */
+
   const sliderRef = useRef<HTMLDivElement>(null);
   const thumbDiameter = 14;
   const [usefulWidth, setUsefulWidth] = useState(0);
@@ -132,7 +158,7 @@ export default function Slider({
         maxPerInterval: max,
         cntMax: Math.max(...cnt, 1),
       };
-    }, [data, rangeBoundary]);
+    }, [data, rangeBoundary, dif]);
 
   /** Helper to check if a bar overlaps with selected range */
   const isBarInRange = (min: number, max: number, [low, high]: number[]) =>
@@ -164,7 +190,8 @@ export default function Slider({
         className={styles.sliderContainer}
         ref={sliderRef}
         onMouseUp={onBlur}
-      >
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setHoverCloserTo(null)}>
         <div className={styles.sliderTracker} />
         <div
           className={styles.activeSliderTrack}

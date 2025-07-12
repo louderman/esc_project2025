@@ -17,14 +17,16 @@
   flex-direction: column;
   flex: 1;
   width: 100px;
+  box-sizing: border-box;
   position: relative;
   border: 1px solid #dddddd;
   border-radius: 8px;
   padding-top: 5px;
   font-size: 0.75rem;
-  transition: border-color 0.2s;
+  transition: border-color 0.3s ease-out;
 }
 
+.inputbox.highlight,
 .inputbox:focus-within {
   border-color: #ffb800;
   border-width: 2px;

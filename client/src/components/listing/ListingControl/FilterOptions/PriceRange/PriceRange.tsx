@@ -33,6 +33,9 @@ export default function PriceRange({
   const [lastValidRange, setLastValidRange] = useState<[number, number]>(
     listingState.filterBy.priceRange
   );
+  const [hoverCloserTo, setHoverCloserTo] = useState<null | 'left' | 'right'>(
+    null
+  );
 
   /**
    * Syncs the price range state with the URL and available data boundaries.
@@ -75,13 +78,21 @@ export default function PriceRange({
 
       setPriceRange([clampedMin, clampedMax]);
     }
-  }, [rangeMin, rangeMax, filterMin, filterMax]);
+  }, [
+    rangeMin,
+    rangeMax,
+    filterMin,
+    filterMax,
+    listingDispatch,
+    listingState.filterBy.priceRange,
+    rangeBoundary,
+  ]);
 
   function handleChangePrice(ev: React.ChangeEvent<HTMLInputElement>) {
     const name = ev.currentTarget.name;
-    const input = ev.currentTarget;
+    // const input = ev.currentTarget;
     // TODO: Fix cursor problem in input element
-    const cursorPos = input.selectionStart ?? 0;
+    // const cursorPos = input.selectionStart ?? 0;
 
     let value = parseFloat(ev.currentTarget.value.replace(/[^0-9.]/g, ''));
     value = Math.floor(value * 100) / 100;
@@ -127,11 +138,15 @@ export default function PriceRange({
           data={data}
           selectedRange={priceRange}
           setSelectedRange={setPriceRange}
+          setHoverCloserTo={setHoverCloserTo}
           onBlur={handleSetPrice}
         />
       </div>
       <div className={styles.inputboxSection}>
-        <label className={styles.inputbox}>
+        <label
+          className={`${styles.inputbox} ${
+            hoverCloserTo === 'left' ? styles.highlight : ''
+          }`}>
           <span>Min price</span>
           <div className={styles.inputGroup}>
             <span>$</span>
@@ -146,7 +161,10 @@ export default function PriceRange({
             />
           </div>
         </label>
-        <label className={styles.inputbox}>
+        <label
+          className={`${styles.inputbox} ${
+            hoverCloserTo === 'right' ? styles.highlight : ''
+          }`}>
           <span>Max price</span>
           <div className={styles.inputGroup}>
             <span>$</span>
