@@ -3,137 +3,71 @@ export default function BookingConfirmationPage() {
   return <div>Home Page</div>;
 }
 */
-import React, { useState } from 'react';
+//import React from 'react';
 import './bookingconfirmationpage.css';
 
-type RoomType = '' | 'single' | 'double' | 'suite';
+export default function BookingConfirmation() {
+  return (
+    <div className="booking-page" >
+      <div className="booking-box" >
+        <h1 className="booking-title" style={{ marginBottom: '1rem', marginTop: '1rem' }}>Booking Confirmed!</h1>
+        <p className="booking-subtitle">
+          We are pleased to inform you that your booking is successful!
+        </p>
+        <hr className="divider" style={{ marginBottom: '3rem' }}/>
 
-const App: React.FC = () => {
-  const [name, setName] = useState('');
-  const [checkin, setCheckin] = useState('');
-  const [checkout, setCheckout] = useState('');
-  const [roomType, setRoomType] = useState<RoomType>('');
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+        <div className="details-title">Booking Details</div>
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setMessage('');
+        <div className="details-grid">
+          <div className="detail-item">
+            <div className="label">Booking ID</div>
+            <div className="value">1211</div>
+          </div>
+          <div className="detail-item">
+            <div className="label">Check-in Date</div>
+            <div className="value">20th May 2025</div>
+          </div>
+          <div className="detail-item">
+            <div className="label">Check-out Date</div>
+            <div className="value">22th May 2025</div>
+          </div>
+          <div className="detail-item">
+            <div className="label">Total</div>
+            <div className="value">$622</div>
+          </div>
+          <div className="detail-item">
+            <div className="label">Status</div>
+            <div className="value confirmed">Confirmed</div>
+          </div > 
+        </div >
 
-    if (!name || !checkin || !checkout || !roomType) {
-      setError('Please fill in all fields.');
-      return;
-    }
+        <div className="room-detail">
+          <p className="label" style={{ marginBottom: '1rem', marginTop: '2.5rem' }}>Details:</p>
+          <p className="value bold"> Standard Single Room</p>
+        </div >
+      </div>
 
-    if (checkout <= checkin) {
-      setError('Check-out date must be after check-in date.');
-      return;
-    }
-
-    setMessage(
-      `Thank you, ${name}! Your booking for a ${roomType} room from ${checkin} to ${checkout} is confirmed.`
-    );
-  };
-
-return (
-  <>
-    {/* First container: Booking form */}
-    <div className="container">
-      <h1>Hotel Booking Form</h1>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Name:
-          <input
-            type="text"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            required
+      <div className="hotel-section">
+        <div className="flex-row">
+          <img
+            src="/images/hotel.png"
+            alt="Hotel Room"
+            className="hotel-image"
           />
-        </label>
-        <label>
-          Check-in Date:
-          <input
-            type="date"
-            value={checkin}
-            onChange={e => setCheckin(e.target.value)}
-            required
-          />
-        </label>
-        <label>
-          Check-out Date:
-          <input
-            type="date"
-            value={checkout}
-            onChange={e => setCheckout(e.target.value)}
-            required
-          />
-        </label>
-        <label>
-          Room Type:
-          <select
-            value={roomType}
-            onChange={e => setRoomType(e.target.value as RoomType)}
-            required
-          >
-            <option value="">Select...</option>
-            <option value="single">Single</option>
-            <option value="double">Double</option>
-            <option value="suite">Suite</option>
-          </select>
-        </label>
-        <button type="submit">Book Now</button>
-      </form>
-      {error && <div className="error">{error}</div>}
-      {message && <div className="confirmation">{message}</div>}
-    </div>
-
-    <div className="container">
-      <div className="flex-row">
-        <img
-          src="/images/hotel.png"
-          alt="Hotel Room"
-          className="image"
-        />
-        <div className="text-content">
-          <h2>REVIEW BOOKING</h2>
-
-          <div className="booking-summary">
-            <div className="summary-item">
-              <strong>Check-in:</strong> {checkin}
+          <div className="text-content">
+            <div className="hotel-info">
+              <h2 className="hotel-name">
+                Oasia Resort Sentosa <br />
+                <span className="hotel-brand">By Far East Hospitality</span>
+              </h2>
+              <p className="hotel-address">
+                📍 23 Beach View Rd, Palawan Ridge <br />
+                Sentosa Island
+              </p>
             </div>
-            <div className="summary-item">
-              <strong>Check-out:</strong> {checkout}
-            </div>
-            <div className="summary-item">
-              <strong>Room Type:</strong> {roomType}
-            </div>
-            <div className="summary-item">
-              <strong>Guest Name:</strong> {name}
-            </div>
-
-            <h3 style={{ marginBottom: '2rem' }}>Oasia Resort Sentosa By Far East Hospitality</h3>
-            
-
-            <h3 style={{ marginBottom: '1rem' }}>SGD 311/night</h3>
-            
-
-            <h3>What's Included</h3>
-            <ul>
-              <li>Luxurious Accommodations</li>
-              <li>Free Wi-Fi</li>
-              <li>Complimentary Breakfast</li>
-              <li>Access to the Pool and Spa</li>
-            </ul>
           </div>
         </div>
       </div>
     </div>
-
-
-  </>
-);
-
-};
-
-export default App;
+  );
+}
