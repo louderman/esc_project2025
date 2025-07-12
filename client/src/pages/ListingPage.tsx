@@ -54,14 +54,14 @@ export default function ListingPage() {
       if (data.completed) {
         setPrices(data.hotels);
       }
+      setLoading((prev) => ({ ...prev, price: !data.completed }));
       return data.completed;
     } catch (err) {
       if (err instanceof Error && err.name !== 'AbortError') {
         console.error('Fetch hotel error: ', err);
       }
-      return true; // stop polling if there is error
-    } finally {
       setLoading((prev) => ({ ...prev, price: false }));
+      return true; // stop polling if there is error
     }
   }, []);
   usePollingAsync(fetchPrice, 5000);
