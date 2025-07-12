@@ -55,10 +55,10 @@ export default function PriceRange({
    */
   useEffect(() => {
     const inRange = filterMin >= rangeMin && filterMax <= rangeMax;
-    setLastValidRange(rangeBoundary);
 
     if (inRange) {
       setPriceRange(listingState.filterBy.priceRange);
+      setLastValidRange(listingState.filterBy.priceRange);
     } else {
       const clampedMin = Math.max(Math.min(filterMin, rangeMax), rangeMin);
       const clampedMax = Math.min(filterMax, rangeMax);
@@ -75,7 +75,7 @@ export default function PriceRange({
           },
         });
       }
-
+      setLastValidRange([clampedMin, clampedMax]);
       setPriceRange([clampedMin, clampedMax]);
     }
   }, [
@@ -85,18 +85,13 @@ export default function PriceRange({
     filterMax,
     listingDispatch,
     listingState.filterBy.priceRange,
-    rangeBoundary,
   ]);
 
   function handleChangePrice(ev: React.ChangeEvent<HTMLInputElement>) {
     const name = ev.currentTarget.name;
-    // const input = ev.currentTarget;
-    // TODO: Fix cursor problem in input element
-    // const cursorPos = input.selectionStart ?? 0;
 
-    let value = parseFloat(ev.currentTarget.value.replace(/[^0-9.]/g, ''));
+    let value = parseFloat(ev.currentTarget.value.replace(/[^0-9]/g, ''));
     value = Math.floor(value * 100) / 100;
-    console.log(value);
     if (isNaN(value)) value = 0;
 
     setPriceRange((prev) => {
@@ -114,12 +109,12 @@ export default function PriceRange({
   }
 
   function handleSetPrice() {
-    if (
-      priceRange[0] > priceRange[1] ||
-      priceRange[0] < rangeMin ||
-      priceRange[1] > rangeMax
-    ) {
+    if (priceRange[0] > priceRange[1]) {
       setPriceRange(lastValidRange);
+    } else if (priceRange[0] < rangeMin) {
+      setPriceRange((prev) => [rangeBoundary[0], prev[1]]);
+    } else if (priceRange[1] > rangeMax) {
+      setPriceRange((prev) => [prev[0], rangeBoundary[1]]);
     } else {
       listingDispatch({
         type: 'SET_FILTER',
@@ -155,9 +150,7 @@ export default function PriceRange({
               name='min'
               onChange={handleChangePrice}
               onBlur={handleSetPrice}
-              value={priceRange[0].toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+              value={priceRange[0]}
             />
           </div>
         </label>
@@ -173,9 +166,7 @@ export default function PriceRange({
               name='max'
               onChange={handleChangePrice}
               onBlur={handleSetPrice}
-              value={priceRange[1].toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+              value={priceRange[1]}
             />
           </div>
         </label>
