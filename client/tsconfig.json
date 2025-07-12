@@ -7,8 +7,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@types/*": ["../types/*"]
+      "types": ["vite/client", "node"]
     },
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
   }
 }

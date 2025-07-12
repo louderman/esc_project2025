@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import type { Hotel } from '@types/Hotel';
-import type { PriceResponse } from '@types/Price';
-import './HotelDetailPage.css';
+import type { Hotel } from '/Users/mandarjoshi/Desktop/SUTD-Term-5/ElementsOfSoftwareConstruction/ProjectStuff/esc_project2025/types/Hotel.ts';
+import type { PriceResponse } from '/Users/mandarjoshi/Desktop/SUTD-Term-5/ElementsOfSoftwareConstruction/ProjectStuff/esc_project2025/types/Price.ts';
+import '/Users/mandarjoshi/Desktop/SUTD-Term-5/ElementsOfSoftwareConstruction/ProjectStuff/esc_project2025/client/src/pages/HotelDetailPage.css';
 
 type HotelParams = {
   hotelId: string;
