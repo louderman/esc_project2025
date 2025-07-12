@@ -6,12 +6,25 @@ import {
 } from '../../reducers/listingReducer';
 import type { Price } from '../../../../types/Price';
 
+/**
+ * useSortedHotels
+ *
+ * @param pricedHotels - The array of hotels (with prices) to be sorted.
+ * @param sortOptions - The selected sort criteria from predefined `SORT_OPTIONS` from `listingReducer`.
+ * @param useSearchRank - Whether to sort by `searchRank` before applying the sort option (default: true).
+ * @returns A memoized, sorted array of hotels.
+ */
 export function useSortedHotels(
   pricedHotels: (Hotel & Price)[],
-  sortOptions: SortByOptions
+  sortOptions: SortByOptions,
+  useSearchRank: boolean = true
 ) {
   const sortedHotels = useMemo(() => {
     const hotelsCopy = [...pricedHotels];
+    if (useSearchRank) {
+      hotelsCopy.sort((a, b) => a.searchRank - b.searchRank);
+    }
+
     switch (sortOptions) {
       case SORT_OPTIONS.PRICE_ASC:
         hotelsCopy.sort((a, b) => a.price - b.price);
@@ -41,7 +54,7 @@ export function useSortedHotels(
         break;
     }
     return hotelsCopy;
-  }, [pricedHotels, sortOptions]);
+  }, [pricedHotels, sortOptions, useSearchRank]);
 
   return sortedHotels;
 }
