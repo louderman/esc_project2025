@@ -14,12 +14,14 @@ export type SortByOptions = (typeof SORT_OPTIONS)[keyof typeof SORT_OPTIONS];
 export const FILTER_OPTIONS = {
   priceRange: 'priceRange',
   stars: 'stars',
+  guestRating: 'guestRating',
   amenities: 'amenities',
 } as const;
 
 export type FilterByOptions = {
   [FILTER_OPTIONS.priceRange]: [number, number];
   [FILTER_OPTIONS.stars]: number[];
+  [FILTER_OPTIONS.guestRating]: number;
   [FILTER_OPTIONS.amenities]: AmenityKey[];
 };
 
@@ -36,6 +38,7 @@ export type ListingAction =
 const initialFilterBy: FilterByOptions = {
   priceRange: [-1, 1000000],
   stars: [],
+  guestRating: 0,
   amenities: [],
 };
 
