@@ -18,13 +18,6 @@ export default function PriceRange({
   listingState: ListingState;
   listingDispatch: React.ActionDispatch<[action: ListingAction]>;
 }) {
-  /** TODO:
-    1. Fix cursor jumping to the end when invalid char / , is inserted.
-  */
-
-  // console.log(data);
-  // console.log(rangeBoundary);
-
   const [filterMin, filterMax] = listingState.filterBy.priceRange;
   const [rangeMin, rangeMax] = rangeBoundary;
   const [priceRange, setPriceRange] = useState<[number, number]>(
