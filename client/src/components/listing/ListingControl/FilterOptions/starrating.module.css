@@ -1,0 +1,86 @@
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.row:hover {
+  background-color: rgb(243, 243, 243);
+}
+
+.inputContainer {
+  display: block;
+  position: relative;
+  padding-left: 20px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  font-size: 22px;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Hide the native checkbox */
+.inputContainer > input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+/* The custom checkbox background */
+.checkmark {
+  position: absolute;
+  border: 2px solid rgb(206, 206, 206);
+  border-radius: 3px;
+  top: 0;
+  left: 0;
+  height: 18px;
+  width: 18px;
+}
+
+/* Checkmark tick */
+.checkmark::after {
+  content: '';
+  position: absolute;
+  display: none;
+  left: 5px;
+  top: 1px;
+  width: 4px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Show checkmark when checked */
+.inputContainer input:checked ~ .checkmark::after {
+  display: block;
+}
+
+.inputContainer input:checked ~ .checkmark {
+  background-color: rgb(252, 125, 75);
+  border-color: rgb(224, 130, 68);
+  border-width: 1px;
+}
+
+.stars {
+  display: flex;
+  gap: 5px;
+  user-select: none;
+}
+
+.ratingCount {
+  line-height: 10px;
+  color: rgb(88, 87, 87);
+  font-size: 0.7rem;
+  align-self: flex-end;
+}

@@ -8,9 +8,10 @@ import {
 } from '../../../reducers/listingReducer';
 import Amenities from './FilterOptions/Amenities';
 import PriceRange from './FilterOptions/PriceRange/PriceRange';
-import Rating from './FilterOptions/Rating';
+import StarRating from './FilterOptions/StarRating';
 import styles from './filterpanel.module.css';
 import { useFilteredHotels } from '../../../hooks/hotels/useFilteredHotels';
+import GuestRating from './FilterOptions/GuestRating';
 
 export default function FilterPanel({
   hotels,
@@ -74,18 +75,15 @@ export default function FilterPanel({
         <div className={styles.ratingSection}>
           <div className={styles.ratingSubsection}>
             <span>Star ratings</span>
-            <Rating
+            <StarRating
               data={hotelsFilteredWithoutRating.map((h) => h.rating)}
-              groupId={1}
               listingState={listingState}
               listingDispatch={listingDispatch}
             />
           </div>
           <div className={styles.ratingSubsection}>
             <span>Guest ratings</span>
-            <Rating
-              data={hotelsFilteredWithoutRating.map((h) => h.rating)}
-              groupId={2}
+            <GuestRating
               listingState={listingState}
               listingDispatch={listingDispatch}
             />

@@ -1,6 +1,9 @@
 .container {
+  width: 100%;
   display: flex;
   flex-direction: column;
+  flex-wrap: wrap;
+  gap: 5px;
 }
 
 .row {
@@ -27,7 +30,7 @@
   pointer-events: none;
 }
 
-/* Hide the native checkbox */
+/* Hide the native ratio button */
 .inputContainer > input {
   position: absolute;
   opacity: 0;
@@ -36,11 +39,11 @@
   width: 0;
 }
 
-/* The custom checkbox background */
+/* The custom radio button background */
 .checkmark {
   position: absolute;
-  border: 1px solid rgb(206, 206, 206);
-  border-radius: 3px;
+  border: 2px solid rgb(206, 206, 206);
+  border-radius: 50%;
   top: 0;
   left: 0;
   height: 18px;
@@ -52,34 +55,25 @@
   content: '';
   position: absolute;
   display: none;
-  left: 5px;
-  top: 1px;
-  width: 4px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
   height: 10px;
-  border: solid white;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
+  border-radius: 50%;
+  background-color: rgb(252, 125, 75);
 }
 
-/* Show checkmark when checked */
+/* Show checkmark when selected */
 .inputContainer input:checked ~ .checkmark::after {
   display: block;
 }
 
 .inputContainer input:checked ~ .checkmark {
-  background-color: rgb(252, 125, 75);
   border-color: rgb(224, 130, 68);
 }
 
-.stars {
-  display: flex;
-  gap: 5px;
-  user-select: none;
-}
-
-.ratingCount {
-  line-height: 10px;
-  color: rgb(88, 87, 87);
-  font-size: 0.7rem;
-  align-self: flex-end;
+.ratingText {
+  font-size: 0.9rem;
+  color: #6b6b6b;
 }

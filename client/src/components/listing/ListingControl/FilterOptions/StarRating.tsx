@@ -1,18 +1,16 @@
 import { useEffect, useState } from 'react';
-import styles from './rating.module.css';
+import styles from './starrating.module.css';
 import type {
   ListingAction,
   ListingState,
 } from '../../../../reducers/listingReducer';
 
-export default function Rating({
+export default function StarRating({
   data,
-  groupId,
   listingState,
   listingDispatch,
 }: {
   data: number[];
-  groupId: number | string;
   listingState: ListingState;
   listingDispatch: React.ActionDispatch<[action: ListingAction]>;
 }) {
@@ -34,7 +32,7 @@ export default function Rating({
         return newCounts;
       });
     });
-  }, [data]);
+  }, [data, ratingCount.length, ratings.length]);
 
   function handleSelectRating(rating: number) {
     const newStars = activeStars.includes(rating)
@@ -54,9 +52,8 @@ export default function Rating({
       {ratings.map((rating, i) => (
         <div
           className={styles.row}
-          key={`group-${groupId}row-${rating}`}
-          onClick={() => handleSelectRating(rating)}
-        >
+          key={`rating-row-${rating}`}
+          onClick={() => handleSelectRating(rating)}>
           <label className={styles.inputContainer}>
             <input
               type='checkbox'
@@ -68,7 +65,7 @@ export default function Rating({
           <div className={styles.stars}>
             {[1, 2, 3, 4, 5].map((star) => (
               <img
-                key={`group-${groupId}-star-${rating}-${star}`}
+                key={`rating-star-${rating}-${star}`}
                 src={`/listing/stars/star_${
                   star <= rating ? 'full' : 'empty'
                 }.svg`}
