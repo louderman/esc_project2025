@@ -1,6 +1,9 @@
 import styles from './navbar.module.css';
+import { useNavigate } from 'react-router-dom';
 
 export default function NavBar() {
+  const navigate = useNavigate();
+
   return (
     <div className={styles.container}>
       <div className={styles.box}>
@@ -13,11 +16,18 @@ export default function NavBar() {
         </div>
         <div className={styles.userSection}>
           <div className={styles.currencySection}>SGD En</div>
-          <button className={`${styles.accountButton} ${styles.loginButton}`}>
+
+          <button
+            className={`${styles.accountButton} ${styles.loginButton}`}
+            onClick={() => navigate('/login')}
+          >
             <img src='/navbar/user.svg' /> <span>Login</span>
           </button>
+
           <button
-            className={`${styles.accountButton} ${styles.registerButton}`}>
+            className={`${styles.accountButton} ${styles.registerButton}`}
+            onClick={() => navigate('/register')}
+          >
             <img src='/navbar/user.svg' />
             <span>Register</span>
           </button>
@@ -26,4 +36,3 @@ export default function NavBar() {
     </div>
   );
 }
-//
