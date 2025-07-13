@@ -1,60 +1,100 @@
-import express, { Request, Response, Router, RequestHandler } from 'express';
-import { pool } from '../database/db';
+// server/routes/hotel.ts
+import express, { Router, Request, Response, NextFunction } from 'express';
 import { Hotel } from '../../types/Hotel';
-import { RowDataPacket } from 'mysql2';
+import { type Destination } from '../../types/Destination';
+import { getByUid } from '../models/destination';
+import axios, { AxiosError } from 'axios';
+import { validateHotelParams } from '../validators/hotelValidator'; // Fixed import path
 
-interface Destination extends RowDataPacket {
-  id: number;
-  dest_id: string;
-  term: string;
-  lat: number;
-  lng: number;
-  type: string;
-  state: string | null;
+const router: Router = express.Router();
+
+interface HotelApiResponse {
+  destination: Destination;
+  hotels: Hotel[];
+  metadata?: {
+    hotelCount: number;
+    destinationType: string;
+  };
 }
 
-const router = express.Router();
+interface ErrorResponse {
+  error: string;
+  details?: string;
+  validationErrors?: Record<string, string>;
+}
 
-// 1. Properly typed handler that satisfies Express's RequestHandler
-const handleHotelRequest: RequestHandler<{ dest_id: string }> = async (req, res, next) => {
+// Simplified handler without explicit Response generic
+const getHotelsHandler = async (
+  req: Request<{ uid: string }>,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const { dest_id } = req.params;
+    const { uid } = validateHotelParams(req.params);
     
-    // 2. Type-safe MySQL query
-    const [destRows] = await pool.query<Destination[]>(
-      'SELECT * FROM destination WHERE dest_id = ?', 
-      [dest_id]
+    const destination = await getByUid(uid);
+    if (!destination) {
+      return res.status(404).json({ 
+        error: 'Destination not found',
+        details: `No destination found with UID: ${uid}`
+      } as ErrorResponse);
+    }
+
+    const response = await axios.get<Hotel[]>(
+      `https://hotelapi.loyalty.dev/api/hotels?destination_id=${uid}`,
+      {
+        timeout: 5000,
+        headers: { 
+          'Accept': 'application/json',
+          'Accept-Encoding': 'gzip,deflate,compress',
+        }
+      }
     );
-    
-    if (!Array.isArray(destRows) || destRows.length === 0) {
-      res.status(404).json({ error: 'Destination not found' });
-      return;
-    }
 
-    const apiUrl = `https://hotelapi.loyalty.dev/api/hotels?destination_id=${dest_id}`;
-    const apiResponse = await fetch(apiUrl);
-    
-    if (!apiResponse.ok) {
-      throw new Error(`API request failed: ${apiResponse.status}`);
-    }
-    
-    const hotelData = await apiResponse.json() as Hotel[];
+    const result: HotelApiResponse = {
+      destination,
+      hotels: response.data,
+      metadata: {
+        hotelCount: response.data.length,
+        destinationType: destination.type
+      }
+    };
 
-    res.json({
-      destination: destRows[0],
-      hotels: hotelData
-    });
-
+    return res.json(result);
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    res.status(500).json({ 
-      error: 'Internal server error',
-      details: errorMessage 
-    });
+    if (error instanceof Error && 'validationErrors' in error) {
+      const validationError = error as { validationErrors?: Record<string, string> };
+      return res.status(400).json({
+        error: 'Validation Error',
+        details: error.message,
+        ...(validationError.validationErrors && { 
+          validationErrors: validationError.validationErrors 
+        })
+      } as ErrorResponse);
+    }
+
+    if (axios.isAxiosError(error)) {
+      console.error('Hotel API Error:', error.code, error.message);
+      const statusCode = error.response?.status || 502;
+      return res.status(statusCode).json({
+        error: 'Hotel Service Error',
+        details: error.response?.data?.message || error.message
+      } as ErrorResponse);
+    }
+
+    console.error('Server Error:', error);
+    return res.status(500).json({
+      error: 'Internal Server Error',
+      ...(process.env.NODE_ENV === 'development' && {
+        details: error instanceof Error ? error.stack : 'Unknown error'
+      })
+    } as ErrorResponse);
   }
 };
 
-// 3. Register the route with proper typing
-router.get('/query/:dest_id', handleHotelRequest);
+// Register route with simplified typing
+router.get('/query/:uid', (req, res, next) => {
+  getHotelsHandler(req, res, next).catch(next);
+});
 
-export { router };
+export default router;

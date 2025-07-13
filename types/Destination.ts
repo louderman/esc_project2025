@@ -1,3 +1,4 @@
+// types/Destination.ts
 type Destination = {
   id: number;
   term: string;
