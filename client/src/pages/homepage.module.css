@@ -1,0 +1,22 @@
+/* .container {
+} */
+
+
+.searchbarSection {
+  display: grid;
+  justify-content: center;
+  align-items: center;
+  padding: 30px 20px;
+  height: 400px;
+  /*background-image: url('/common/mbs_blur.jpg');*/
+  background-color: #ffca0b;
+  background-size: cover;
+  background-position: 50% 60%;
+  background-repeat: no-repeat;
+}
+
+.headerQuestion {
+  color: white;
+  font-weight: bold;
+  font-size: 50px;
+}
