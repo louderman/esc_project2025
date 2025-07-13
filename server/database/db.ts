@@ -1,27 +1,15 @@
-import { createPool } from 'mysql2/promise';
+import { createPool } from 'mysql2/promise'; 
 
 const pool = createPool({
   host: 'back.r3po.org',
   port: 53042,
   user: 'pub',
   password: 'asbestosSnOrter8&',
-  database: 'hotel',
-}).promise();
-
-// const pool = createPool({
-//   host: 'localhost',  
-//   port: 3306,
-//   user: 'user',  
-//   password: 'password',
-//   database: 'hotel',
-// }).promise();
+  database: 'hotel'
+}); // Removed .promise() - it's not needed!
 
 async function cleanup() {
   await pool.end();
 }
 
 export { pool, cleanup };
-
-// CREATE USER 'your_username'@'your_host' IDENTIFIED BY 'your_password';
-// GRANT ALL PRIVILEGES ON db_name.* TO 'your_username'@'localhost';
-// FLUSH PRIVILEGES;

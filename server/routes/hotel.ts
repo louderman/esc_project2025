@@ -31,14 +31,17 @@ const handleHotelRequest: RequestHandler<{ dest_id: string }> = async (req, res,
       return;
     }
 
-  const url = `https://hotelapi.loyalty.dev/api/hotels?destination_id=${dest_id}`;
+    const url = `https://hotelapi.loyalty.dev/api/hotels?destination_id=${dest_id}`;
+    const response = await fetch(url);
+    const data: Hotel[] = await response.json();
+    console.log('called');
+    res.send(data);
+  } catch (error) {
+    next(error); // Proper error handling
+  }
+}; // Fixed: Removed extra ) and added proper closing }
 
-  const response = await fetch(url);
-  const data: Hotel[] = await response.json();
-  // console.log(data);
-  console.log('called');
-
-  res.send(data);
-});
+// Register the route
+router.get('/:dest_id', handleHotelRequest);
 
 export { router };
