@@ -1,6 +1,7 @@
-import { useNavigate } from 'react-router-dom';
+ a import { useNavigate } from 'react-router-dom';
 import type { Hotel } from '../../../../../types/Hotel';
 import type { Price } from '../../../../../types/Price';
+import type { StayDatesState } from '../SearchBar/DateInput/DateInput';
 import styles from './listingcard.module.css';
 
 const AMENITY_TO_SVG = {
@@ -21,13 +22,15 @@ const AMENITY_TO_SVG = {
 
 export default function ListingCard({
   hotel,
+  stayDates,
 }: {
   hotel: Hotel & Partial<Price>;
+  stayDates: StayDatesState;
 }) {
   const navigate = useNavigate();
 
   const handleView = () => {
-    navigate('/booking', { state: { hotel } });
+    navigate('/booking', { state: { hotel, stayDates } });
   };
 
   return (
