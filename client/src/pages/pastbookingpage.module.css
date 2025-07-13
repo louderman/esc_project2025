@@ -1,0 +1,96 @@
+.container {
+  /* Empty container following your ListingPage pattern */
+}
+
+.searchbarSection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px 20px;
+  background-image: url('/listing/lobby_tint.png');
+  background-size: cover;
+  background-position: 50% 60%;
+  background-repeat: no-repeat;
+}
+
+.mainSection {
+  padding: 30px 20px;
+}
+
+.mainBox {
+  display: flex;
+  flex-direction: column;
+  max-width: 1280px;
+  margin-inline: auto;
+  gap: 30px;
+}
+
+.headerSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.pageTitle {
+  color: rgb(39, 39, 39);
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  color: rgb(113, 113, 113);
+  font-size: 1rem;
+  margin: 0;
+}
+
+.contentSection {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+}
+
+.placeholderCard {
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  border: 2px dashed #e0e0e0;
+}
+
+.placeholderCard h2 {
+  color: rgb(39, 39, 39);
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+.placeholderCard p {
+  color: rgb(113, 113, 113);
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Responsive design following your existing patterns */
+@media (max-width: 768px) {
+  .searchbarSection {
+    padding: 20px 15px;
+  }
+  
+  .mainSection {
+    padding: 20px 15px;
+  }
+  
+  .pageTitle {
+    font-size: 1.5rem;
+  }
+  
+  .placeholderCard {
+    padding: 30px 20px;
+  }
+}
