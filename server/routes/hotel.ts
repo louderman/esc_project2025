@@ -1,17 +1,21 @@
-// server/routes/hotel.ts
 import express, { Router, Request, Response, NextFunction } from 'express';
 import { Hotel } from '../../types/Hotel';
 import { type Destination } from '../../types/Destination';
 import { getByUid } from '../models/destination';
 import axios, { AxiosError } from 'axios';
-import { validateHotelParams } from '../validators/hotelValidator'; // Fixed import path
+import { validateHotelParams } from '../validators/hotelValidator';
 
 const router: Router = express.Router();
 
+// Constants
+const HOTEL_API_BASE_URL = 'https://hotelapi.loyalty.dev/api/hotels';
+const API_TIMEOUT_MS = 5000;
+
+// Type Definitions
 interface HotelApiResponse {
   destination: Destination;
   hotels: Hotel[];
-  metadata?: {
+  metadata: {
     hotelCount: number;
     destinationType: string;
   };
@@ -23,76 +27,51 @@ interface ErrorResponse {
   validationErrors?: Record<string, string>;
 }
 
-// Simplified handler without explicit Response generic
+/**
+ * Fetches combined hotel and destination data
+ */
+const fetchHotelData = async (uid: string): Promise<HotelApiResponse> => {
+  const destination = await getByUid(uid);
+  if (!destination) {
+    throw new Error('Destination not found');
+  }
+
+  const response = await axios.get<Hotel[]>(`${HOTEL_API_BASE_URL}?destination_id=${uid}`, {
+    timeout: API_TIMEOUT_MS,
+    headers: {
+      'Accept': 'application/json',
+      'Accept-Encoding': 'gzip,deflate,compress'
+    }
+  });
+
+  return {
+    destination,
+    hotels: response.data,
+    metadata: {
+      hotelCount: response.data.length,
+      destinationType: destination.type
+    }
+  };
+};
+
+/**
+ * Route handler for hotel queries
+ */
 const getHotelsHandler = async (
   req: Request<{ uid: string }>,
-  res: Response,
+  res: Response<HotelApiResponse | ErrorResponse>,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
     const { uid } = validateHotelParams(req.params);
-    
-    const destination = await getByUid(uid);
-    if (!destination) {
-      return res.status(404).json({ 
-        error: 'Destination not found',
-        details: `No destination found with UID: ${uid}`
-      } as ErrorResponse);
-    }
-
-    const response = await axios.get<Hotel[]>(
-      `https://hotelapi.loyalty.dev/api/hotels?destination_id=${uid}`,
-      {
-        timeout: 5000,
-        headers: { 
-          'Accept': 'application/json',
-          'Accept-Encoding': 'gzip,deflate,compress',
-        }
-      }
-    );
-
-    const result: HotelApiResponse = {
-      destination,
-      hotels: response.data,
-      metadata: {
-        hotelCount: response.data.length,
-        destinationType: destination.type
-      }
-    };
-
-    return res.json(result);
-  } catch (error: unknown) {
-    if (error instanceof Error && 'validationErrors' in error) {
-      const validationError = error as { validationErrors?: Record<string, string> };
-      return res.status(400).json({
-        error: 'Validation Error',
-        details: error.message,
-        ...(validationError.validationErrors && { 
-          validationErrors: validationError.validationErrors 
-        })
-      } as ErrorResponse);
-    }
-
-    if (axios.isAxiosError(error)) {
-      console.error('Hotel API Error:', error.code, error.message);
-      const statusCode = error.response?.status || 502;
-      return res.status(statusCode).json({
-        error: 'Hotel Service Error',
-        details: error.response?.data?.message || error.message
-      } as ErrorResponse);
-    }
-
-    console.error('Server Error:', error);
-    return res.status(500).json({
-      error: 'Internal Server Error',
-      ...(process.env.NODE_ENV === 'development' && {
-        details: error instanceof Error ? error.stack : 'Unknown error'
-      })
-    } as ErrorResponse);
+    const result = await fetchHotelData(uid);
+    res.json(result);
+  } catch (error) {
+    next(error); // Pass errors to the central error handler
   }
 };
 
-// Register route with simplified typing
+// Route Definitions
 router.get('/query/:uid', (req, res, next) => {
   getHotelsHandler(req, res, next).catch(next);
 });
