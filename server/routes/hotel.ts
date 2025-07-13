@@ -31,17 +31,30 @@ const handleHotelRequest: RequestHandler<{ dest_id: string }> = async (req, res,
       return;
     }
 
-    const url = `https://hotelapi.loyalty.dev/api/hotels?destination_id=${dest_id}`;
-    const response = await fetch(url);
-    const data: Hotel[] = await response.json();
-    console.log('called');
-    res.send(data);
-  } catch (error) {
-    next(error); // Proper error handling
-  }
-}; // Fixed: Removed extra ) and added proper closing }
+    const apiUrl = `https://hotelapi.loyalty.dev/api/hotels?destination_id=${dest_id}`;
+    const apiResponse = await fetch(apiUrl);
+    
+    if (!apiResponse.ok) {
+      throw new Error(`API request failed: ${apiResponse.status}`);
+    }
+    
+    const hotelData = await apiResponse.json() as Hotel[];
 
-// Register the route
-router.get('/:dest_id', handleHotelRequest);
+    res.json({
+      destination: destRows[0],
+      hotels: hotelData
+    });
+
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: errorMessage 
+    });
+  }
+};
+
+// 3. Register the route with proper typing
+router.get('/query/:dest_id', handleHotelRequest);
 
 export { router };

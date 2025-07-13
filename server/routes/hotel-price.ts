@@ -5,13 +5,7 @@ const router = express.Router();
 router.get('/query/:dest_id', async (req, res) => {
   const dest_id = req.params.dest_id;
   if (!dest_id) {
-    res.send({
-      searchCompleted: null,
-      completed: true,
-      status: null,
-      currency: null,
-      hotels: [],
-    });
+    res.send([]);
     return;
   }
 
@@ -19,7 +13,7 @@ router.get('/query/:dest_id', async (req, res) => {
 
   const response = await fetch(url);
   const data: PriceResponse = await response.json();
-  // console.log(data);
+  console.log(data);
 
   res.send(data);
 });
