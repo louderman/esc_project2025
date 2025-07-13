@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import type { Hotel } from '../../../../../types/Hotel';
 import type { Price } from '../../../../../types/Price';
 import styles from './listingcard.module.css';
@@ -23,6 +24,12 @@ export default function ListingCard({
 }: {
   hotel: Hotel & Partial<Price>;
 }) {
+  const navigate = useNavigate();
+
+  const handleView = () => {
+    navigate('/booking', { state: { hotel } });
+  };
+
   return (
     <div className={styles.container}>
       {hotel.imageCount > 0 ? (
@@ -77,7 +84,7 @@ export default function ListingCard({
             </span>
             <span className={styles.stayInfoText}>1 room, 1 night</span>
           </div>
-          <button className={styles.viewButton}>View</button>
+          <button className={styles.viewButton} onClick={handleView}>View</button>
         </div>
       </div>
     </div>
