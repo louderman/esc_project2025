@@ -1,4 +1,4 @@
- a import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import type { Hotel } from '../../../../../types/Hotel';
 import type { Price } from '../../../../../types/Price';
 import type { StayDatesState } from '../SearchBar/DateInput/DateInput';
