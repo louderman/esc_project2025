@@ -1,17 +1,20 @@
 import { useEffect, useState } from 'react';
 import type { Hotel } from '../../../../../types/Hotel';
+import type { Price } from '../../../../../types/Price';
+import type { StayDatesState } from '../SearchBar/DateInput/DateInput';
 import ListingCard from './ListingCard';
 import styles from './listings.module.css';
-import type { Price } from '../../../../../types/Price';
 
 const ITEMS_PER_PAGE = 10;
 
 export default function Listings({
   hotels,
   loading,
+  stayDates,
 }: {
   hotels: (Hotel & Price)[];
   loading: { hotel: boolean; price: boolean };
+  stayDates: StayDatesState;
 }) {
   const [page, setPage] = useState(1);
 
@@ -39,7 +42,7 @@ export default function Listings({
   return (
     <div className={styles.container}>
       {hotels.slice(0, page * ITEMS_PER_PAGE).map((hotel) => (
-        <ListingCard key={`listing-card-${hotel.id}`} hotel={hotel} />
+        <ListingCard key={`listing-card-${hotel.id}`} hotel={hotel} stayDates={stayDates} />
       ))}
     </div>
   );
