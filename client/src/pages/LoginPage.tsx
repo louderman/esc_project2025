@@ -63,7 +63,7 @@ export default function LoginPage() {
       if (response.ok) {
         const data = await response.json();
         alert('Login successful!');
-        navigate('/home');
+        navigate('/booking');
       } else {
         const error = await response.json();
         alert(error.message || 'Login failed.');
