@@ -51,18 +51,6 @@
   margin: 0;
 }
 
-.pageTitle {
-  color: rgb(39, 39, 39);
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 10px;
-}
-
-.subtitle {
-  color: rgb(113, 113, 113);
-  font-size: 1rem;
-  margin: 0;
-}
 
 .contentSection {
   display: flex;
@@ -103,7 +91,11 @@
     padding: 20px 15px;
   }
   
-  .pageTitle {
+  .titleCard {
+    padding: 20px;
+  }
+  
+  .titleCard .pageTitle {
     font-size: 1.5rem;
   }
   
