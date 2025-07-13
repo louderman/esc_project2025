@@ -1,0 +1,17 @@
+.button {
+  color: #808080;
+  text-align: start;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.button.hasDate {
+  color: black;
+}
+
+.calendar {
+  position: absolute;
+  bottom: -13px;
+  transform: translateY(100%);
+  z-index: 99;
+}
