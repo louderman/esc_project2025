@@ -80,7 +80,7 @@ export default function LoginPage() {
         <h2 className={styles.title}>Sign in</h2>
 
         <form className={styles.form} onSubmit={handleSubmit}>
-          <label>Email or mobile phone number</label>
+          <label>Email</label>
           <input
             type="text"
             className={`${styles.input} ${emailError ? styles.invalid : ''}`}
@@ -92,7 +92,7 @@ export default function LoginPage() {
           />
           {emailError && <div className={styles.error}>{emailError}</div>}
 
-          <label>Your password</label>
+          <label>Password</label>
           <div className={styles.passwordWrapper}>
             <input
               type={passwordVisible ? 'text' : 'password'}
