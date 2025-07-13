@@ -10,7 +10,6 @@ import type { OccupancyState } from '../components/listing/SearchBar/GuestInput/
 export default function PastBookingPage() {
   const navigate = useNavigate();
   
-  // Basic state for the search bar (following your ListingPage pattern)
   const [userDest, setUserDest] = useState<string>('');
   const [stayDates, setStayDates] = useState<StayDatesState>({
     startDate: null,
@@ -24,7 +23,6 @@ export default function PastBookingPage() {
 
   return (
     <div className={styles.container}>
-      {/* Header section with search bar - similar to your ListingPage */}
       <section className={styles.searchbarSection}>
         <SearchBar
           userDest={userDest}
