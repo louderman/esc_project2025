@@ -9,11 +9,12 @@ router.get('/query/:dest_id', async (req, res) => {
     return;
   }
 
-  const url = `https://hotelapi.loyalty.dev/api/hotels?destination_id=RsBU`;
+  const url = `https://hotelapi.loyalty.dev/api/hotels?destination_id=${dest_id}`;
 
   const response = await fetch(url);
   const data: Hotel[] = await response.json();
-  console.log(data);
+  // console.log(data);
+  console.log('called');
 
   res.send(data);
 });

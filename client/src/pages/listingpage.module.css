@@ -1,12 +1,12 @@
-.container {
-}
+/* .container {
+} */
 
 .searchbarSection {
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 30px 20px;
-  background-image: url('/listing/lobby_tint.png');
+  background-image: url('/common/mbs_blur.png');
   background-size: cover;
   background-position: 50% 60%;
   background-repeat: no-repeat;
@@ -28,9 +28,25 @@
   flex-wrap: nowrap;
 }
 
-.filterSection {
-}
+/* .filterSection {
+} */
 
 .listingSection {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
   flex: 1;
+}
+
+.listingTopSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hotelCountText {
+  color: rgb(39, 39, 39);
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1rem;
 }

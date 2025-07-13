@@ -7,6 +7,7 @@ import { useCallback, useRef } from 'react';
  * @param callback - The async function to debounce
  * @param delay - Delay in milliseconds (default: 300ms)
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useDebounceAsync<T extends (...args: any[]) => Promise<any>>(
   callback: T,
   delay: number = 300

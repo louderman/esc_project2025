@@ -3,3 +3,19 @@
   flex-direction: column;
   gap: 20px;
 }
+
+.noHotelText {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 600;
+  color: gray;
+}
+
+.noHotelSubtext {
+  display: block;
+  width: 100%;
+  text-align: center;
+  color: gray;
+}

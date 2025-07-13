@@ -1,0 +1,78 @@
+.container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.row:hover {
+  background-color: rgb(243, 243, 243);
+}
+
+.inputContainer {
+  display: block;
+  position: relative;
+  padding-left: 20px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  font-size: 22px;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Hide the native ratio button */
+.inputContainer > input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+/* The custom radio button background */
+.checkmark {
+  position: absolute;
+  border: 2px solid rgb(206, 206, 206);
+  border-radius: 50%;
+  top: 0;
+  left: 0;
+  height: 18px;
+  width: 18px;
+}
+
+/* Checkmark tick */
+.checkmark::after {
+  content: '';
+  position: absolute;
+  display: none;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: rgb(252, 125, 75);
+}
+
+/* Show checkmark when selected */
+.inputContainer input:checked ~ .checkmark::after {
+  display: block;
+}
+
+.inputContainer input:checked ~ .checkmark {
+  border-color: rgb(224, 130, 68);
+}
+
+.ratingText {
+  font-size: 0.9rem;
+  color: #6b6b6b;
+}
