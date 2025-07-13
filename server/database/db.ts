@@ -1,5 +1,4 @@
-// const mysql = require('mysql2');
-import { createPool } from 'mysql2';
+import { createPool } from 'mysql2/promise';
 
 const pool = createPool({
   host: 'back.r3po.org',
@@ -7,14 +6,9 @@ const pool = createPool({
   user: 'pub',
   password: 'asbestosSnOrter8&',
   database: 'hotel',
-}).promise();
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
 
-async function cleanup() {
-  await pool.end();
-}
-
-export { pool, cleanup };
-
-// CREATE USER 'your_username'@'your_host' IDENTIFIED BY 'your_password';
-// GRANT ALL PRIVILEGES ON db_name.* TO 'your_username'@'localhost';
-// FLUSH PRIVILEGES;
+export { pool };

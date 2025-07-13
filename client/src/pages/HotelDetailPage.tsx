@@ -1,116 +1,178 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import type { Hotel } from '/Users/mandarjoshi/Desktop/SUTD-Term-5/ElementsOfSoftwareConstruction/ProjectStuff/esc_project2025/types/Hotel.ts';
-import type { PriceResponse } from '/Users/mandarjoshi/Desktop/SUTD-Term-5/ElementsOfSoftwareConstruction/ProjectStuff/esc_project2025/types/Price.ts';
+import type { Hotel } from '../../../types/Hotel';
+import type { PriceResponse, Price } from '../../../types/Price';
 import './HotelDetailPage.css';
+
+// Configure path aliases in tsconfig.json:
+// {
+//   "compilerOptions": {
+//     "baseUrl": ".",
+//     "paths": {
+//       "@types/*": ["../types/*"]
+//     }
+//   }
+// }
 
 type HotelParams = {
   hotelId: string;
 };
 
+type ApiResponse = {
+  hotel: Hotel;
+  prices: PriceResponse;
+};
+
 export default function HotelDetailPage() {
   const { hotelId } = useParams<HotelParams>();
   const navigate = useNavigate();
-  const [hotel, setHotel] = useState<Hotel | null>(null);
-  const [prices, setPrices] = useState<PriceResponse | null>(null);
+  const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const abortController = new AbortController();
+    const { signal } = abortController;
+
     const fetchHotelData = async () => {
       try {
         setLoading(true);
         setError(null);
         
-        if (!hotelId) {
-          throw new Error('Hotel ID is missing');
+        if (!hotelId?.trim()) {
+          throw new Error('Hotel ID is required');
         }
 
-        // Fetch hotel details
-        const hotelResponse = await fetch(`/api/hotel/query/${hotelId}`);
-        if (!hotelResponse.ok) throw new Error('Failed to fetch hotel details');
-        const hotelData = await hotelResponse.json() as Hotel[];
-        if (!hotelData?.length) throw new Error('Hotel not found');
-        setHotel(hotelData[0]);
+        const response = await fetch(`/api/hotel/combined/${hotelId}`, {
+          signal,
+          headers: {
+            'Accept': 'application/json',
+            'X-Request-Source': 'hotel-detail-page'
+          }
+        });
 
-        // Fetch prices
-        const priceResponse = await fetch(`/api/hotel-price/query/${hotelId}`);
-        if (!priceResponse.ok) throw new Error('Failed to fetch prices');
-        const priceData = await priceResponse.json() as PriceResponse;
-        setPrices(priceData);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Request failed: ${response.status} - ${errorText.slice(0, 100)}`);
+        }
 
+        const contentType = response.headers.get('content-type');
+        if (!contentType?.includes('application/json')) {
+          throw new Error(`Expected JSON response, got ${contentType}`);
+        }
+
+        const result = await response.json() as ApiResponse;
+
+        // Data validation
+        if (!result.hotel?.id || !result.prices?.hotels) {
+          throw new Error('Invalid data structure from server');
+        }
+
+        setData(result);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+        if (signal.aborted) return;
+        
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load hotel data';
+        setError(errorMessage);
+        console.error('Fetch error:', err);
       } finally {
-        setLoading(false);
+        if (!signal.aborted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchHotelData();
+
+    return () => {
+      abortController.abort();
+    };
   }, [hotelId]);
 
   if (loading) {
-    return <div className="loading">Loading hotel details...</div>;
+    return (
+      <div className="loading-state">
+        <div className="spinner"></div>
+        <p>Loading hotel details...</p>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="error">Error: {error}</div>;
+    return (
+      <div className="error-state">
+        <h3>Error Loading Hotel</h3>
+        <p>{error}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="retry-button"
+        >
+          Retry
+        </button>
+      </div>
+    );
   }
 
-  if (!hotel) {
-    return <div className="error">Hotel not found</div>;
+  if (!data) {
+    return <div className="error">No hotel data available</div>;
   }
 
-  // Helper function to render amenities
-  const renderAmenities = () => {
-    const amenities = [];
-    if (hotel.amenities?.airConditioning) amenities.push('Air Conditioning');
-    if (hotel.amenities?.businessCenter) amenities.push('Business Center');
-    if (hotel.amenities?.dryCleaning) amenities.push('Dry Cleaning');
-    if (hotel.amenities?.hairDryer) amenities.push('Hair Dryer');
-    if (hotel.amenities?.inHouseBar) amenities.push('Bar');
-    if (hotel.amenities?.inHouseDining) amenities.push('Restaurant');
-    if (hotel.amenities?.miniBarInRoom) amenities.push('Mini Bar');
-    if (hotel.amenities?.outdoorPool) amenities.push('Outdoor Pool');
-    if (hotel.amenities?.roomService) amenities.push('Room Service');
-    if (hotel.amenities?.sauna) amenities.push('Sauna');
-    if (hotel.amenities?.tVInRoom) amenities.push('TV');
-    if (hotel.amenities?.continentalBreakfast) amenities.push('Breakfast');
+  const { hotel, prices } = data;
 
-    return amenities.map((amenity, index) => (
-      <div key={index}>{amenity}</div>
-    ));
-  };
+  // Memoized amenities render
+  const amenities = [
+    { key: 'airConditioning', label: 'Air Conditioning' },
+    { key: 'businessCenter', label: 'Business Center' },
+    { key: 'dryCleaning', label: 'Dry Cleaning' },
+    { key: 'hairDryer', label: 'Hair Dryer' },
+    { key: 'inHouseBar', label: 'Bar' },
+    { key: 'inHouseDining', label: 'Restaurant' },
+    { key: 'miniBarInRoom', label: 'Mini Bar' },
+    { key: 'outdoorPool', label: 'Outdoor Pool' },
+    { key: 'roomService', label: 'Room Service' },
+    { key: 'sauna', label: 'Sauna' },
+    { key: 'tVInRoom', label: 'TV' },
+    { key: 'continentalBreakfast', label: 'Breakfast' }
+  ].filter(item => hotel.amenities?.[item.key as keyof typeof hotel.amenities])
+   .map((item, index) => (
+    <div key={`amenity-${index}`} className="amenity-item">
+      {item.label}
+    </div>
+  ));
 
   return (
     <div className="hotel-detail-container">
-      <button onClick={() => navigate(-1)} className="back-button">
+      <button 
+        onClick={() => navigate(-1)} 
+        className="back-button"
+        aria-label="Back to previous page"
+      >
         ← Back to Hotels
       </button>
 
-      {/* Header with hotel name and rating */}
       <header className="hotel-header">
         <h1>{hotel.name}</h1>
         {hotel.rating && (
-          <div className="rating">
+          <div className="rating" aria-label={`Rating: ${hotel.rating} out of 5`}>
             <span className="rating-value">{hotel.rating}</span>
             <span className="rating-max">/5</span>
           </div>
         )}
       </header>
 
-      {/* Main image gallery */}
-      {hotel.imgix_url && hotel.default_image_index !== undefined && hotel.image_details?.suffix && (
+      {hotel.imgix_url && (
         <div className="hotel-gallery">
-          <img 
-            src={`${hotel.imgix_url}${hotel.default_image_index}${hotel.image_details.suffix}`} 
-            alt={hotel.name} 
+          <img
+            src={`${hotel.imgix_url}${hotel.default_image_index || 0}${hotel.image_details?.suffix || ''}`}
+            alt={hotel.name}
             className="main-image"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/images/hotel-placeholder.jpg';
+            }}
           />
         </div>
       )}
 
-      {/* Hotel details section */}
       <section className="hotel-info">
         <div className="address">
           <h3>Address</h3>
@@ -122,85 +184,97 @@ export default function HotelDetailPage() {
           <p>{hotel.description || 'No description available.'}</p>
         </div>
 
-        {/* TrustYou scores if available */}
         {hotel.trustyou?.score && (
-          <div className="trustyou-scores">
-            <h3>Guest Ratings</h3>
-            <div className="scores-grid">
-              {hotel.trustyou.score.overall !== null && (
-                <div className="score-item">
-                  <span>Overall</span>
-                  <span>{hotel.trustyou.score.overall}/10</span>
-                </div>
-              )}
-              {hotel.trustyou.score.solo !== null && (
-                <div className="score-item">
-                  <span>Solo Travelers</span>
-                  <span>{hotel.trustyou.score.solo}/10</span>
-                </div>
-              )}
-              {hotel.trustyou.score.couple !== null && (
-                <div className="score-item">
-                  <span>Couples</span>
-                  <span>{hotel.trustyou.score.couple}/10</span>
-                </div>
-              )}
-              {hotel.trustyou.score.family !== null && (
-                <div className="score-item">
-                  <span>Families</span>
-                  <span>{hotel.trustyou.score.family}/10</span>
-                </div>
-              )}
-              {hotel.trustyou.score.business !== null && (
-                <div className="score-item">
-                  <span>Business</span>
-                  <span>{hotel.trustyou.score.business}/10</span>
-                </div>
-              )}
-            </div>
-          </div>
+          <GuestScores scores={hotel.trustyou.score} />
         )}
       </section>
 
-      {/* Amenities section */}
       <section className="amenities">
         <h3>Amenities</h3>
         <div className="amenities-grid">
-          {renderAmenities()}
+          {amenities}
         </div>
       </section>
 
-      {/* Prices section */}
-      <section className="prices">
-        <h3>Available Rooms</h3>
-        {prices?.hotels?.length ? (
-          <div className="price-list">
-            {prices.hotels.map((price, index) => (
-              <div key={index} className="price-item">
-                <div className="price-header">
-                  <span className="price-type">{price.price_type}</span>
-                  {price.free_cancellation && (
-                    <span className="cancellation-badge">Free Cancellation</span>
-                  )}
-                </div>
-                <div className="price-details">
-                  <div className="price-numbers">
-                    <span className="price-amount">${price.price?.toFixed(2) || '0.00'}</span>
-                    <span className="price-night">per night</span>
-                  </div>
-                  {price.rooms_available !== undefined && (
-                    <div className="price-availability">
-                      {price.rooms_available} rooms available
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+      <RoomPrices prices={prices} />
+    </div>
+  );
+}
+
+// Extracted components with proper typing
+type GuestScoresProps = {
+  scores: NonNullable<Hotel['trustyou']>['score'];
+};
+
+function GuestScores({ scores }: GuestScoresProps) {
+  const scoreItems = [
+    { key: 'overall', label: 'Overall' },
+    { key: 'solo', label: 'Solo Travelers' },
+    { key: 'couple', label: 'Couples' },
+    { key: 'family', label: 'Families' },
+    { key: 'business', label: 'Business' }
+  ].filter(item => scores[item.key as keyof typeof scores] !== null);
+
+  return (
+    <div className="trustyou-scores">
+      <h3>Guest Ratings</h3>
+      <div className="scores-grid">
+        {scoreItems.map((item) => (
+          <div key={item.key} className="score-item">
+            <span>{item.label}</span>
+            <span>{scores[item.key as keyof typeof scores]}/10</span>
           </div>
-        ) : (
-          <p>No pricing information available</p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+type RoomPricesProps = {
+  prices: PriceResponse;
+};
+
+function RoomPrices({ prices }: RoomPricesProps) {
+  return (
+    <section className="prices">
+      <h3>Available Rooms</h3>
+      {prices.hotels?.length ? (
+        <div className="price-list">
+          {prices.hotels.map((price: Price, index: number) => (
+            <PriceCard key={`${price.id}-${index}`} price={price} />
+          ))}
+        </div>
+      ) : (
+        <p>No pricing information available</p>
+      )}
+    </section>
+  );
+}
+
+type PriceCardProps = {
+  price: Price;
+};
+
+function PriceCard({ price }: PriceCardProps) {
+  return (
+    <div className="price-item">
+      <div className="price-header">
+        <span className="price-type">{price.price_type}</span>
+        {price.free_cancellation && (
+          <span className="cancellation-badge">Free Cancellation</span>
         )}
-      </section>
+      </div>
+      <div className="price-details">
+        <div className="price-numbers">
+          <span className="price-amount">${price.price?.toFixed(2) || '0.00'}</span>
+          <span className="price-night">per night</span>
+        </div>
+        {price.rooms_available !== undefined && (
+          <div className="price-availability">
+            {price.rooms_available} rooms available
+          </div>
+        )}
+      </div>
     </div>
   );
 }

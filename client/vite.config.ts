@@ -1,14 +1,9 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';
-import type { UserConfig } from 'vite';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@types': path.resolve(__dirname, '../types')
-    }
+  plugins: [react()], // Remove custom babel config
+  server: {
+    port: 3000
   }
-}) as UserConfig;
+})
