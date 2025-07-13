@@ -31,30 +31,14 @@ const handleHotelRequest: RequestHandler<{ dest_id: string }> = async (req, res,
       return;
     }
 
-    const apiUrl = `https://hotelapi.loyalty.dev/api/hotels?destination_id=${dest_id}`;
-    const apiResponse = await fetch(apiUrl);
-    
-    if (!apiResponse.ok) {
-      throw new Error(`API request failed: ${apiResponse.status}`);
-    }
-    
-    const hotelData = await apiResponse.json() as Hotel[];
+  const url = `https://hotelapi.loyalty.dev/api/hotels?destination_id=${dest_id}`;
 
-    res.json({
-      destination: destRows[0],
-      hotels: hotelData
-    });
+  const response = await fetch(url);
+  const data: Hotel[] = await response.json();
+  // console.log(data);
+  console.log('called');
 
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    res.status(500).json({ 
-      error: 'Internal server error',
-      details: errorMessage 
-    });
-  }
-};
-
-// 3. Register the route with proper typing
-router.get('/query/:dest_id', handleHotelRequest);
+  res.send(data);
+});
 
 export { router };

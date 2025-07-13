@@ -9,6 +9,7 @@
   box-shadow: 1px 1px 23px 0px rgba(110, 110, 110, 0.49);
   -webkit-box-shadow: 1px 1px 23px 0px rgba(110, 110, 110, 0.49);
   -moz-box-shadow: 1px 1px 23px 0px rgba(110, 110, 110, 0.49);
+  z-index: 99;
 }
 
 .suggestionItem {

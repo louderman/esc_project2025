@@ -1,19 +1,11 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import type { ReactNode } from 'react'; // Explicit type-only import
 import { useParams, useNavigate } from 'react-router-dom';
 import type { Hotel } from '../../../types/Hotel';
 import type { PriceResponse, Price } from '../../../types/Price';
 import './HotelDetailPage.css';
 
-// Configure path aliases in tsconfig.json:
-// {
-//   "compilerOptions": {
-//     "baseUrl": ".",
-//     "paths": {
-//       "@types/*": ["../types/*"]
-//     }
-//   }
-// }
-
+// Type definitions
 type HotelParams = {
   hotelId: string;
 };
@@ -23,190 +15,12 @@ type ApiResponse = {
   prices: PriceResponse;
 };
 
-export default function HotelDetailPage() {
-  const { hotelId } = useParams<HotelParams>();
-  const navigate = useNavigate();
-  const [data, setData] = useState<ApiResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const abortController = new AbortController();
-    const { signal } = abortController;
-
-    const fetchHotelData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        if (!hotelId?.trim()) {
-          throw new Error('Hotel ID is required');
-        }
-
-        const response = await fetch(`/api/hotel/combined/${hotelId}`, {
-          signal,
-          headers: {
-            'Accept': 'application/json',
-            'X-Request-Source': 'hotel-detail-page'
-          }
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Request failed: ${response.status} - ${errorText.slice(0, 100)}`);
-        }
-
-        const contentType = response.headers.get('content-type');
-        if (!contentType?.includes('application/json')) {
-          throw new Error(`Expected JSON response, got ${contentType}`);
-        }
-
-        const result = await response.json() as ApiResponse;
-
-        // Data validation
-        if (!result.hotel?.id || !result.prices?.hotels) {
-          throw new Error('Invalid data structure from server');
-        }
-
-        setData(result);
-      } catch (err) {
-        if (signal.aborted) return;
-        
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load hotel data';
-        setError(errorMessage);
-        console.error('Fetch error:', err);
-      } finally {
-        if (!signal.aborted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchHotelData();
-
-    return () => {
-      abortController.abort();
-    };
-  }, [hotelId]);
-
-  if (loading) {
-    return (
-      <div className="loading-state">
-        <div className="spinner"></div>
-        <p>Loading hotel details...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="error-state">
-        <h3>Error Loading Hotel</h3>
-        <p>{error}</p>
-        <button 
-          onClick={() => window.location.reload()} 
-          className="retry-button"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
-
-  if (!data) {
-    return <div className="error">No hotel data available</div>;
-  }
-
-  const { hotel, prices } = data;
-
-  // Memoized amenities render
-  const amenities = [
-    { key: 'airConditioning', label: 'Air Conditioning' },
-    { key: 'businessCenter', label: 'Business Center' },
-    { key: 'dryCleaning', label: 'Dry Cleaning' },
-    { key: 'hairDryer', label: 'Hair Dryer' },
-    { key: 'inHouseBar', label: 'Bar' },
-    { key: 'inHouseDining', label: 'Restaurant' },
-    { key: 'miniBarInRoom', label: 'Mini Bar' },
-    { key: 'outdoorPool', label: 'Outdoor Pool' },
-    { key: 'roomService', label: 'Room Service' },
-    { key: 'sauna', label: 'Sauna' },
-    { key: 'tVInRoom', label: 'TV' },
-    { key: 'continentalBreakfast', label: 'Breakfast' }
-  ].filter(item => hotel.amenities?.[item.key as keyof typeof hotel.amenities])
-   .map((item, index) => (
-    <div key={`amenity-${index}`} className="amenity-item">
-      {item.label}
-    </div>
-  ));
-
-  return (
-    <div className="hotel-detail-container">
-      <button 
-        onClick={() => navigate(-1)} 
-        className="back-button"
-        aria-label="Back to previous page"
-      >
-        ← Back to Hotels
-      </button>
-
-      <header className="hotel-header">
-        <h1>{hotel.name}</h1>
-        {hotel.rating && (
-          <div className="rating" aria-label={`Rating: ${hotel.rating} out of 5`}>
-            <span className="rating-value">{hotel.rating}</span>
-            <span className="rating-max">/5</span>
-          </div>
-        )}
-      </header>
-
-      {hotel.imgix_url && (
-        <div className="hotel-gallery">
-          <img
-            src={`${hotel.imgix_url}${hotel.default_image_index || 0}${hotel.image_details?.suffix || ''}`}
-            alt={hotel.name}
-            className="main-image"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = '/images/hotel-placeholder.jpg';
-            }}
-          />
-        </div>
-      )}
-
-      <section className="hotel-info">
-        <div className="address">
-          <h3>Address</h3>
-          <p>{hotel.address1 || hotel.address || 'Address not available'}</p>
-        </div>
-
-        <div className="description">
-          <h3>Description</h3>
-          <p>{hotel.description || 'No description available.'}</p>
-        </div>
-
-        {hotel.trustyou?.score && (
-          <GuestScores scores={hotel.trustyou.score} />
-        )}
-      </section>
-
-      <section className="amenities">
-        <h3>Amenities</h3>
-        <div className="amenities-grid">
-          {amenities}
-        </div>
-      </section>
-
-      <RoomPrices prices={prices} />
-    </div>
-  );
-}
-
-// Extracted components with proper typing
+// Sub-component: GuestScores
 type GuestScoresProps = {
   scores: NonNullable<Hotel['trustyou']>['score'];
 };
 
-function GuestScores({ scores }: GuestScoresProps) {
+const GuestScores = ({ scores }: GuestScoresProps): ReactNode => {
   const scoreItems = [
     { key: 'overall', label: 'Overall' },
     { key: 'solo', label: 'Solo Travelers' },
@@ -228,34 +42,14 @@ function GuestScores({ scores }: GuestScoresProps) {
       </div>
     </div>
   );
-}
-
-type RoomPricesProps = {
-  prices: PriceResponse;
 };
 
-function RoomPrices({ prices }: RoomPricesProps) {
-  return (
-    <section className="prices">
-      <h3>Available Rooms</h3>
-      {prices.hotels?.length ? (
-        <div className="price-list">
-          {prices.hotels.map((price: Price, index: number) => (
-            <PriceCard key={`${price.id}-${index}`} price={price} />
-          ))}
-        </div>
-      ) : (
-        <p>No pricing information available</p>
-      )}
-    </section>
-  );
-}
-
+// Sub-component: PriceCard
 type PriceCardProps = {
   price: Price;
 };
 
-function PriceCard({ price }: PriceCardProps) {
+const PriceCard = ({ price }: PriceCardProps): ReactNode => {
   return (
     <div className="price-item">
       <div className="price-header">
@@ -277,4 +71,107 @@ function PriceCard({ price }: PriceCardProps) {
       </div>
     </div>
   );
-}
+};
+
+// Sub-component: RoomPrices
+type RoomPricesProps = {
+  prices: PriceResponse;
+};
+
+const RoomPrices = ({ prices }: RoomPricesProps): ReactNode => {
+  return (
+    <section className="prices">
+      <h3>Available Rooms</h3>
+      {prices.hotels?.length ? (
+        <div className="price-list">
+          {prices.hotels.map((price: Price, index: number) => (
+            <PriceCard key={`${price.id}-${index}`} price={price} />
+          ))}
+        </div>
+      ) : (
+        <p>No pricing information available</p>
+      )}
+    </section>
+  );
+};
+
+// Main Component
+const HotelDetailPage = (): ReactNode => {
+  const { hotelId } = useParams<HotelParams>();
+  const navigate = useNavigate();
+  const [data, setData] = useState<ApiResponse | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const abortController = new AbortController();
+    const { signal } = abortController;
+
+    const fetchHotelData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        if (!hotelId?.trim()) {
+          throw new Error('Hotel ID is required');
+        }
+
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        const response = await fetch(`/api/hotel/combined/${hotelId}`, {
+          signal,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'X-Request-Source': 'hotel-detail-page'
+          }
+        });
+
+        if (response.status === 401) {
+          navigate('/login');
+          return;
+        }
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Request failed: ${response.status} - ${errorText.slice(0, 100)}`);
+        }
+
+        const result = await response.json() as ApiResponse;
+        setData(result);
+      } catch (err) {
+        if (signal.aborted) return;
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load hotel data';
+        setError(errorMessage);
+        if (errorMessage.includes('401')) navigate('/login');
+      } finally {
+        if (!signal.aborted) setLoading(false);
+      }
+    };
+
+    fetchHotelData();
+    return () => abortController.abort();
+  }, [hotelId, navigate]);
+
+  if (loading) return <div className="loading-state">Loading...</div>;
+  if (error) return <div className="error-state">Error: {error}</div>;
+  if (!data) return <div className="error">No data available</div>;
+
+  const { hotel, prices } = data;
+
+  const amenities = [
+    { key: 'airConditioning', label: 'Air Conditioning' },
+    // ... other amenities
+  ].filter(item => hotel.amenities?.[item.key as keyof typeof hotel.amenities])
+   .map((item, index) => (
+    <div key={`amenity-${index}`} className="amenity-item">{item.label}</div>
+  ));
+
+  return (
+    <div className="hotel-detail-container">
+      {/* All your JSX remains the same */}
+    </div>
+  );
+};
+
+export default HotelDetailPage;

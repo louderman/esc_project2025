@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-const SAFE_INTERVAL = 2500; // ms
+const SAFE_INTERVAL = 2000; // ms
 
 /**
  * usePollingAsync
@@ -9,7 +9,7 @@ const SAFE_INTERVAL = 2500; // ms
  * @param callback - An asynchronous function that returns a boolean.
  *                   Returning `true` signals that polling should stop.
  * @param interval - Desired polling interval in milliseconds.
- *                   Actual delay will be `Math.max(2500, interval)` to ensure a minimum delay of 2.5 seconds.
+ *                   Actual delay will be `Math.max(SAFE_INTERVAL, interval)` to ensure a minimum delay of `SAFE_INTERVAL` seconds.
  * @example
  * usePollingAsync(async () => {
  *   const response = await fetch('/api/status');
@@ -31,10 +31,17 @@ export function usePollingAsync(
         const done = await callback();
         if (done) {
           stop.current = true;
+          break;
         }
+        console.log(
+          `waiting for ${Math.max(
+            SAFE_INTERVAL,
+            interval
+          )}ms sec before sending another req`
+        );
         await new Promise((res) =>
           setTimeout(res, Math.max(SAFE_INTERVAL, interval))
-        ); // atleast 2.5 secs for safety, i dont wanna get blocked
+        );
       }
     }
     loop();

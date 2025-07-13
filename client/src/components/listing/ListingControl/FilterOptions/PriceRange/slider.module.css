@@ -13,6 +13,7 @@
   flex: 1;
   align-self: flex-end;
   background-color: #ffb3b3;
+  transition: height 0.5s ease;
 }
 
 .sliderContainer {
@@ -27,10 +28,12 @@
   transform: translateY(-50%);
   width: 100%;
   height: 5px;
+  padding-block: 18px;
   outline: none;
   background: none;
   border-radius: 5px;
   z-index: 2;
+  cursor: grab;
 }
 
 /* .sliderPrimary {

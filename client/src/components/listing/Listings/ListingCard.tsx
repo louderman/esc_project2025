@@ -1,32 +1,20 @@
 import type { Hotel } from '../../../../../types/Hotel';
 import type { Price } from '../../../../../types/Price';
+import { AMENITY_TO_SVG } from '../../../constants/amenities';
 import styles from './listingcard.module.css';
-
-const AMENITY_TO_SVG = {
-  airConditioning: 'ac_unit.svg',
-  parkingGarage: 'garage.svg',
-  businessCenter: 'business_centre.svg',
-  clothingIron: 'iron.svg',
-  inHouseBar: 'local_bar.svg',
-  inHouseDining: 'fork_spoon.svg',
-  miniBarInRoom: 'local_bar.svg',
-  outdoorPool: 'pool.svg',
-  roomService: 'room_service.svg',
-  sauna: 'sauna.svg',
-  tVInRoom: 'tv.svg',
-  continentalBreakfast: 'fork_spoon.svg',
-  kitchen: 'kitchen.svg',
-};
 
 export default function ListingCard({
   hotel,
 }: {
   hotel: Hotel & Partial<Price>;
 }) {
+  const userRating = hotel.categories.overall?.score;
+
   return (
     <div className={styles.container}>
       {hotel.imageCount > 0 ? (
         <img
+          className={styles.image}
           src={`${hotel.image_details.prefix}0${hotel.image_details.suffix}`}
           alt='hotel img'
           onError={(e) => {
@@ -36,7 +24,11 @@ export default function ListingCard({
           }}
         />
       ) : (
-        <img src='/listing/hotel_img_placeholder.png' alt='hotel img' />
+        <img
+          className={styles.image}
+          src='/listing/hotel_img_placeholder.png'
+          alt='hotel img'
+        />
       )}
 
       <div className={styles.infoSection}>
@@ -50,6 +42,7 @@ export default function ListingCard({
                 key={`${hotel.id}-star-${i}`}
               />
             ))}
+            {hotel.rating > 0 && <span>hotel</span>}
           </div>
           <div className={styles.amenitiesSection}>
             {Object.keys(hotel.amenities)
@@ -61,7 +54,10 @@ export default function ListingCard({
                 <div key={`${hotel.id}-${amenity}`} className={styles.amenity}>
                   <img src={`/amenities/${AMENITY_TO_SVG[amenity]}`} />
                   <span>
-                    {amenity.replace(/([A-Z])/g, ' $1').toLowerCase()}
+                    {amenity
+                      .replace(/(tV)/g, 'tv')
+                      .replace(/([A-Z])/g, ' $1')
+                      .toLowerCase()}
                   </span>
                 </div>
               ))}
@@ -76,6 +72,16 @@ export default function ListingCard({
               }) ?? '...'}
             </span>
             <span className={styles.stayInfoText}>1 room, 1 night</span>
+            <div className={styles.userRatingBox}>
+              <span className={styles.userRatingText}>Rating</span>
+              <div
+                className={`${styles.userRatingNumber} ${
+                  (userRating === undefined || userRating === null) &&
+                  styles.noRating
+                }`}>
+                {userRating ? (userRating / 10).toFixed(1) : '-'}
+              </div>
+            </div>
           </div>
           <button className={styles.viewButton}>View</button>
         </div>

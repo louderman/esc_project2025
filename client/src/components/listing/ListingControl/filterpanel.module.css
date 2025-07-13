@@ -1,8 +1,11 @@
 .container {
+  position: relative;
+  max-width: 280px;
   display: flex;
   flex-direction: column;
   gap: 1px;
   border-radius: 3px;
+  background-color: rgba(179, 179, 179, 0.49);
   box-shadow: 1px 1px 10px 0px rgba(179, 179, 179, 0.49);
   -webkit-box-shadow: 1px 1px 23px 0px rgba(179, 179, 179, 0.49);
   -moz-box-shadow: 1px 1px 23px 0px rgba(179, 179, 179, 0.49);

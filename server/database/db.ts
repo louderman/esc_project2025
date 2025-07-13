@@ -6,9 +6,22 @@ const pool = createPool({
   user: 'pub',
   password: 'asbestosSnOrter8&',
   database: 'hotel',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+}).promise();
 
-export { pool };
+// const pool = createPool({
+//   host: 'localhost',  
+//   port: 3306,
+//   user: 'user',  
+//   password: 'password',
+//   database: 'hotel',
+// }).promise();
+
+async function cleanup() {
+  await pool.end();
+}
+
+export { pool, cleanup };
+
+// CREATE USER 'your_username'@'your_host' IDENTIFIED BY 'your_password';
+// GRANT ALL PRIVILEGES ON db_name.* TO 'your_username'@'localhost';
+// FLUSH PRIVILEGES;
