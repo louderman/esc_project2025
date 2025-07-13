@@ -9,6 +9,14 @@ const pool = createPool({
   database: 'hotel',
 }).promise();
 
+// const pool = createPool({
+//   host: 'localhost',  
+//   port: 3306,
+//   user: 'user',  
+//   password: 'password',
+//   database: 'hotel',
+// }).promise();
+
 async function cleanup() {
   await pool.end();
 }
