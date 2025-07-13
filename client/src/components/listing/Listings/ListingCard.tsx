@@ -1,8 +1,7 @@
-import { useNavigate } from 'react-router-dom';
 import type { Hotel } from '../../../../../types/Hotel';
 import type { Price } from '../../../../../types/Price';
-import type { StayDatesState } from '../SearchBar/DateInput/DateInput';
 import { AMENITY_TO_SVG } from '../../../constants/amenities';
+import type { StayDatesState } from '../SearchBar/DateInput/DateInput';
 import styles from './listingcard.module.css';
 
 export default function ListingCard({
@@ -12,11 +11,6 @@ export default function ListingCard({
   hotel: Hotel & Partial<Price>;
   stayDates: StayDatesState;
 }) {
-  const navigate = useNavigate();
-
-  const handleView = () => {
-    navigate('/booking', { state: { hotel, stayDates } });
-  };
   const userRating = hotel.categories.overall?.score;
 
   return (
@@ -92,7 +86,7 @@ export default function ListingCard({
               </div>
             </div>
           </div>
-          <button className={styles.viewButton} onClick={handleView}>View</button>
+          <button className={styles.viewButton}>View</button>
         </div>
       </div>
     </div>

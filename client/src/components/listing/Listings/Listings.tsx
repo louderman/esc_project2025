@@ -3,8 +3,8 @@ import type { Hotel } from '../../../../../types/Hotel';
 import type { Price } from '../../../../../types/Price';
 import type { StayDatesState } from '../SearchBar/DateInput/DateInput';
 import ListingCard from './ListingCard';
-import styles from './listings.module.css';
 import ListingCardSkeleton from './ListingCardSkeleton';
+import styles from './listings.module.css';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -47,3 +47,22 @@ export default function Listings({
 
   return (
     <div className={styles.container}>
+      {isLoading &&
+        Array.from({ length: 3 }).map((_, i) => (
+          <ListingCardSkeleton key={`skeleton-${i}`} />
+        ))}
+      {!isLoading && !hasHotel && <div>no results</div>}
+      {!isLoading &&
+        hasHotel &&
+        hotels
+          .slice(0, page * ITEMS_PER_PAGE)
+          .map((hotel) => (
+            <ListingCard
+              key={hotel.id}
+              hotel={hotel}
+              stayDates={stayDates}
+            />
+          ))}
+    </div>
+  );
+}

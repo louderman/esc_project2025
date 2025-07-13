@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useLocation } from 'react-router-dom';
 import type { Hotel } from '../../../types/Hotel';
 import type { Price } from '../../../types/Price';
 import BookingForm from '../components/booking/BookingForm';
@@ -10,12 +9,67 @@ import SearchBar from '../components/listing/SearchBar/SearchBar';
 import styles from './bookingpage.module.css';
 
 export default function BookingPage() {
-  const location = useLocation();
-  const hotel = location.state?.hotel as (Hotel & Price) | undefined;
+  const hotel: Hotel & Partial<Price> = {
+    id: '27225324',
+    name: 'Oasia Resort Sentosa by Far East Hospitality',
+    rating: 5,
+    imageCount: 5,
+    image_details: {
+      prefix:
+        'https://cf.bstatic.com/xdata/images/hotel/max1024x768/542957392.jpg?k=603585ae63a1f285412e0d9dca035c581aceadc3408cf28a2c2eb3c7ba75f0a2&o=',
+      suffix: '.jpg',
+      count: 5,
+    },
+    address: '23 Beach View, Palawan Ridge, Sentosa Island, 098679, Singapore',
+    latitude: 1.25481,
+    longitude: 103.8239,
+    address1: '23 Beach View, Palawan Ridge',
+    distance: 0,
+    trustyou: {
+      id: 'test',
+      score: {
+        overall: 88,
+        kaligo_overall: 88,
+        solo: null,
+        couple: null,
+        family: null,
+        business: null,
+      },
+    },
+    amenities_ratings: [],
+    description: 'test description',
+    hires_image_index: '',
+    number_of_images: 5,
+    default_image_index: 0,
+    imgix_url: '',
+    cloudflare_image_url: '',
+    checkin_time: '15:00',
+    amenities: {
+      airConditioning: true,
+      businessCenter: true,
+      inHouseDining: true,
+      parkingGarage: true,
+      clothingIron: true,
+      kitchen: true,
+      inHouseBar: true,
+      outdoorPool: true,
+      roomService: true,
+      sauna: true,
+      tVInRoom: true,
+    },
+    categories: {
+      overall: {
+        score: 88,
+        name: 'overall',
+        popularity: 100,
+      },
+    },
+    price: 311,
+  };
 
   const [stayDates, setStayDates] = useState<StayDatesState>({
-    startDate: null,
-    endDate: null,
+    startDate: new Date('2024-05-20'),
+    endDate: new Date('2024-05-22'),
   });
   const [occupancy, setOccupancy] = useState<OccupancyState>({
     adults: 2,
@@ -23,10 +77,6 @@ export default function BookingPage() {
     rooms: 1,
   });
   const [userDest, setUserDest] = useState('');
-
-  if (!hotel) {
-    return <div>No hotel selected. Please go back to the listing page.</div>;
-  }
 
   const numberOfNights = stayDates.startDate && stayDates.endDate
     ? Math.ceil((stayDates.endDate.getTime() - stayDates.startDate.getTime()) / (1000 * 3600 * 24))

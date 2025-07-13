@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styles from './LoginPage.module.css';
+import styles from './loginpage.module.css';
 
 export default function LoginPage() {
   const navigate = useNavigate();
