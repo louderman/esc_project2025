@@ -1,10 +1,10 @@
 import { useEffect, type SetStateAction } from 'react';
 import type { Hotel } from '../../../../../types/Hotel';
-import type { Price } from '../../../../../types/Price';
-import type { StayDatesState } from '../SearchBar/DateInput/DateInput';
 import ListingCard from './ListingCard';
 import styles from './listings.module.css';
+import type { Price } from '../../../../../types/Price';
 import ListingCardSkeleton from './ListingCardSkeleton';
+import type { StayDatesState } from '../SearchBar/DateInput/DateInput';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -47,3 +47,31 @@ export default function Listings({
 
   return (
     <div className={styles.container}>
+      {isLoading &&
+        Array.from({ length: 3 }).map((_, i) => (
+          <ListingCardSkeleton key={`skeleton-${i}`} />
+        ))}
+
+      {!isLoading &&
+        hasHotel &&
+        hotels
+          .slice(0, page * ITEMS_PER_PAGE)
+          .map((hotel) => (
+            <ListingCard
+              stayDates={stayDates}
+              key={`listing-card-${hotel.id}`}
+              hotel={hotel}
+            />
+          ))}
+
+      {!isLoading && !hasHotel && (
+        <div>
+          <span className={styles.noHotelText}>No Hotel Found</span>
+          <span className={styles.noHotelSubtext}>
+            Please try changing destination name or adjust filtering
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
