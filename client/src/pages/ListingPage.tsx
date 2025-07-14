@@ -50,16 +50,54 @@ export default function ListingPage() {
   });
   const [page, setPage] = useState(1);
 
+  // Sync listing control states with URL, and vice-versa
+  useControlPanelUrlSync({
+    listingState,
+    listingDispatch,
+    navigate,
+  });
+  // Sync search bar destination, stay dates, occupancy with URL, and vice-versa
+  const { syncSearchBarToURL } = useSearchBarUrlSync({
+    destination,
+    setDestination,
+    navigate,
+    occupancy,
+    setOccupancy,
+    setStayDates,
+    stayDates,
+  });
+
   const destIdRaw = searchParams.get('destId');
-  const destId = destIdRaw ? JSON.parse(destIdRaw) : 'S60X'; // TODO: don't hardcode
+  const destId = destIdRaw ? JSON.parse(destIdRaw) : '';
+  const startPolling = !!stayDates.checkinDate && !!stayDates.checkoutDate;
+
   const fetchPrice = useCallback(async () => {
+    if (!stayDates.checkinDate || !stayDates.checkoutDate) {
+      return false;
+    }
+
+    const formatDate = (date: Date) => {
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
     console.log('fetching price');
+
     const controller = new AbortController();
     const signal = controller.signal;
     try {
-      const response = await fetch(`/api/hotel-price/query/${destId}`, {
-        signal,
-      });
+      const response = await fetch(
+        `/api/hotel-price/query?dest_id=${destId}&checkin=${formatDate(
+          stayDates.checkinDate
+        )}&checkout=${formatDate(stayDates.checkoutDate)}&guests=${
+          occupancy.adults
+        }`,
+        {
+          signal,
+        }
+      );
+
       const data: PriceResponse | null = await response.json();
       if (data === null) {
         setLoading((prev) => ({ ...prev, price: false }));
@@ -70,6 +108,7 @@ export default function ListingPage() {
         setPrices(data.hotels);
       }
       setLoading((prev) => ({ ...prev, price: !data.completed }));
+
       return data.completed;
     } catch (err) {
       if (err instanceof Error && err.name !== 'AbortError') {
@@ -78,8 +117,8 @@ export default function ListingPage() {
       setLoading((prev) => ({ ...prev, price: false }));
       return true; // stop polling if there is error
     }
-  }, []);
-  usePollingAsync(fetchPrice, 2000);
+  }, [stayDates, occupancy, destId]);
+  usePollingAsync(fetchPrice, 2000, startPolling);
 
   useEffect(() => {
     const fetchHotel = async () => {
@@ -90,7 +129,9 @@ export default function ListingPage() {
       const signal = controller.signal;
 
       try {
-        const response = await fetch(`/api/hotel/query/${destId}`, { signal });
+        const response = await fetch(`/api/hotel/query?dest_id=${destId}`, {
+          signal,
+        });
         const data: Hotel[] = await response.json();
         if (data === null) {
           setLoading((prev) => ({ ...prev, hotel: false }));
@@ -120,23 +161,6 @@ export default function ListingPage() {
   // console.log(hotels);
   // console.log(prices);
   // console.log(hotelsWithPrice);
-
-  // Sync listing control states with URL, and vice-versa
-  useControlPanelUrlSync({
-    listingState,
-    listingDispatch,
-    navigate,
-  });
-  // Sync search bar destination, stay dates, occupancy with URL, and vice-versa
-  const { syncSearchBarToURL } = useSearchBarUrlSync({
-    destination,
-    setDestination,
-    navigate,
-    occupancy,
-    setOccupancy,
-    setStayDates,
-    stayDates,
-  });
 
   // Scroll to top and set page to 1 when listing control state is changed
   const prevListingState = useRef(listingState);
