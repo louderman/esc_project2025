@@ -3,6 +3,7 @@ import inputStyles from '../inputbox.module.css';
 import styles from './destinationinput.module.css';
 import { type Destination } from '../../../../../../types/Destination';
 import { useDebounceAsync } from '../../../../hooks/useDebounceAsync';
+import { useSearchParams } from 'react-router-dom';
 
 // TODO: replace onMouseDown?
 
@@ -20,6 +21,7 @@ export default function DestinationInput({
 }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestedDests, setSuggestedDests] = useState<Destination[]>([]);
+  const [searchParams] = useSearchParams();
 
   function handleOnFocus() {
     setShowSuggestions(true);
@@ -30,14 +32,23 @@ export default function DestinationInput({
   }
 
   useEffect(() => {
-    async function fetchRandomDest() {
-      const res = await fetch(`/api/destination/random?count=5`, {
+    async function fetchInitialDest() {
+      // TODO: don't hardcode url param
+      const urlDestName = searchParams.get('destName');
+      let url;
+      if (urlDestName && urlDestName.length > 0) {
+        url = `/api/destination/query/${urlDestName}?count=10`;
+      } else {
+        url = `/api/destination/random?count=5`;
+      }
+
+      const res = await fetch(url, {
         method: 'GET',
       });
       const dests: Destination[] = await res.json();
       setSuggestedDests(dests);
     }
-    fetchRandomDest();
+    fetchInitialDest();
   }, []);
 
   const debouncedFetch = useDebounceAsync(async (userInput: string) => {
