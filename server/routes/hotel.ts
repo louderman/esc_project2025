@@ -2,10 +2,13 @@ import express from 'express';
 import { Hotel } from '../../types/Hotel';
 const router = express.Router();
 
-router.get(['/query', '/query/:dest_id'], async (req, res) => {
-  const dest_id = req.params.dest_id;
+/**
+ * GET /query?dest_id={dest_id}
+ */
+router.get('/query', async (req, res) => {
+  const dest_id = req.query.dest_id;
   if (!dest_id) {
-    res.send([]);
+    res.status(400).json({ error: 'missing dest_id' });
     return;
   }
 
