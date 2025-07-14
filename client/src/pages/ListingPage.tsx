@@ -193,6 +193,7 @@ export default function ListingPage() {
               page={page}
               setPage={setPage}
               stayDates={stayDates}
+              occupancy={occupancy}
             />
           </div>
         </div>
