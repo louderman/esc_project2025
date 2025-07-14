@@ -6,12 +6,17 @@ import { useDebounceAsync } from '../../../../hooks/useDebounceAsync';
 
 // TODO: replace onMouseDown?
 
+export type DestinationState = {
+  id: string; // null if user input destination name not in destination.json file
+  name: string;
+};
+
 export default function DestinationInput({
-  userDest,
-  setUserDest,
+  destination,
+  setDestination,
 }: {
-  userDest: string;
-  setUserDest: React.Dispatch<React.SetStateAction<string>>;
+  destination: DestinationState;
+  setDestination: React.Dispatch<React.SetStateAction<DestinationState>>;
 }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestedDests, setSuggestedDests] = useState<Destination[]>([]);
@@ -43,7 +48,7 @@ export default function DestinationInput({
     return dests;
   }, 300);
   async function handleOnChange(e: ChangeEvent<HTMLInputElement>) {
-    setUserDest(e.target.value);
+    setDestination((prev) => ({ ...prev, name: e.target.value }));
     const dests = await debouncedFetch(e.target.value);
     setSuggestedDests(dests);
   }
@@ -57,7 +62,7 @@ export default function DestinationInput({
         className={inputStyles.inputBox}
         type='text'
         placeholder='Destination'
-        value={userDest}
+        value={destination.name}
         onChange={handleOnChange}
       />
       {showSuggestions && (
@@ -65,8 +70,11 @@ export default function DestinationInput({
           {suggestedDests.map((dest, i) => (
             <li
               key={`dest-${i}`}
-              onMouseDown={() => setUserDest(dest.term)}
-              className={styles.suggestionItem}>
+              onMouseDown={() =>
+                setDestination({ id: dest.dest_id, name: dest.term })
+              }
+              className={styles.suggestionItem}
+            >
               <img src='/listing/destination_gray.svg' />
               <div className={styles.itemTextSection}>
                 <span className={styles.itemDestName}>{dest.term}</span>
