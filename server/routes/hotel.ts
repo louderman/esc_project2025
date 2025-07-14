@@ -2,7 +2,7 @@ import express from 'express';
 import { Hotel } from '../../types/Hotel';
 const router = express.Router();
 
-router.get('/query/:dest_id', async (req, res) => {
+router.get(['/query', '/query/:dest_id'], async (req, res) => {
   const dest_id = req.params.dest_id;
   if (!dest_id) {
     res.send([]);
