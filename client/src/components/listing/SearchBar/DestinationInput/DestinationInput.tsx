@@ -41,23 +41,31 @@ export default function DestinationInput({
   }, []);
 
   const debouncedFetch = useDebounceAsync(async (userInput: string) => {
-    const res = await fetch(`/api/destination/query/${userInput}?count=10`, {
-      method: 'GET',
-    });
-    const dests: Destination[] = await res.json();
-    return dests;
+    const controller = new AbortController();
+
+    try {
+      const res = await fetch(`/api/destination/query/${userInput}?count=10`, {
+        signal: controller.signal,
+      });
+      const dests: Destination[] = await res.json();
+      return dests;
+    } catch (e) {
+      if (e instanceof Error && e.name !== 'AbortError') {
+        console.error(e);
+      }
+      return [];
+    }
   }, 300);
   async function handleOnChange(e: ChangeEvent<HTMLInputElement>) {
     const inputValue = e.target.value;
 
-    // I'm not sure if two setStates will cause race condition?
     setDestination((prev) => ({ ...prev, name: inputValue }));
     const dests = await debouncedFetch(e.target.value);
     setSuggestedDests(dests);
-    setDestination({
+    setDestination((prev) => ({
+      ...prev,
       id: dests.length > 0 ? dests[0].dest_id : '',
-      name: inputValue,
-    });
+    }));
   }
 
   return (
@@ -69,7 +77,7 @@ export default function DestinationInput({
         className={inputStyles.inputBox}
         type='text'
         placeholder='Destination'
-        value={destination.name}
+        value={destination.name ?? ''}
         onChange={handleOnChange}
       />
       {showSuggestions && (
