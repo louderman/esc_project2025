@@ -1,25 +1,38 @@
-// client/src/pages/HomePage.tsx
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import SearchBar from '../components/homepage/SearchBar/SearchBar';
+import type { StayDatesState } from '../components/homepage/SearchBar/DateInput/DateInput';
+import type { OccupancyState } from '../components/homepage/SearchBar/GuestInput/GuestInput';
+
+import styles from './homepage.module.css';
+
+
 
 export default function HomePage() {
-  const sampleHotels = [
-    { id: 'RsBU', name: 'Grand Plaza Hotel' },
-    { id: 'Lk9X', name: 'Beachside Resort' },
-    { id: 'Pq4R', name: 'Mountain View Lodge' }
-  ];
+
+
+  const [userDest, setUserDest] = useState<string>('');
+  const [stayDates, setStayDates] = useState<StayDatesState>({
+    startDate: null,
+    endDate: null,
+  });
+  const [occupancy, setOccupancy] = useState<OccupancyState>({
+    adults: 1,
+    children: 0,
+    rooms: 1,
+  });
 
   return (
-    <div className="home-container">
-      <h1>Featured Hotels</h1>
-      <div className="hotel-list">
-        {sampleHotels.map((hotel) => (
-          <div key={hotel.id} className="hotel-card">
-            <h3>{hotel.name}</h3>
-            <Link to={`/hotels/${hotel.id}`} className="view-details-btn">
-              View Details
-            </Link>
-          </div>
-        ))}
+    <div className={styles.container}>
+      <div className={styles.searchbarSection}>
+        <div className={styles.headerQuestion}>Looking for a place to stay?</div>
+        <SearchBar
+          userDest={userDest}
+          setUserDest={setUserDest}
+          stayDates={stayDates}
+          setStayDates={setStayDates}
+          occupancy={occupancy}
+          setOccupancy={setOccupancy}
+        />
       </div>
     </div>
   );

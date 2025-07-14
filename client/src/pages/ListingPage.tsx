@@ -167,6 +167,7 @@ export default function ListingPage() {
               loading={loading}
               page={page}
               setPage={setPage}
+              stayDates={stayDates}
             />
           </div>
         </div>
