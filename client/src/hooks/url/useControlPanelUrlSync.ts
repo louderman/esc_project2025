@@ -10,16 +10,16 @@ import {
 } from '../../reducers/listingReducer';
 import { useEffect, useState } from 'react';
 
-type UseUrlSyncOptions = {
+type ControlPanelUrlSyncOptions = {
   listingState: ListingState;
   listingDispatch: React.Dispatch<ListingAction>;
   navigate: NavigateFunction;
 };
 
 /**
- * useUrlSync
+ * useControlPanelUrlSync
  * Used in hotel listing page
- * Synchronize URL query parameters with hotel listing control state (filters and sorting).
+ * Synchronize URL query parameters with hotel listing control states (filters and sorting).
  *
  * There are two responsibilities:
  * 1. On first load (component mount), read the current URL's query parameters
@@ -37,11 +37,11 @@ type UseUrlSyncOptions = {
  *   Used to prevent writing defaults back to the URL during initial mount.
  *
  */
-export function useUrlSync({
+export function useControlPanelUrlSync({
   listingState,
   listingDispatch,
   navigate,
-}: UseUrlSyncOptions) {
+}: ControlPanelUrlSyncOptions) {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const [processedUrlParam, setProcessedUrlParam] = useState(false);
@@ -62,7 +62,7 @@ export function useUrlSync({
       } catch (e) {
         if (e instanceof Error) {
           console.warn(
-            `Failed to parse URL paramm "${key}" raw: ${rawValue} error: ${e}`
+            `Failed to parse URL param "${key}" raw: ${rawValue} error: ${e}`
           );
         }
       }
@@ -81,6 +81,7 @@ export function useUrlSync({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const syncParam = (key: string, value: any) => {
       const strValue = JSON.stringify(value);
+
       if (urlParams.get(key) !== strValue) {
         urlParams.set(key, strValue);
         hasChanged = true;
