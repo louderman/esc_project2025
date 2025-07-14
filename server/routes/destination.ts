@@ -7,8 +7,11 @@ router.get('/all/', async function (req, res) {
   res.send(dests);
 });
 
-router.get('/random{/:count}', async function (req, res) {
-  const countRaw = Number(req.query.count);
+/**
+ * GET /random?count={count}
+ */
+router.get('/random', async function (req, res) {
+  const countRaw = parseInt(req.query.count as string);
   const count = isNaN(countRaw) ? 10 : countRaw;
 
   if (count === 0) {
