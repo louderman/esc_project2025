@@ -98,11 +98,12 @@ export default function ListingPage() {
         }
       );
 
-      const data: PriceResponse | null = await response.json();
-      if (data === null) {
+      if (!response.ok) {
         setLoading((prev) => ({ ...prev, price: false }));
         return true;
       }
+
+      const data: PriceResponse = await response.json();
 
       if (data.completed) {
         setPrices(data.hotels);
@@ -132,11 +133,11 @@ export default function ListingPage() {
         const response = await fetch(`/api/hotel/query?dest_id=${destId}`, {
           signal,
         });
-        const data: Hotel[] = await response.json();
-        if (data === null) {
+        if (!response.ok) {
           setLoading((prev) => ({ ...prev, hotel: false }));
-          return;
+          return true;
         }
+        const data: Hotel[] = await response.json();
 
         setHotels(data);
       } catch (err) {
