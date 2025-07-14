@@ -48,9 +48,16 @@ export default function DestinationInput({
     return dests;
   }, 300);
   async function handleOnChange(e: ChangeEvent<HTMLInputElement>) {
-    setDestination((prev) => ({ ...prev, name: e.target.value }));
+    const inputValue = e.target.value;
+
+    // I'm not sure if two setStates will cause race condition?
+    setDestination((prev) => ({ ...prev, name: inputValue }));
     const dests = await debouncedFetch(e.target.value);
     setSuggestedDests(dests);
+    setDestination({
+      id: dests.length > 0 ? dests[0].dest_id : '',
+      name: inputValue,
+    });
   }
 
   return (

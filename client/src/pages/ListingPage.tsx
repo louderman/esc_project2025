@@ -165,7 +165,6 @@ export default function ListingPage() {
           setOccupancy={setOccupancy}
           onSubmit={() => {
             syncSearchBarToURL();
-            // navigate('/listing');
           }}
         />
       </div>

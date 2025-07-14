@@ -22,8 +22,6 @@ export default function SearchBar({
   setOccupancy: React.Dispatch<React.SetStateAction<OccupancyState>>;
   onSubmit: () => void;
 }) {
-  // TODO: Fix user typing in non-matching destination name.
-
   return (
     <div className={styles.container}>
       <DestinationInput
