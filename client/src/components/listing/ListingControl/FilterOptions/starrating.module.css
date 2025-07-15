@@ -39,7 +39,7 @@
 /* The custom checkbox background */
 .checkmark {
   position: absolute;
-  border: 1px solid rgb(206, 206, 206);
+  border: 2px solid rgb(206, 206, 206);
   border-radius: 3px;
   top: 0;
   left: 0;
@@ -69,6 +69,7 @@
 .inputContainer input:checked ~ .checkmark {
   background-color: rgb(252, 125, 75);
   border-color: rgb(224, 130, 68);
+  border-width: 1px;
 }
 
 .stars {
