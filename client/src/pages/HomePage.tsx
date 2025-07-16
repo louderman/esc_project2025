@@ -25,6 +25,8 @@ export default function HomePage() {
     rooms: 1,
   });
 
+  console.log('stayDates:', stayDates);
+  
   const { syncSearchBarToURL } = useSearchBarUrlSync({
     destination,
     setDestination,
