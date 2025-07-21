@@ -9,6 +9,7 @@ import HotelDetailPage from './pages/HotelDetailPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import PastBookingPage from './pages/PastBookingPage';
+import HotelDetailPageTest from './pages/HotelDetailPageFrontendTest';
 
 function App() {
   return (
@@ -22,9 +23,8 @@ function App() {
           element={<BookingConfirmationPage />}
         />
         <Route path='/booking' element={<BookingPage />} />
-        <Route path="/hotels/:hotelId" element={<HotelDetailPage />} />
 
-        <Route path='/hotel_detail' element={<HotelDetailPage />} />
+        <Route path='/hotel_detail' element={<HotelDetailPageTest />} />
         <Route path='/login' element={<LoginPage />} />
         <Route path='/register' element={<RegisterPage />} />
         <Route path='/past_booking' element={<PastBookingPage />} />

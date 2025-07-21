@@ -1,8 +1,7 @@
-// types/Destination.ts
 type Destination = {
-  id: number;
+  id: string;
+  dest_id: string;
   term: string;
-  uid: string;
   lat: number;
   lng: number;
   type: string;

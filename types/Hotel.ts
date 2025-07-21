@@ -77,6 +77,7 @@ export type Hotel = {
   imgix_url: string;
   cloudflare_image_url: string;
   checkin_time: string;
+  rank?: string;
 };
 
 export type Emenities = {
