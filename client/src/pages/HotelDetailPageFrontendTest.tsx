@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
 import styles from './HotelDetailPage.module.css';
-import Test from '../components/hotel_detail/Test';
+import Test from '../components/hotel/Test';
 
 // ===== TESTING CONFIGURATION =====
 const MOCK_MODE = true; // Set to false when ready to test real API

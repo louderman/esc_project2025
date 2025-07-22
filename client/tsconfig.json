@@ -7,9 +7,13 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "types": ["vite/client", "node"]
+      "@/*": ["./src/*"]
     },
-    "jsx": "react-jsx",
-    "jsxImportSource": "react"
+    "noImplicitAny": false,
+    "noUnusedParameters": false,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "noUnusedLocals": false,
+    "strictNullChecks": false
   }
 }

@@ -13,3 +13,4 @@ if (rootElement) {
     </StrictMode>
   );
 }
+createRoot(document.getElementById("root")!).render(<App />);
