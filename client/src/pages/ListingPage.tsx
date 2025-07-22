@@ -208,12 +208,23 @@ export default function ListingPage() {
       </div>
       <div className={styles.mainSection}>
         <div className={styles.mainBox}>
-          <div className={styles.filterSection}>
-            <FilterPanel
-              hotels={hotelsWithPrice}
-              listingState={listingState}
-              listingDispatch={listingDispatch}
-            />
+          <div className={styles.sidebar}>
+            <div className={styles.mapTogglerSection}>
+              <button
+                className={styles.mapTogglerBtn}
+                onClick={() => setShowMap(true)}
+              >
+                <img src='/listing/map_pin.svg' />
+                Show on Map
+              </button>
+            </div>
+            <div className={styles.filterSection}>
+              <FilterPanel
+                hotels={hotelsWithPrice}
+                listingState={listingState}
+                listingDispatch={listingDispatch}
+              />
+            </div>
           </div>
           <div className={styles.listingSection}>
             <div className={styles.listingTopSection}>
