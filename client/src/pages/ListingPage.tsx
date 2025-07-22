@@ -20,6 +20,7 @@ import { useSortedHotels } from '../hooks/hotels/useSortedHotels';
 import { useControlPanelUrlSync } from '../hooks/url/useControlPanelUrlSync';
 import type { DestinationState } from '../components/listing/SearchBar/DestinationInput/DestinationInput';
 import { useSearchBarUrlSync } from '../hooks/url/useSearchBarUrlSync';
+import Map from '../components/listing/ListingMap/ListingMap';
 
 export default function ListingPage() {
   const navigate = useNavigate();
@@ -49,6 +50,7 @@ export default function ListingPage() {
     hotel: true,
   });
   const [page, setPage] = useState(1);
+  const [showMap, setShowMap] = useState(false);
 
   // Sync listing control states with URL, and vice-versa
   useControlPanelUrlSync({
@@ -180,6 +182,17 @@ export default function ListingPage() {
 
   return (
     <div className={styles.container}>
+      {showMap && (
+        <Map
+          loading={loading.hotel || loading.price}
+          hotels={hotelsWithPrice}
+          sortedHotels={sortedHotels}
+          stayDates={stayDates}
+          occupancy={occupancy}
+          listingDispatch={listingDispatch}
+          listingState={listingState}
+        />
+      )}
       <div className={styles.searchbarSection}>
         <SearchBar
           destination={destination}
