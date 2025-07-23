@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import type { Hotel } from '../../../types/Hotel';
 import type { Price } from '../../../types/Price';
 import BookingForm from '../components/booking/BookingForm';
@@ -11,7 +11,6 @@ import SearchBar from '../components/listing/SearchBar/SearchBar';
 import styles from './bookingpage.module.css';
 
 export default function BookingPage() {
-  const location = useLocation();
   const navigate = useNavigate();
   // commented until I get listing data
   // const hotel = location.state?.hotel as (Hotel & Price) | undefined;
@@ -121,12 +120,31 @@ export default function BookingPage() {
         : '/listing/hotel_img_placeholder.png',
   };
 
+  const handlePaymentSuccess = () => {
+    // Navigate to booking confirmation page on successful payment
+    navigate('/booking/confirmation', {
+      state: {
+        bookingDetails,
+        hotel,
+        totalAmount: (hotel.price ?? 0) * numberOfNights,
+      },
+    });
+  };
+
+  const handlePaymentError = (error: string) => {
+    // Handle payment error - could show a toast notification or alert
+    console.error('Payment failed:', error);
+    // For now, just log the error. You could add a toast notification here
+  };
+
   const policyDetails = {
     guaranteePolicy: 'Credit Card is required at the time of booking.',
     cancelPolicy:
       'Reservation must be cancelled by 3pm local time 1 day before arrival to avoid penalty of 1 night room and tax.',
     costPerNight: hotel.price ?? 0,
     numberOfNights,
+    onPaymentSuccess: handlePaymentSuccess,
+    onPaymentError: handlePaymentError,
   };
 
   return (

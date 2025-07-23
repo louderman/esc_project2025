@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import PaymentForm from './PaymentForm';
 import styles from './bookingform.module.css';
 
 // Define props for the component based on the Figma design
@@ -6,6 +8,8 @@ interface BookingFormProps {
   cancelPolicy: string;
   costPerNight: number;
   numberOfNights: number;
+  onPaymentSuccess?: () => void;
+  onPaymentError?: (error: string) => void;
 }
 
 export default function BookingForm({
@@ -13,8 +17,25 @@ export default function BookingForm({
   cancelPolicy,
   costPerNight,
   numberOfNights,
+  onPaymentSuccess,
+  onPaymentError,
 }: BookingFormProps) {
   const totalCost = costPerNight * numberOfNights;
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+
+  const handlePaymentSuccess = () => {
+    setPaymentError(null);
+    if (onPaymentSuccess) {
+      onPaymentSuccess();
+    }
+  };
+
+  const handlePaymentError = (error: string) => {
+    setPaymentError(error);
+    if (onPaymentError) {
+      onPaymentError(error);
+    }
+  };
 
   return (
     <div className={styles.container}>
@@ -41,6 +62,18 @@ export default function BookingForm({
           <span>${totalCost}</span>
         </div>
       </div>
+
+      <PaymentForm
+        amount={totalCost * 100} // Convert to cents for Stripe
+        onPaymentSuccess={handlePaymentSuccess}
+        onPaymentError={handlePaymentError}
+      />
+
+      {paymentError && (
+        <div className={styles.errorMessage}>
+          <p>Payment Error: {paymentError}</p>
+        </div>
+      )}
     </div>
   );
 }
