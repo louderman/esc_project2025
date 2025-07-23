@@ -5,16 +5,70 @@ import type { Price } from '../../../types/Price';
 import BookingForm from '../components/booking/BookingForm';
 import BookingReview from '../components/booking/BookingReview';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
-import type { OccupancyState } from '../components/listing/SearchBar/GuestInput/GuestInput';
-import styles from './bookingpage.module.css';
-import SearchBar from '../components/listing/SearchBar/SearchBar';
 import type { DestinationState } from '../components/listing/SearchBar/DestinationInput/DestinationInput';
-import { useSearchBarUrlSync } from '../hooks/url/useSearchBarUrlSync';
+import type { OccupancyState } from '../components/listing/SearchBar/GuestInput/GuestInput';
+import SearchBar from '../components/listing/SearchBar/SearchBar';
+import styles from './bookingpage.module.css';
 
 export default function BookingPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const hotel = location.state?.hotel as (Hotel & Price) | undefined;
+  // const hotel = location.state?.hotel as (Hotel & Price) | undefined;
+  const hotel: Hotel & Price = {
+    // Hotel properties
+    id: 'mock-oasia-1',
+    name: 'Oasia Resort Sentosa By Far East Hospitality',
+    rating: 4.5,
+    imageCount: 5,
+    latitude: 1.2588,
+    longitude: 103.823,
+    address: '23 Beach View, Sentosa Island',
+    address1: 'Singapore, 098679',
+    distance: 5.4,
+    trustyou: {
+      id: 'ty-1',
+      score: {
+        overall: 9,
+        kaligo_overall: 9,
+        solo: 8,
+        couple: 9,
+        family: 9,
+        business: 8,
+      },
+    },
+    categories: {},
+    amenities_ratings: [],
+    description:
+      'A luxurious resort on Sentosa island, perfect for a relaxing getaway.',
+    amenities: { outdoorPool: true, roomService: true },
+    image_details: {
+      prefix: '/listing/hotel_img_placeholder.png?id=',
+      count: 5,
+      suffix: '',
+    },
+    hires_image_index: '',
+    number_of_images: 5,
+    default_image_index: 0,
+    imgix_url: '',
+    cloudflare_image_url: '',
+    checkin_time: '15:00',
+    // Price properties
+    price: 311,
+    searchRank: 1,
+    price_type: 'per_night',
+    free_cancellation: true,
+    rooms_available: 5,
+    max_cash_payment: 311,
+    coverted_max_cash_payment: 311,
+    points: 5000,
+    bonuses: 0,
+    bonus_programs: [],
+    bonus_tiers: [],
+    lowest_price: 311,
+    converted_price: 311,
+    lowest_converted_price: 311,
+    market_rates: [{ supplier: 'supplier-a', rate: 320 }],
+  };
 
   const [stayDates, setStayDates] = useState<StayDatesState>({
     checkinDate: null,
@@ -30,9 +84,6 @@ export default function BookingPage() {
     name: '',
   });
 
-  if (!hotel) {
-    return <div>No hotel selected. Please go back to the listing page.</div>;
-  }
 
   const numberOfNights =
     stayDates.checkinDate && stayDates.checkoutDate

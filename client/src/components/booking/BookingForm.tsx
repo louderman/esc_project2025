@@ -41,49 +41,6 @@ export default function BookingForm({
           <span>${totalCost}</span>
         </div>
       </div>
-
-      <div className={styles.personalDetails}>
-        <h3>Personal Details</h3>
-        <form>
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label htmlFor="firstName">FIRST NAME</label>
-              <input type="text" id="firstName" name="firstName" />
-            </div>
-            <div className={styles.formGroup}>
-              <label htmlFor="lastName">LAST NAME</label>
-              <input type="text" id="lastName" name="lastName" />
-            </div>
-          </div>
-          <div className={styles.formGroup}>
-            <label htmlFor="email">EMAIL</label>
-            <input type="email" id="email" name="email" />
-          </div>
-          <div className={styles.formGroup}>
-            <label htmlFor="phone">PHONE NUMBER</label>
-            <input type="tel" id="phone" name="phone" />
-          </div>
-          <div className={styles.formGroup}>
-            <label htmlFor="creditCard">Credit card</label>
-            <input type="text" id="creditCard" name="creditCard" />
-          </div>
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label htmlFor="expiry">Expiry</label>
-              <input type="text" id="expiry" name="expiry" />
-            </div>
-            <div className={styles.formGroup}>
-              <label htmlFor="cvv">CVV</label>
-              <input type="text" id="cvv" name="cvv" />
-            </div>
-            <div className={styles.formGroup}>
-              <label htmlFor="postalCode">Postal Code</label>
-              <input type="text" id="postalCode" name="postalCode" />
-            </div>
-          </div>
-          <button type="submit" className={styles.reserveButton}>RESERVE</button>
-        </form>
-      </div>
     </div>
   );
 }
