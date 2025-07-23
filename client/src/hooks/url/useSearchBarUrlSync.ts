@@ -110,13 +110,13 @@ export function useSearchBarUrlSync({
     syncParam(
       'checkin',
       stayDates.checkinDate
-        ? stayDates.checkinDate.toISOString().split('T')[0]
+        ? stayDates.checkinDate.toLocaleDateString('en-CA')
         : null
     );
     syncParam(
       'checkout',
       stayDates.checkoutDate
-        ? stayDates.checkoutDate.toISOString().split('T')[0]
+        ? stayDates.checkoutDate.toLocaleDateString('en-CA')
         : null
     );
     syncParam('adult', occupancy.adults);
