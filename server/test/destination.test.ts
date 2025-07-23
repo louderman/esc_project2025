@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { cleanup } from '../database/db';
-import app from '../server';
+import app from '../app';
 
 afterAll(async () => {
   await cleanup();
