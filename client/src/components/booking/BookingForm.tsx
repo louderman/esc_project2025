@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import PaymentFormWrapper from './PaymentFormWrapper';
+import PaymentForm from './PaymentForm';
 import styles from './bookingform.module.css';
 
 // Define props for the component based on the Figma design
@@ -63,7 +63,7 @@ export default function BookingForm({
         </div>
       </div>
 
-      <PaymentFormWrapper
+      <PaymentForm
         amount={totalCost * 100} // Convert to cents for Stripe
         onPaymentSuccess={handlePaymentSuccess}
         onPaymentError={handlePaymentError}
