@@ -91,7 +91,6 @@ const PaymentForm = ({ amount, onPaymentSuccess, onPaymentError }: PaymentFormPr
       return;
     }
 
-    // Use your card Element with other Stripe.js APIs
     const { error: paymentMethodError, paymentMethod } = await stripe.createPaymentMethod({
       type: 'card',
       card: cardElement,
@@ -103,6 +102,7 @@ const PaymentForm = ({ amount, onPaymentSuccess, onPaymentError }: PaymentFormPr
       },
     });
 
+    // TODO: probably make this more robust, this really doesn't say much
     if (paymentMethodError) {
       const errorMessage = paymentMethodError.message || "An unknown payment error occurred.";
       setError(errorMessage);
@@ -111,10 +111,6 @@ const PaymentForm = ({ amount, onPaymentSuccess, onPaymentError }: PaymentFormPr
       return;
     }
 
-    //
-    // --- BACKEND COMMUNICATION ---
-    // Here you will send the `paymentMethod.id` to your backend to create a PaymentIntent.
-    //
     try {
       const response = await fetch(API_ENDPOINTS.PAYMENT.CREATE_PAYMENT_INTENT, {
         method: 'POST',
@@ -179,13 +175,13 @@ const PaymentForm = ({ amount, onPaymentSuccess, onPaymentError }: PaymentFormPr
   };
 
   return (
+    // HTML for the payment form over here
     <div className={styles.container}>
       <h3>Payment Details</h3>
       <form onSubmit={handleSubmit}>
         {/* Billing Address Section */}
         <div className={styles.billingSection}>
-          <h4>Billing Information</h4>
-          
+          <h4>Billing Information</h4>  
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
               <label>Full Name *</label>
@@ -301,7 +297,20 @@ const PaymentForm = ({ amount, onPaymentSuccess, onPaymentError }: PaymentFormPr
           <div className={styles.formGroup}>
             <label>Card Information</label>
             <div className={styles.cardElement}>
-              <CardElement />
+              <CardElement 
+                options={{
+                  hidePostalCode: true,
+                  style: {
+                    base: {
+                      fontSize: '16px',
+                      color: '#424770',
+                      '::placeholder': {
+                        color: '#aab7c4',
+                      },
+                    },
+                  },
+                }}
+              />
             </div>
           </div>
         </div>
