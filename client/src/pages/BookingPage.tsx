@@ -13,6 +13,7 @@ import styles from './bookingpage.module.css';
 export default function BookingPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  // commented until I get listing data
   // const hotel = location.state?.hotel as (Hotel & Price) | undefined;
   const hotel: Hotel & Price = {
     // Hotel properties

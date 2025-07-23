@@ -1,24 +1,6 @@
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { useState } from 'react';
-
-// A basic CSS-in-JS object for styling the Stripe Card Element for a better user experience.
-const cardElementOptions = {
-  style: {
-    base: {
-      color: "#32325d",
-      fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
-      fontSmoothing: "antialiased",
-      fontSize: "16px",
-      "::placeholder": {
-        color: "#aab7c4",
-      },
-    },
-    invalid: {
-      color: "#fa755a",
-      iconColor: "#fa755a",
-    },
-  },
-};
+import styles from './paymentform.module.css';
 
 interface PaymentFormProps {
   amount: number;
@@ -105,16 +87,25 @@ const PaymentForm = ({ amount, onPaymentSuccess, onPaymentError }: PaymentFormPr
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label>
-        Card details
-        <CardElement options={cardElementOptions} />
-      </label>
-      <button type="submit" disabled={!stripe || processing} style={{ marginTop: '20px' }}>
-        {processing ? 'Processing...' : `Pay $${(amount / 100).toFixed(2)}`}
-      </button>
-      {error && <div style={{ color: 'red', marginTop: '10px' }}>{error}</div>}
-    </form>
+    <div className={styles.container}>
+      <h3>Payment Details</h3>
+      <form onSubmit={handleSubmit}>
+        <div className={styles.formGroup}>
+          <label>Card details</label>
+          <div className={styles.cardElement}>
+            <CardElement />
+          </div>
+        </div>
+        <button
+          type="submit"
+          disabled={!stripe || processing}
+          className={styles.payButton}
+        >
+          {processing ? 'Processing...' : `Pay $${(amount / 100).toFixed(2)}`}
+        </button>
+        {error && <div className={styles.error}>{error}</div>}
+      </form>
+    </div>
   );
 };
 
