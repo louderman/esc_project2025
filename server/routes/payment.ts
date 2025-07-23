@@ -22,10 +22,7 @@ router.post('/create-payment-intent', async (req, res) => {
       currency: 'sgd', // You can make this dynamic if needed
       payment_method: paymentMethodId,
       confirm: true,
-      automatic_payment_methods: {
-        enabled: false,
-        allow_redirects: 'never' // Prevents redirects for this flow
-      }
+      confirmation_method: 'manual' // Disable authentication for testing
     });
 
     // Check if payment requires additional action (like 3D Secure)
