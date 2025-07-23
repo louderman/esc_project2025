@@ -132,9 +132,9 @@ export default function BookingPage() {
   };
 
   const handlePaymentError = (error: string) => {
-    // Handle payment error - could show a toast notification or alert
+    // Console error for now
+    // TODO: add a toast saying it failed, ya lazy bum
     console.error('Payment failed:', error);
-    // For now, just log the error. You could add a toast notification here
   };
 
   const policyDetails = {

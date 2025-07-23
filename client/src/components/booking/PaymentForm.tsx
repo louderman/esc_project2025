@@ -90,14 +90,27 @@ const PaymentForm = ({ amount, onPaymentSuccess, onPaymentError }: PaymentFormPr
         }),
       });
 
-      const { success, error: backendError } = await response.json();
+      const result = await response.json();
 
-      if (backendError) {
-        setError(backendError);
-        onPaymentError(backendError);
-      } else if (success) {
-        // The backend confirmed the payment was successful.
-        // The parent component will handle the redirect.
+      if (result.error) {
+        setError(result.error);
+        onPaymentError(result.error);
+      } else if (result.requires_action) {
+        // Handle additional authentication if required
+        const { error: confirmError } = await stripe.confirmCardPayment(
+          result.payment_intent.client_secret
+        );
+        
+        if (confirmError) {
+          setError(confirmError.message || 'Authentication failed');
+          onPaymentError(confirmError.message || 'Authentication failed');
+        } else {
+          // Payment succeeded after authentication
+          onPaymentSuccess();
+        }
+      } else if (result.success) {
+        // Payment succeeded without additional authentication
+        console.log('Payment succeeded with ID:', result.payment_intent_id);
         onPaymentSuccess();
       } else {
         setError('An unknown error occurred on the server.');
