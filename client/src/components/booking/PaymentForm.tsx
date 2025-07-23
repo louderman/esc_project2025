@@ -1,5 +1,6 @@
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { useState } from 'react';
+import { API_ENDPOINTS } from '../../config/api';
 import styles from './PaymentForm.module.css';
 
 interface PaymentFormProps {
@@ -80,7 +81,7 @@ const PaymentForm = ({ amount, onPaymentSuccess, onPaymentError }: PaymentFormPr
     // Here you will send the `paymentMethod.id` to your backend to create a PaymentIntent.
     //
     try {
-      const response = await fetch('http://localhost:5000/api/payment/create-payment-intent', {
+      const response = await fetch(API_ENDPOINTS.PAYMENT.CREATE_PAYMENT_INTENT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
