@@ -16,21 +16,34 @@ router.post('/create-payment-intent', async (req, res) => {
   }
 
   try {
-    // Create and confirm a PaymentIntent in a single API call.
-    // This attempts to charge the card immediately.
-    await stripe.paymentIntents.create({
+    // Create and confirm a PaymentIntent with authentication disabled for testing
+    const paymentIntent = await stripe.paymentIntents.create({
       amount,
-      currency: 'usd', // You can make this dynamic if needed
+      currency: 'sgd', // You can make this dynamic if needed
       payment_method: paymentMethodId,
       confirm: true,
+      confirmation_method: 'manual', // Disable authentication for testing
       automatic_payment_methods: {
         enabled: true,
         allow_redirects: 'never' // Prevents redirects for this flow
       }
     });
 
-    // If the create call is successful, the payment is processed.
-    res.json({ success: true });
+    // Check if payment requires additional action (like 3D Secure)
+    if (paymentIntent.status === 'requires_action') {
+      return res.json({
+        requires_action: true,
+        payment_intent: {
+          id: paymentIntent.id,
+          client_secret: paymentIntent.client_secret
+        }
+      });
+    } else if (paymentIntent.status === 'succeeded') {
+      // Payment succeeded without additional authentication
+      res.json({ success: true, payment_intent_id: paymentIntent.id });
+    } else {
+      res.status(400).json({ error: 'Payment failed with status: ' + paymentIntent.status });
+    }
 
   } catch (e) {
     // Handle specific card errors sent by Stripe
