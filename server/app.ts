@@ -1,7 +1,5 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import process from 'process';
-import { cleanup } from './database/db';
 
 import { router as destRouter } from './routes/destination';
 import { router as priceRouter } from './routes/hotel-price';
