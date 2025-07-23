@@ -4,6 +4,11 @@ import { FieldPacket } from 'mysql2';
 
 export const tableName = 'destination';
 // CREATE TABLE Destination (id INT AUTO_INCREMENT PRIMARY KEY, dest_id VARCHAR(4), term VARCHAR(255), lat FLOAT, lng FLOAT, type VARCHAR(100));
+/**
+ *  +----+---------+-------------+---------+---------+------+-------+
+ *  | id | dest_id | term        | lat     | lng     | type | state |
+ *  +----+---------+-------------+---------+---------+------+-------+
+ */
 
 function editDistance(a: string, b: string): number {
   const m = a.length;
@@ -47,7 +52,7 @@ async function sync() {
   );
 }
 
-async function all() {
+async function getAllDestinations() {
   try {
     const [rows] = await pool.query(`
       SELECT * FROM ${tableName};
@@ -59,7 +64,7 @@ async function all() {
   }
 }
 
-async function random(count: number) {
+async function getRandomDestinations(count: number) {
   try {
     const [rows] = await pool.query(
       `
@@ -76,7 +81,7 @@ async function random(count: number) {
   }
 }
 
-async function query(
+async function searchDestinations(
   text: string,
   distanceThresh: number = 2,
   returnCount: number = 10
@@ -123,7 +128,7 @@ async function query(
     )) as [Destination[], FieldPacket[]];
 
     if (rows.length < returnCount) {
-      const allRows = await all();
+      const allRows = await getAllDestinations();
       const textParts = text.toLowerCase().split(/[\s,]+/);
       for (let i = 0; i < allRows.length && rows.length < returnCount; i++) {
         const row = allRows[i];
@@ -154,4 +159,32 @@ async function query(
   }
 }
 
-export { sync, all, random, query };
+async function searchDestinationsInBounds({
+  minLat,
+  maxLat,
+  minLng,
+  maxLng,
+}: {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+}) {
+  const [rows] = (await pool.query(
+    `
+        SELECT * FROM destination
+        WHERE LAT BETWEEN ? AND ? AND LNG BETWEEN ? AND ?;
+    `,
+    [minLat, maxLat, minLng, maxLng]
+  )) as [Destination[], FieldPacket[]];
+
+  return rows;
+}
+
+export {
+  sync,
+  getAllDestinations,
+  getRandomDestinations,
+  searchDestinations,
+  searchDestinationsInBounds,
+};
