@@ -1,226 +1,157 @@
 import { pool } from '../database/db';
 import { type Destination } from '../../types/Destination';
-import { ResultSetHeader, RowDataPacket } from 'mysql2';
+import { FieldPacket } from 'mysql2';
 
-export const tableName = 'destinations';
+export const tableName = 'destination';
+// CREATE TABLE Destination (id INT AUTO_INCREMENT PRIMARY KEY, dest_id VARCHAR(4), term VARCHAR(255), lat FLOAT, lng FLOAT, type VARCHAR(100));
 
-// Re-export the Destination type for convenience
-export type { Destination } from '../../types/Destination';
-
-// Helper function to convert RowDataPacket to Destination
-function toDestination(row: RowDataPacket): Destination {
-  return {
-    id: row.id,
-    term: row.term,
-    uid: row.uid,
-    lat: row.lat,
-    lng: row.lng,
-    type: row.type,
-    state: row.state
-  };
-}
-// Helper function to calculate edit distance (Levenshtein distance)
 function editDistance(a: string, b: string): number {
-  if (a.length === 0) return b.length;
-  if (b.length === 0) return a.length;
+  const m = a.length;
+  const n = b.length;
 
-  const matrix: number[][] = Array(b.length + 1)
-    .fill(null)
-    .map(() => Array(a.length + 1).fill(null));
+  const dp: number[][] = Array.from({ length: m + 1 }, () =>
+    Array(n + 1).fill(0)
+  );
 
-  for (let i = 0; i <= a.length; i++) {
-    matrix[0][i] = i;
-  }
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
 
-  for (let j = 0; j <= b.length; j++) {
-    matrix[j][0] = j;
-  }
-
-  for (let j = 1; j <= b.length; j++) {
-    for (let i = 1; i <= a.length; i++) {
-      const substitutionCost = a[i - 1] === b[j - 1] ? 0 : 1;
-      matrix[j][i] = Math.min(
-        matrix[j][i - 1] + 1, // deletion
-        matrix[j - 1][i] + 1, // insertion
-        matrix[j - 1][i - 1] + substitutionCost // substitution
-      );
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (a[i - 1] === b[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1];
+      } else {
+        dp[i][j] = Math.min(
+          dp[i - 1][j] + 1,
+          dp[i][j - 1] + 1,
+          dp[i - 1][j - 1] + 1
+        );
+      }
     }
   }
 
-  return matrix[b.length][a.length];
+  return dp[m][n];
 }
 
-// Initialize the database table
 async function sync() {
+  await pool.query(
+    `CREATE TABLE IF NOT EXISTS ${tableName} (
+        id INT AUTO_INCREMENT PRIMARY KEY, 
+        dest_id VARCHAR(4), 
+        term VARCHAR(255), 
+        lat FLOAT, 
+        lng FLOAT, 
+        type VARCHAR(100), 
+        state VARCHAR(100)
+    );`
+  );
+}
+
+async function all() {
   try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS ${tableName} (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        uid VARCHAR(36) NOT NULL UNIQUE,
-        term VARCHAR(255) NOT NULL,
-        lat FLOAT NOT NULL,
-        lng FLOAT NOT NULL,
-        type VARCHAR(100) NOT NULL,
-        state VARCHAR(100) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FULLTEXT INDEX idx_term (term)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-    `);
-    console.log(`Table ${tableName} synchronized`);
-  } catch (error) {
-    console.error(`Error synchronizing table ${tableName}:`, error);
-    throw error;
+    const [rows] = await pool.query(`
+      SELECT * FROM ${tableName};
+      `);
+    return rows as Destination[];
+  } catch (e) {
+    console.error(e);
+    return [];
   }
 }
 
-// Get all destinations
-async function all(): Promise<Destination[]> {
+async function random(count: number) {
   try {
-    const [rows] = await pool.query<RowDataPacket[]>(`SELECT * FROM ${tableName}`);
-    return rows.map(toDestination);
-  } catch (error) {
-    console.error('Error fetching all destinations:', error);
-    throw error;
-  }
-}
-
-// Get random destinations
-async function random(count: number): Promise<Destination[]> {
-  if (count <= 0) return [];
-
-  try {
-    const [rows] = await pool.query<RowDataPacket[]>(
-      `SELECT * FROM ${tableName} ORDER BY RAND() LIMIT ?`,
+    const [rows] = await pool.query(
+      `
+      SELECT * FROM ${tableName}
+      ORDER BY RAND()
+      LIMIT ?;
+      `,
       [count]
     );
-    return rows.map(toDestination);
-  } catch (error) {
-    console.error(`Error fetching ${count} random destinations:`, error);
-    throw error;
+    return rows as Destination[];
+  } catch (e) {
+    console.error(e);
+    return [];
   }
 }
 
-// Search destinations with fuzzy matching
 async function query(
   text: string,
   distanceThresh: number = 2,
   returnCount: number = 10
-): Promise<Destination[]> {
-  if (!text.trim()) return [];
+) {
+  /**
+   * Performs a fuzzy search for destinations based on the user's input `text`.
+   *
+   * Step 1: SQL `LIKE` search
+   * - Executes a query: `SELECT * FROM destination WHERE term LIKE '%text%' LIMIT returnCount`
+   * - Finds destinations where `term` contains the input `text` as a substring.
+   * - Time Complexity: O(N × M)
+   *   - N = number of rows in the `destination` table
+   *   - M = average length of each `term`
+   * - Limitation: Since `LIKE '%text%'` starts with a wildcard, it disables index optimization (causes full table scan).
+   *
+   * Step 2: Fuzzy match with edit distance
+   * - If fewer than `returnCount` results are found:
+   *   - Retrieves all rows from the `destination` table.
+   *   - Normalizes the input `text` by lowercasing and splitting on whitespace or commas: `/[\s,]+/`
+   *   - For each row:
+   *     - Skip if it has no `term` or is already in the result set.
+   *     - Normalize the row's `term` using the same splitting strategy.
+   *     - Perform fuzzy matching by:
+   *         - Ensuring every word in the input matches some word in the row’s `term`, where:
+   *             - Their lengths differ by at most `distanceThresh`, and
+   *             - Their Levenshtein (edit) distance is ≤ `distanceThresh`.
+   *   - Matching rows are added until `returnCount` is reached.
+   *
+   * Time Complexity of fallback: O(N × P × Q × M)
+   * - N = number of rows in the table
+   * - P = number of parts in the input text
+   * - Q = number of parts in each row's term
+   * - M = average token length
+   */
 
   try {
-    // First try full-text search for better performance
-    const [fullTextRows] = await pool.query<RowDataPacket[]>(
-      `SELECT *, MATCH(term) AGAINST(? IN NATURAL LANGUAGE MODE) as relevance 
-       FROM ${tableName} 
-       WHERE MATCH(term) AGAINST(? IN NATURAL LANGUAGE MODE) 
-       ORDER BY relevance DESC 
-       LIMIT ?`,
-      [text, text, returnCount]
-    );
+    const [rows] = (await pool.query(
+      `
+        SELECT * FROM destination
+        WHERE term LIKE ?
+        LIMIT ${returnCount}
+    `,
+      [`%${text}%`]
+    )) as [Destination[], FieldPacket[]];
 
-    let results = fullTextRows.map(toDestination);
-
-    if (results.length >= returnCount) {
-      return results.slice(0, returnCount);
-    }
-
-    // Fallback to LIKE search if full-text doesn't return enough results
-    const [likeRows] = await pool.query<RowDataPacket[]>(
-      `SELECT * FROM ${tableName} WHERE term LIKE ? LIMIT ?`,
-      [`%${text}%`, returnCount]
-    );
-
-    results = [...new Set([...results, ...likeRows.map(toDestination)])];
-
-    // If we still don't have enough results, use fuzzy matching
-    if (results.length < returnCount) {
-      const allDestinations = await all();
-      const textParts = text.toLowerCase().split(/[\s,]+/).filter(Boolean);
-
-      for (const destination of allDestinations) {
-        if (results.length >= returnCount) break;
-        if (!destination.term || results.some(r => r.id === destination.id)) {
+    if (rows.length < returnCount) {
+      const allRows = await all();
+      const textParts = text.toLowerCase().split(/[\s,]+/);
+      for (let i = 0; i < allRows.length && rows.length < returnCount; i++) {
+        const row = allRows[i];
+        const included = rows.some((r) => r.id === row.id);
+        if (!row.term || included) {
           continue;
         }
 
-        const termParts = destination.term.toLowerCase().split(/[\s,]+/).filter(Boolean);
-        const isMatch = textParts.every(userWord => 
-          termParts.some(termWord => 
-            Math.abs(termWord.length - userWord.length) <= distanceThresh &&
-            editDistance(termWord, userWord) <= distanceThresh
+        const rowParts = row.term.toLowerCase().split(/[\s,]+/);
+        const isFuzzyMatch = textParts.every((userWord) =>
+          rowParts.some(
+            (p) =>
+              Math.abs(p.length - userWord.length) <= distanceThresh &&
+              rowParts.some((p) => editDistance(p, userWord) <= distanceThresh)
           )
         );
 
-        if (isMatch) {
-          results.push(destination);
+        if (isFuzzyMatch) {
+          rows.push(row);
         }
       }
     }
 
-    return results.slice(0, returnCount);
-  } catch (error) {
-    console.error('Error querying destinations:', error);
-    throw error;
+    return rows;
+  } catch (e) {
+    console.error(e);
+    return [];
   }
 }
 
-// Get destination by ID
-async function getById(id: number): Promise<Destination | null> {
-  try {
-    const [rows] = await pool.query<RowDataPacket[]>(
-      `SELECT * FROM ${tableName} WHERE id = ?`,
-      [id]
-    );
-    return rows.length > 0 ? toDestination(rows[0]) : null;
-  } catch (error) {
-    console.error(`Error fetching destination with ID ${id}:`, error);
-    throw error;
-  }
-}
-
-// Get destination by UID
-async function getByUid(uid: string): Promise<Destination | null> {
-  try {
-    const [rows] = await pool.query<RowDataPacket[]>(
-      `SELECT * FROM ${tableName} WHERE uid = ?`,
-      [uid]
-    );
-    return rows.length > 0 ? toDestination(rows[0]) : null;
-  } catch (error) {
-    console.error(`Error fetching destination with UID ${uid}:`, error);
-    throw error;
-  }
-}
-
-// Create a new destination
-async function create(destination: Omit<Destination, 'id'>): Promise<Destination> {
-  try {
-    const [result] = await pool.query<ResultSetHeader>(
-      `INSERT INTO ${tableName} (uid, term, lat, lng, type, state) 
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [destination.uid, destination.term, destination.lat, 
-       destination.lng, destination.type, destination.state]
-    );
-    
-    const createdDestination = await getById(result.insertId);
-    if (!createdDestination) {
-      throw new Error('Failed to retrieve created destination');
-    }
-    return createdDestination;
-  } catch (error) {
-    console.error('Error creating destination:', error);
-    throw error;
-  }
-}
-
-export { 
-  sync, 
-  all, 
-  random, 
-  query, 
-  getById, 
-  getByUid, 
-  create 
-};
+export { sync, all, random, query };
