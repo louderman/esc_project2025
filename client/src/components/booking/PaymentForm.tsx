@@ -1,4 +1,4 @@
-ey kimport { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { useState } from 'react';
 import styles from './PaymentForm.module.css';
 
