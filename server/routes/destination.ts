@@ -11,7 +11,6 @@ router.get('/all/', async function (req, res) {
  * GET /random?count={count}
  */
 router.get('/random', async function (req, res) {
-  console.log('called')
   const countRaw = parseInt(req.query.count as string);
   const count = isNaN(countRaw) ? 10 : countRaw;
 

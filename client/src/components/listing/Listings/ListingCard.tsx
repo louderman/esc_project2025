@@ -4,20 +4,32 @@ import type { Price } from '../../../../../types/Price';
 import type { StayDatesState } from '../SearchBar/DateInput/DateInput';
 import { AMENITY_TO_SVG } from '../../../constants/amenities';
 import styles from './listingcard.module.css';
+import type { OccupancyState } from '../SearchBar/GuestInput/GuestInput';
 
 export default function ListingCard({
   hotel,
   stayDates,
+  occupancy,
 }: {
   hotel: Hotel & Partial<Price>;
   stayDates: StayDatesState;
+  occupancy: OccupancyState;
 }) {
   const navigate = useNavigate();
 
   const handleView = () => {
     navigate('/booking', { state: { hotel, stayDates } });
   };
+
   const userRating = hotel.categories.overall?.score;
+  const checkin = stayDates.checkinDate;
+  const checkout = stayDates.checkoutDate;
+  const numNights =
+    checkin && checkout
+      ? Math.round(
+          (checkout.getTime() - checkin.getTime()) / (1000 * 60 * 60 * 24)
+        )
+      : 0;
 
   return (
     <div className={styles.container}>
@@ -80,19 +92,25 @@ export default function ListingCard({
                 minimumFractionDigits: 2,
               }) ?? '...'}
             </span>
-            <span className={styles.stayInfoText}>1 room, 1 night</span>
+            <span className={styles.stayInfoText}>
+              {occupancy.rooms} room{occupancy.rooms > 0 ? 's' : ''},{' '}
+              {numNights} night{numNights > 0 ? 's' : ''}
+            </span>
             <div className={styles.userRatingBox}>
               <span className={styles.userRatingText}>Rating</span>
               <div
                 className={`${styles.userRatingNumber} ${
                   (userRating === undefined || userRating === null) &&
                   styles.noRating
-                }`}>
+                }`}
+              >
                 {userRating ? (userRating / 10).toFixed(1) : '-'}
               </div>
             </div>
           </div>
-          <button className={styles.viewButton} onClick={handleView}>View</button>
+          <button className={styles.viewButton} onClick={handleView}>
+            View
+          </button>
         </div>
       </div>
     </div>
