@@ -7,7 +7,7 @@ import { useIsMobile } from '../hooks/hotel_details/use-mobile.tsx';
 import { cn } from '../lib/utils';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
+import { Separator } from "../components/ui/separator"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
