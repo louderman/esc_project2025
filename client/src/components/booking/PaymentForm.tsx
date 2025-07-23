@@ -39,7 +39,7 @@ const PaymentForm = ({ amount, onPaymentSuccess, onPaymentError }: PaymentFormPr
       city: '',
       state: '',
       postal_code: '',
-      country: 'US',
+      country: 'SG',
     },
   });
 
