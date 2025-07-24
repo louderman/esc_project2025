@@ -143,6 +143,18 @@ export default function BookingPage() {
       'Reservation must be cancelled by 3pm local time 1 day before arrival to avoid penalty of 1 night room and tax.',
     costPerNight: hotel.price ?? 0,
     numberOfNights,
+    bookingData: {
+      hotelId: hotel.id,
+      hotelName: hotel.name,
+      checkInDate: bookingDetails.checkInDate,
+      checkOutDate: bookingDetails.checkOutDate,
+      guests: bookingDetails.guests,
+      pricePerNight: hotel.price ?? 0,
+      numberOfNights,
+      totalAmount: (hotel.price ?? 0) * numberOfNights,
+      whatsIncluded: bookingDetails.whatsIncluded,
+      imageUrl: bookingDetails.imageUrl,
+    },
     onPaymentSuccess: handlePaymentSuccess,
     onPaymentError: handlePaymentError,
   };

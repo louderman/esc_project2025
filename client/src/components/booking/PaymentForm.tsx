@@ -1,10 +1,12 @@
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { useState } from 'react';
+import type { CreateBookingRequest } from '../../../../types/Booking';
 import { API_ENDPOINTS } from '../../config/api';
 import styles from './PaymentForm.module.css';
 
 interface PaymentFormProps {
   amount: number;
+  bookingData?: CreateBookingRequest; // Booking data to send with payment
   onPaymentSuccess: () => void;
   onPaymentError: (error: string) => void;
 }
@@ -23,7 +25,7 @@ interface BillingAddress {
   };
 }
 
-const PaymentForm = ({ amount, onPaymentSuccess, onPaymentError }: PaymentFormProps) => {
+const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: PaymentFormProps) => {
   // State for handling errors and processing status
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
@@ -118,6 +120,7 @@ const PaymentForm = ({ amount, onPaymentSuccess, onPaymentError }: PaymentFormPr
         body: JSON.stringify({
           paymentMethodId: paymentMethod.id,
           amount: amount, // Amount in cents
+          bookingData: bookingData, // Include booking data
         }),
       });
 

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { CreateBookingRequest } from '../../../../types/Booking';
 import PaymentForm from './PaymentForm';
 import styles from './bookingform.module.css';
 
@@ -8,6 +9,7 @@ interface BookingFormProps {
   cancelPolicy: string;
   costPerNight: number;
   numberOfNights: number;
+  bookingData?: CreateBookingRequest; // Booking data to pass to payment
   onPaymentSuccess?: () => void;
   onPaymentError?: (error: string) => void;
 }
@@ -17,6 +19,7 @@ export default function BookingForm({
   cancelPolicy,
   costPerNight,
   numberOfNights,
+  bookingData,
   onPaymentSuccess,
   onPaymentError,
 }: BookingFormProps) {
@@ -65,6 +68,7 @@ export default function BookingForm({
 
       <PaymentForm
         amount={totalCost * 100} // Convert to cents for Stripe
+        bookingData={bookingData}
         onPaymentSuccess={handlePaymentSuccess}
         onPaymentError={handlePaymentError}
       />
