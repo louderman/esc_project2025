@@ -22,9 +22,11 @@ router.post('/create-payment-intent', async (req, res) => {
       currency: 'sgd', // You can make this dynamic if needed
       payment_method: paymentMethodId,
       confirm: true,
-      confirmation_method: 'manual' // Disable authentication for testing
+      confirmation_method: 'manual', // Disable authentication for testing
+      return_url: 'https://localhost:5173/booking/confirmation'
     });
 
+    
     // Check if payment requires additional action (like 3D Secure)
     if (paymentIntent.status === 'requires_action') {
       return res.json({
