@@ -66,6 +66,10 @@ async function getAllDestinations() {
 
 async function getRandomDestinations(count: number) {
   try {
+    if (count <= 0) {
+      return [];
+    }
+
     const [rows] = await pool.query(
       `
       SELECT * FROM ${tableName}
@@ -86,38 +90,8 @@ async function searchDestinations(
   distanceThresh: number = 2,
   returnCount: number = 10
 ) {
-  /**
-   * Performs a fuzzy search for destinations based on the user's input `text`.
-   *
-   * Step 1: SQL `LIKE` search
-   * - Executes a query: `SELECT * FROM destination WHERE term LIKE '%text%' LIMIT returnCount`
-   * - Finds destinations where `term` contains the input `text` as a substring.
-   * - Time Complexity: O(N × M)
-   *   - N = number of rows in the `destination` table
-   *   - M = average length of each `term`
-   * - Limitation: Since `LIKE '%text%'` starts with a wildcard, it disables index optimization (causes full table scan).
-   *
-   * Step 2: Fuzzy match with edit distance
-   * - If fewer than `returnCount` results are found:
-   *   - Retrieves all rows from the `destination` table.
-   *   - Normalizes the input `text` by lowercasing and splitting on whitespace or commas: `/[\s,]+/`
-   *   - For each row:
-   *     - Skip if it has no `term` or is already in the result set.
-   *     - Normalize the row's `term` using the same splitting strategy.
-   *     - Perform fuzzy matching by:
-   *         - Ensuring every word in the input matches some word in the row’s `term`, where:
-   *             - Their lengths differ by at most `distanceThresh`, and
-   *             - Their Levenshtein (edit) distance is ≤ `distanceThresh`.
-   *   - Matching rows are added until `returnCount` is reached.
-   *
-   * Time Complexity of fallback: O(N × P × Q × M)
-   * - N = number of rows in the table
-   * - P = number of parts in the input text
-   * - Q = number of parts in each row's term
-   * - M = average token length
-   */
-
   try {
+    // First finds destinations where `term` contains the input `text` as a substring.
     const [rows] = (await pool.query(
       `
         SELECT * FROM destination
@@ -127,9 +101,12 @@ async function searchDestinations(
       [`%${text}%`]
     )) as [Destination[], FieldPacket[]];
 
+    // If found rows are lesser than `returnCount`, then
     if (rows.length < returnCount) {
+      // TODO: optimize this
+      // Get every destinations and do fuzzy matching with edit distance dp
       const allRows = await getAllDestinations();
-      const textParts = text.toLowerCase().split(/[\s,]+/);
+      const textParts = text.toLowerCase().split(/[\s,]+/); // Split user input by comma
       for (let i = 0; i < allRows.length && rows.length < returnCount; i++) {
         const row = allRows[i];
         const included = rows.some((r) => r.id === row.id);
@@ -137,6 +114,10 @@ async function searchDestinations(
           continue;
         }
 
+        // Split db destination data by comma too and
+        // try to match with each user input text part
+        // by checking if every user input text part has edit distance <= `distanceThresh`
+        // relative to any db destination data text part
         const rowParts = row.term.toLowerCase().split(/[\s,]+/);
         const isFuzzyMatch = textParts.every((userWord) =>
           rowParts.some(
@@ -182,6 +163,7 @@ async function searchDestinationsInBounds({
 }
 
 export {
+  editDistance,
   sync,
   getAllDestinations,
   getRandomDestinations,
