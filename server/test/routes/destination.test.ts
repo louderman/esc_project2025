@@ -1,9 +1,9 @@
 import request from 'supertest';
 import { cleanup } from '../../database/db';
-import app from '../../app';
 jest.mock('../../models/destination');
 import { getRandomDestinations } from '../../models/destination';
 import { Destination } from '../../../types/Destination';
+import app from '../../server';
 
 // Test /api/destination/random route
 describe('GET /api/destination/random?count={}', () => {
