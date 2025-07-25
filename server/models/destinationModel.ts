@@ -151,10 +151,13 @@ async function searchDestinationsInBounds({
   minLng: number;
   maxLng: number;
 }) {
+  [minLat, maxLat] = minLat < maxLat ? [minLat, maxLat] : [maxLat, minLat];
+  [minLng, maxLng] = minLng < maxLng ? [minLng, maxLng] : [maxLng, minLng];
+
   const [rows] = (await pool.query(
     `
         SELECT * FROM destination
-        WHERE LAT BETWEEN ? AND ? AND LNG BETWEEN ? AND ?;
+        WHERE ROUND(LAT, 4) BETWEEN ROUND(?, 4) AND ROUND(?, 4) AND ROUND(LNG, 4) BETWEEN ROUND(?, 4) AND ROUND(?, 4);
     `,
     [minLat, maxLat, minLng, maxLng]
   )) as [Destination[], FieldPacket[]];
