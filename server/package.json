@@ -5,7 +5,7 @@
   "main": "server.ts",
   "type": "commonjs",
   "scripts": {
-    "test": "cross-env NODE_ENV=test jest --verbose",
+    "test": "cross-env NODE_ENV=test jest --detectOpenHandles",
     "build": "npx tsc",
     "start": "tsc -w & node dist/server.js",
     "dev": "ts-node-dev ./server.ts",

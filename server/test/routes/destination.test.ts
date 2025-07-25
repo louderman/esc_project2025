@@ -1,34 +1,37 @@
 import request from 'supertest';
-import { cleanup } from '../../database/db';
-jest.mock('../../models/destinationModel', () => {
-  return {
-    ...jest.requireActual('../../models/destinationModel'),
-    getRandomDestinations: jest.fn(),
-  };
-});
-import { getRandomDestinations } from '../../models/destinationModel';
+import {
+  getRandomDestinations,
+  tableName,
+} from '../../models/destinationModel';
 import { Destination } from '../../../types/Destination';
 import app from '../../server';
+import { pool } from '../../database/db';
 
 // Test /api/destination/random route
 describe('GET /api/destination/random?count={}', () => {
-  const mockedGetRandomDestinations = getRandomDestinations as jest.Mock;
-  const mockDestination: Destination = {
-    dest_id: '1',
-    id: '1',
-    lat: 0,
-    lng: 0,
-    state: 'state',
-    term: 'term',
-    type: '2',
-  };
-
-  beforeEach(() => {
-    mockedGetRandomDestinations.mockResolvedValue(
-      Array(5).fill(mockDestination)
-    );
+  const testDestinations = Array.from({ length: 10 }, (_, i) => ({
+    dest_id: `test_${i}`,
+    term: `Test Destination ${i}`,
+    lat: 1.0 + i,
+    lng: 103.0 + i,
+    type: 'city',
+    state: 'TestState',
+  }));
+  beforeAll(async () => {
+    for (const dest of testDestinations) {
+      await pool.query(
+        `INSERT INTO ${tableName} (dest_id, term, lat, lng, type, state)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [dest.dest_id, dest.term, dest.lat, dest.lng, dest.type, dest.state]
+      );
+    }
   });
 
+  afterAll(async () => {
+    await pool.query(`DELETE FROM ${tableName} WHERE dest_id LIKE ?`, [
+      `test_%`,
+    ]);
+  });
   it('should have returned destination length equals to count param', async () => {
     const res = await request(app).get('/api/destination/random?count=5');
     expect(res.statusCode).toBe(200);
@@ -38,7 +41,7 @@ describe('GET /api/destination/random?count={}', () => {
     const res = await request(app).get('/api/destination/random?count=0');
     expect(res.statusCode).toBe(400);
   });
-  it('should throw status 40 on negative count', async () => {
+  it('should throw status 400 on negative count', async () => {
     const res = await request(app).get('/api/destination/random?count=-1');
     expect(res.statusCode).toBe(400);
   });
