@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { pool } from './db';
 import { type Destination } from '../../types/Destination';
-import { sync, tableName } from '../models/destination';
+import { sync, tableName } from '../models/destinationModel';
 
 const DESTINATION_JSON_PATH = './public/destinations.json';
 

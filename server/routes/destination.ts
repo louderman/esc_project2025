@@ -4,7 +4,7 @@ import {
   getRandomDestinations,
   searchDestinations,
   searchDestinationsInBounds,
-} from '../models/destination';
+} from '../models/destinationModel';
 const router = express.Router();
 
 router.get('/all/', async function (req, res) {
