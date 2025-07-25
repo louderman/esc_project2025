@@ -8,30 +8,34 @@ on:
       - '**'
 
 jobs:
-  tests:
+  frontend-tests:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
       - name: Install client dependencies
         run: npm install
         working-directory: ./client
-
       - name: Run Vitest (frontend tests)
         run: npx vitest run
         working-directory: ./client
 
+  backend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
       - name: Install server dependencies
         run: npm install
         working-directory: ./server
-
       - name: Run Jest (backend tests)
         run: npm test
         working-directory: ./server
