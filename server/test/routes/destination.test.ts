@@ -1,7 +1,12 @@
 import request from 'supertest';
 import { cleanup } from '../../database/db';
-jest.mock('../../models/destination');
-import { getRandomDestinations } from '../../models/destination';
+jest.mock('../../models/destinationModel', () => {
+  return {
+    ...jest.requireActual('../../models/destinationModel'),
+    getRandomDestinations: jest.fn(),
+  };
+});
+import { getRandomDestinations } from '../../models/destinationModel';
 import { Destination } from '../../../types/Destination';
 import app from '../../server';
 
@@ -44,10 +49,6 @@ describe('GET /api/destination/random?count={}', () => {
   it('should throw status 400 on non-numeric count on missing return count', async () => {
     const res = await request(app).get('/api/destination/random');
     expect(res.statusCode).toBe(400);
-  });
-
-  afterAll(async () => {
-    await cleanup();
   });
 });
 

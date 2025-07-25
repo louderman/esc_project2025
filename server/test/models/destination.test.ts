@@ -1,5 +1,3 @@
-// Mock only the getAllDestinations function in destination model
-import { FieldPacket, QueryResult } from 'mysql2';
 import { cleanup, pool } from '../../database/db';
 import {
   editDistance,
@@ -7,8 +5,7 @@ import {
   searchDestinations,
   searchDestinationsInBounds,
   tableName,
-} from '../../models/destination';
-import { PoolConnection } from 'mysql2/promise';
+} from '../../models/destinationModel';
 
 // Test edit distance dp function
 describe('Test edit distance dp function', () => {
@@ -51,6 +48,31 @@ describe('Test edit distance dp function', () => {
 
 // Test getRandomDestinations function
 describe('Test getRandomDestinations', () => {
+  const testDestinations = Array.from({ length: 10 }, (_, i) => ({
+    dest_id: `test_${i}`,
+    term: `Test Destination ${i}`,
+    lat: 1.0 + i,
+    lng: 103.0 + i,
+    type: 'city',
+    state: 'TestState',
+  }));
+
+  beforeAll(async () => {
+    for (const dest of testDestinations) {
+      await pool.query(
+        `INSERT INTO ${tableName} (dest_id, term, lat, lng, type, state)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [dest.dest_id, dest.term, dest.lat, dest.lng, dest.type, dest.state]
+      );
+    }
+  });
+
+  afterAll(async () => {
+    await pool.query(`DELETE FROM ${tableName} WHERE dest_id LIKE ?`, [
+      `test_%`,
+    ]);
+  });
+
   it('Test returned destination length matches positive count', async () => {
     const res = await getRandomDestinations(5);
     expect(res).toHaveLength(5);
@@ -65,10 +87,6 @@ describe('Test getRandomDestinations', () => {
     const res = await getRandomDestinations(-1);
     expect(res).toHaveLength(0);
   });
-});
-
-afterAll(async () => {
-  await cleanup();
 });
 
 // I can't test searchDestinationsInBounds,
