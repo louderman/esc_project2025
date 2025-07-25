@@ -2,7 +2,7 @@ import process from 'process';
 import express from 'express';
 import cors from 'cors';
 
-import { cleanup, pool } from './database/db';
+import { cleanup } from './database/db';
 
 import { sync as syncUser } from './models/userModel';
 import { sync as syncDest } from './models/destinationModel';
@@ -28,6 +28,7 @@ process.on('SIGTERM', cleanup);
 syncUser();
 syncDest();
 
+// process.env.NODE_ENV === 'test' only when we run `npm run test`
 if (process.env.NODE_ENV !== 'test') {
   app.listen(5000, () => {
     console.log('Server listening on port 5000.');

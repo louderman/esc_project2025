@@ -38,7 +38,7 @@ router.get(['/query/:text', '/query/'], async function (req, res) {
   const distance = isNaN(distanceRaw) ? 2 : distanceRaw;
 
   const text = req.params.text;
-  console.log(text);
+  // console.log(text);
   if (!text) {
     res.status(400).json({ message: 'no query text param given' });
     return;

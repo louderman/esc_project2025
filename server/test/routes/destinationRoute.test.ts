@@ -170,7 +170,7 @@ describe('GET /api/destination/query/:text?count={}?distance={}', () => {
 
 // Test /api/destination/bounds route
 describe('GET /api/destination/bounds?minLat={}&maxLat={}&minLng={}&maxLng={}', () => {
-  it('Test worst robust boundary points', async () => {
+  it('Test lng lat worst robust boundary points', async () => {
     const bounds = {
       minLat: 1.512,
       maxLat: 2.512,
