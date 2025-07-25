@@ -2,10 +2,10 @@ import process from 'process';
 import express from 'express';
 import cors from 'cors';
 
-import { cleanup } from './database/db';
+import { cleanup, pool } from './database/db';
 
-import { sync as syncDest } from './models/destination';
 import { sync as syncUser } from './models/userModel';
+import { sync as syncDest } from './models/destinationModel';
 
 import { router as destRouter } from './routes/destination';
 import { router as priceRouter } from './routes/hotel-price';
@@ -22,13 +22,13 @@ app.use('/api/hotel-price', priceRouter);
 app.use('/api/hotel', hotelRouter);
 app.use('/api/auth', authRouter);
 
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup);
+
+syncUser();
+syncDest();
+
 if (process.env.NODE_ENV !== 'test') {
-  process.on('SIGINT', cleanup);
-  process.on('SIGTERM', cleanup);
-
-  syncDest();
-  syncUser();
-
   app.listen(5000, () => {
     console.log('Server listening on port 5000.');
   });
