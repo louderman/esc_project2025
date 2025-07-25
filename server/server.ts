@@ -7,10 +7,10 @@ import { cleanup, pool } from './database/db';
 import { sync as syncUser } from './models/userModel';
 import { sync as syncDest } from './models/destinationModel';
 
-import { router as destRouter } from './routes/destination';
-import { router as priceRouter } from './routes/hotel-price';
-import { router as hotelRouter } from './routes/hotel';
-import { router as authRouter } from './routes/auth';
+import { router as destRouter } from './routes/destinationRoute';
+import { router as priceRouter } from './routes/hotelpriceRoute';
+import { router as hotelRouter } from './routes/hotelRoute';
+import { router as authRouter } from './routes/authRoute';
 
 const app = express();
 
