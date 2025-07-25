@@ -1,11 +1,15 @@
-import { cleanup, pool } from '../../database/db';
 import {
   editDistance,
   getRandomDestinations,
   searchDestinations,
   searchDestinationsInBounds,
-  tableName,
 } from '../../models/destinationModel';
+import generateRobustWorstBoundaryTCs from '../utils/generateRobustWorst';
+import {
+  deleteTestDestinations,
+  insertTestDestinations,
+  withTestDestinations,
+} from '../utils/testDestinationUtils';
 
 // Test edit distance dp function
 describe('Test edit distance dp function', () => {
@@ -49,6 +53,7 @@ describe('Test edit distance dp function', () => {
 // Test getRandomDestinations function
 describe('Test getRandomDestinations', () => {
   const testDestinations = Array.from({ length: 10 }, (_, i) => ({
+    id: `test_${i}`,
     dest_id: `test_${i}`,
     term: `Test Destination ${i}`,
     lat: 1.0 + i,
@@ -56,22 +61,7 @@ describe('Test getRandomDestinations', () => {
     type: 'city',
     state: 'TestState',
   }));
-
-  beforeAll(async () => {
-    for (const dest of testDestinations) {
-      await pool.query(
-        `INSERT INTO ${tableName} (dest_id, term, lat, lng, type, state)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [dest.dest_id, dest.term, dest.lat, dest.lng, dest.type, dest.state]
-      );
-    }
-  });
-
-  afterAll(async () => {
-    await pool.query(`DELETE FROM ${tableName} WHERE dest_id LIKE ?`, [
-      `test_%`,
-    ]);
-  });
+  withTestDestinations(testDestinations);
 
   it('Test returned destination length matches positive count', async () => {
     const res = await getRandomDestinations(5);
@@ -89,110 +79,129 @@ describe('Test getRandomDestinations', () => {
   });
 });
 
-// I can't test searchDestinationsInBounds,
-// unless I test without mocking
 // Test searchDestinations function
-// describe('Test searchDestinations', () => {
-//   const mockDests = [
-//     {
-//       id: 1,
-//       term: 'Singapore, Singapore',
-//     },
-//     {
-//       id: 2,
-//       term: 'SUTD, Singapore',
-//     },
-//     {
-//       id: 3,
-//       term: 'New Delhi, India',
-//     },
-//     {
-//       id: 4,
-//       term: 'Kuala Lumpur, Malaysia',
-//     },
-//     {
-//       id: 5,
-//       term: 'Johor Bahru, Malaysia',
-//     },
-//   ];
+describe('Test searchDestinations', () => {
+  const testDestinations = [
+    {
+      id: `test_1`,
+      dest_id: `test_1`,
+      term: `Singapore, Singapore`,
+      lat: 0,
+      lng: 0,
+      type: 'city',
+      state: 'TestState',
+    },
+    {
+      id: `test_2`,
+      dest_id: `test_2`,
+      term: `SUTD, Singapore`,
+      lat: 0,
+      lng: 0,
+      type: 'city',
+      state: 'TestState',
+    },
+    {
+      id: `test_3`,
+      dest_id: `test_3`,
+      term: `New Delhi, India`,
+      lat: 0,
+      lng: 0,
+      type: 'city',
+      state: 'TestState',
+    },
+    {
+      id: `test_4`,
+      dest_id: `test_4`,
+      term: `Kuala Lumpur, Malaysia`,
+      lat: 0,
+      lng: 0,
+      type: 'city',
+      state: 'TestState',
+    },
+    {
+      id: `test_5`,
+      dest_id: `test_5`,
+      term: `Johor Bahru, Malaysia`,
+      lat: 0,
+      lng: 0,
+      type: 'city',
+      state: 'TestState',
+    },
+  ];
+  withTestDestinations(testDestinations);
 
-//   let destSpy: jest.SpyInstance;
-//   beforeEach(() => {
-//     const module = require('../../models/destination');
-//     destSpy = jest
-//       .spyOn(module, 'getAllDestinations')
-//       .mockReturnValue(mockDests);
-//   });
+  it('Test match multiple destination with substring matching', async () => {
+    const dest = 'Malaysia';
+    const res = await searchDestinations(dest, 0, 10);
+    expect(res).toHaveLength(2);
+    expect(res.every((r) => r.term.includes(dest))).toBe(true);
+  });
 
-//   afterEach(() => {
-//     destSpy.mockRestore();
-//   });
+  it('Test one missing character', async () => {
+    const dest = 'Kuala Lumpur, Malaysa';
+    const res = await searchDestinations(dest, 1, 1);
+    expect(res).toHaveLength(1);
+    expect(res[0].term).toBe('Kuala Lumpur, Malaysia');
+  });
 
-//   it('Test one missing character', async () => {
-//     const dest = 'Kuala Lumpur, Malaysa';
-//     const res = await searchDestinations(dest, 1, 1);
-//     expect(res).toHaveLength(1);
-//     expect(res[0].term).toBe('Kuala Lumpur, Malaysia');
-//   });
+  it('Test one extra character', async () => {
+    const dest = 'Kuala Lumpur, Malaysiia';
+    const res = await searchDestinations(dest, 1, 1);
+    expect(res).toHaveLength(1);
+    expect(res[0].term).toBe('Kuala Lumpur, Malaysia');
+  });
 
-//   it('Test one extra character', async () => {
-//     const dest = 'Kuala Lumpur, Malaysiia';
-//     const res = await searchDestinations(dest, 1, 1);
-//     expect(res).toHaveLength(1);
-//     expect(res[0].term).toBe('Kuala Lumpur, Malaysia');
-//   });
+  it('Test one missing character on multiple words', async () => {
+    const dest = 'Kual Lumpur, Malayia';
+    const res = await searchDestinations(dest, 1, 1);
+    expect(res).toHaveLength(1);
+    expect(res[0].term).toBe('Kuala Lumpur, Malaysia');
+  });
 
-//   it('Test one missing character on multiple words', async () => {
-//     const dest = 'Kual Lumpur, Malayia';
-//     const res = await searchDestinations(dest, 1, 1);
-//     expect(res).toHaveLength(1);
-//     expect(res[0].term).toBe('Kuala Lumpur, Malaysia');
-//   });
-// });
+  it('Test match multiple destination with edit distance of 2', async () => {
+    const dest = 'Malsia';
+    const res = await searchDestinations(dest, 2, 10);
+    expect(res).toHaveLength(2);
+    expect(res.every((r) => r.term.includes('Malaysia'))).toBe(true);
+  });
+});
 
-// // Test searchDestinationsInBounds function
-// describe('Test searchDestinationsInBounds', () => {
-//   let db: PoolConnection;
+// Test searchDestinationsInBounds function
+describe('Test searchDestinationsInBounds (worst robust boundary testing)', () => {
+  it('Test correct count of destinations within inclusive LAT and LNG bounds', async () => {
+    const bounds = {
+      minLat: 1.512,
+      maxLat: 2.512,
+      minLng: 3.511,
+      maxLng: 4.511,
+    };
 
-//   const testData = [
-//     {
-//       id: '-1',
-//       dest_id: '',
-//       term: '',
-//       lat: 1.2834,
-//       lng: 103.8607,
-//       type: '',
-//       state: '',
-//     },
-//   ];
+    // Generate all the points for worst robust boundary,
+    // for (minLat, minLng) <= (X, Y) <= (maxLat, maxLng), only 25 out of 45 points should be returned.
+    const testDestinations = generateRobustWorstBoundaryTCs(
+      {
+        minX: bounds.minLat,
+        maxX: bounds.maxLat,
+        minY: bounds.minLng,
+        maxY: bounds.maxLng,
+      },
+      0.1
+    ).map(([lat, lng], i) => ({
+      id: `Test_${i}`,
+      dest_id: `Test_${i}`,
+      term: `Test_${i}`,
+      lat,
+      lng,
+      type: 'city',
+      state: 'TestState',
+    }));
 
-//   beforeAll(async () => {
-//     db = await pool.getConnection();
-//     await db.beginTransaction();
-
-//     for (let d of testData) {
-//       await db.query(
-//         `
-//         INSERT INTO ${tableName} (dest_id, term, lat, lng, type, state) VALUES (?, ?, ?, ?, ?, ?)
-//         `,
-//         [d.dest_id, d.term, d.lat, d.lng, d.type, d.state]
-//       );
-//     }
-//   });
-
-//   afterAll(async () => {
-//     await db.rollback();
-//     db.release();
-//   });
-
-//   it('Test normal valid bounds', async () => {
-//     const bounds = {
-//       minLat: 1.2,
-//       maxLat: 1.4,
-//       minLng: 103.8,
-//       maxLng: 103.9,
-//     };
-//     const res = await searchDestinationsInBounds(bounds);
-//     expect(res).toHaveLength(2);
-//   });
-// });
+    try {
+      await insertTestDestinations(testDestinations);
+      const res = await searchDestinationsInBounds(bounds);
+      expect(res).toHaveLength(25);
+    } finally {
+      await deleteTestDestinations();
+    }
+  });
+});
