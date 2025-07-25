@@ -14,9 +14,6 @@ import { router as authRouter } from './routes/auth';
 
 const app = express();
 
-syncDest();
-syncUser();
-
 app.use(cors());
 app.use(express.json());
 
@@ -28,6 +25,9 @@ app.use('/api/auth', authRouter);
 if (process.env.NODE_ENV !== 'test') {
   process.on('SIGINT', cleanup);
   process.on('SIGTERM', cleanup);
+
+  syncDest();
+  syncUser();
 
   app.listen(5000, () => {
     console.log('Server listening on port 5000.');
