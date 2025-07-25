@@ -1,4 +1,4 @@
-name: Run Jest Tests
+name: Run Vitest and Jest Tests
 on:
   pull_request:
     branches:
@@ -8,7 +8,7 @@ on:
       - '**'
 
 jobs:
-  unit-test:
+  tests:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,10 +20,18 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install dependencies
+      - name: Install client dependencies
+        run: npm install
+        working-directory: ./client
+
+      - name: Run Vitest (frontend tests)
+        run: npx vitest run
+        working-directory: ./client
+
+      - name: Install server dependencies
         run: npm install
         working-directory: ./server
 
-      - name: Run tests
+      - name: Run Jest (backend tests)
         run: npm test
         working-directory: ./server
