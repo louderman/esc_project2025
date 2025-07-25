@@ -28,19 +28,23 @@ router.get('/random', async function (req, res) {
   res.send(dests);
 });
 
+/**
+ * GET /query/{text}?distance={distance}?count={count}
+ */
 router.get(['/query/:text', '/query/'], async function (req, res) {
   const countRaw = Number(req.query.count);
   const count = isNaN(countRaw) ? 10 : countRaw;
-  const DISTANCE_THRESH = 2; // Max edit distance, expose to client input?
+  const distanceRaw = Number(req.query.distance); // Max edit distance
+  const distance = isNaN(distanceRaw) ? 2 : distanceRaw;
 
   const text = req.params.text;
   console.log(text);
   if (!text) {
-    res.send([]);
+    res.status(400).json({ message: 'no query text param given' });
     return;
   }
 
-  const rows = await searchDestinations(text, DISTANCE_THRESH, count);
+  const rows = await searchDestinations(text, distance, count);
 
   res.send(rows);
 });
@@ -49,7 +53,6 @@ router.get(['/query/:text', '/query/'], async function (req, res) {
  * GET /query/bounds?minLat={...}&maxLat={...}&minLng={...}&maxLng={...}
  */
 router.get(['/bounds'], async function (req, res) {
-  console.log('called');
   const lat1 = parseFloat(req.query.minLat as string);
   const lat2 = parseFloat(req.query.maxLat as string);
   const lng1 = parseFloat(req.query.minLng as string);
