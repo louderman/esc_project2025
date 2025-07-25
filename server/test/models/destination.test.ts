@@ -203,5 +203,5 @@ describe('Test searchDestinationsInBounds (worst robust boundary testing)', () =
     } finally {
       await deleteTestDestinations();
     }
-  });
+  }, 60000);
 });

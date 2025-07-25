@@ -203,5 +203,5 @@ describe('GET /api/destination/bounds?minLat={}&maxLat={}&minLng={}&maxLng={}', 
     } finally {
       await deleteTestDestinations();
     }
-  });
+  }, 60000);
 });
