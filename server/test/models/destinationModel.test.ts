@@ -144,6 +144,13 @@ describe('Test searchDestinations', () => {
     expect(res[0].term).toBe('Kuala Lumpur, Malaysia');
   });
 
+  it('Test one wrong character', async () => {
+    const dest = 'Kuala Lumpua, Malaysia';
+    const res = await searchDestinations(dest, 1, 1);
+    expect(res).toHaveLength(1);
+    expect(res[0].term).toBe('Kuala Lumpur, Malaysia');
+  });
+
   it('Test one extra character', async () => {
     const dest = 'Kuala Lumpur, Malaysiia';
     const res = await searchDestinations(dest, 1, 1);
@@ -170,10 +177,10 @@ describe('Test searchDestinations', () => {
 describe('Test searchDestinationsInBounds (worst robust boundary testing)', () => {
   it('Test correct count of destinations within inclusive LAT and LNG bounds', async () => {
     const bounds = {
-      minLat: 1.512,
-      maxLat: 2.512,
-      minLng: 3.511,
-      maxLng: 4.511,
+      minLat: -1.512,
+      maxLat: 1.512,
+      minLng: -1.511,
+      maxLng: 1.511,
     };
 
     // Generate all the points for worst robust boundary,
@@ -200,6 +207,15 @@ describe('Test searchDestinationsInBounds (worst robust boundary testing)', () =
       await insertTestDestinations(testDestinations);
       const res = await searchDestinationsInBounds(bounds);
       expect(res).toHaveLength(25);
+      expect(
+        res.every(
+          (r) =>
+            r.lat >= bounds.minLat &&
+            r.lat <= bounds.maxLat &&
+            r.lng >= bounds.minLng &&
+            r.lng <= bounds.maxLng
+        )
+      ).toBe(true);
     } finally {
       await deleteTestDestinations();
     }

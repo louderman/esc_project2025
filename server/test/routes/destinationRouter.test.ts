@@ -143,6 +143,14 @@ describe('GET /api/destination/query/:text?count={}?distance={}', () => {
     expect(res.body[0].term).toBe('Kuala Lumpur, Malaysia');
   });
 
+  it('Test one wrong character', async () => {
+    const dest = 'Kuala Lumpua, Malaysia';
+    const res = await request(app).get(`/api/destination/query/${dest}`);
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0].term).toBe('Kuala Lumpur, Malaysia');
+  });
+
   it('Test one missing character on multiple words', async () => {
     const dest = 'Kual Lumpur, Malayia';
     const res = await request(app).get(`/api/destination/query/${dest}`);
