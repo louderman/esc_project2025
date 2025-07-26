@@ -2,7 +2,7 @@ import request from 'supertest';
 import app from '../../server';
 
 // Test /api/hotel-price/query?dest_id={}&checkin={}&checkout={}&guests={}
-describe('Test /api/hotel/query?dest_id={}', () => {
+describe('Test /api/hotel-price/query?dest_id={}&checkin={}&checkout={}&guests={}', () => {
   function formatDate(date: Date): string {
     return date.toISOString().split('T')[0]; // YYYY-MM-DD
   }
