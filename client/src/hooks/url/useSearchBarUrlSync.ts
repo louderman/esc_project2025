@@ -44,10 +44,9 @@ export function useSearchBarUrlSync({
     const getParsedInt = (value: string | null, prev: number) =>
       value !== null && !isNaN(parseInt(value)) ? parseInt(value) : prev;
 
-    const toStartOfDay = (date: Date) => {
-      const d = new Date(date);
-      d.setHours(0, 0, 0, 0);
-      return d;
+    const parseDate = (dateString: string) => {
+      const [year, month, day] = dateString.split('-').map(Number);
+      return new Date(year, month - 1, day);
     };
 
     // TODO1: Try not to hardcode these params?
@@ -76,10 +75,8 @@ export function useSearchBarUrlSync({
       }));
     }
     setStayDates((prev) => ({
-      checkinDate: checkin ? toStartOfDay(new Date(checkin)) : prev.checkinDate,
-      checkoutDate: checkout
-        ? toStartOfDay(new Date(checkout))
-        : prev.checkoutDate,
+      checkinDate: checkin ? parseDate(checkin) : prev.checkinDate,
+      checkoutDate: checkout ? parseDate(checkout) : prev.checkoutDate,
     }));
     setOccupancy((prev) => ({
       adults: getParsedInt(adults, prev.adults),
@@ -102,7 +99,6 @@ export function useSearchBarUrlSync({
       }
     };
 
-    console.log(destination);
     syncParam('destName', destination.name);
     syncParam('destId', destination.id);
     // console.log(urlParams.toString());
