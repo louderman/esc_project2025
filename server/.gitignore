@@ -5,6 +5,3 @@ dist/
 *.local
 *.log
 node_modules
-
-# Secret Keys
-.env

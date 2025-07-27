@@ -11,8 +11,6 @@
     "test": "cross-env NODE_ENV=test vitest"
   },
   "dependencies": {
-    "@stripe/react-stripe-js": "^3.8.0",
-    "@stripe/stripe-js": "^7.6.1",
     "@react-google-maps/api": "^2.20.7",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/user-event": "^14.6.1",

@@ -1,74 +1,20 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import type { Hotel } from '../../../types/Hotel';
 import type { Price } from '../../../types/Price';
 import BookingForm from '../components/booking/BookingForm';
 import BookingReview from '../components/booking/BookingReview';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
-import type { DestinationState } from '../components/listing/SearchBar/DestinationInput/DestinationInput';
 import type { OccupancyState } from '../components/listing/SearchBar/GuestInput/GuestInput';
-import SearchBar from '../components/listing/SearchBar/SearchBar';
 import styles from './bookingpage.module.css';
+import SearchBar from '../components/listing/SearchBar/SearchBar';
+import type { DestinationState } from '../components/listing/SearchBar/DestinationInput/DestinationInput';
+import { useSearchBarUrlSync } from '../hooks/url/useSearchBarUrlSync';
 
 export default function BookingPage() {
+  const location = useLocation();
   const navigate = useNavigate();
-  // commented until I get listing data
-  // const hotel = location.state?.hotel as (Hotel & Price) | undefined;
-  const hotel: Hotel & Price = {
-    // Hotel properties
-    id: 'mock-oasia-1',
-    name: 'Oasia Resort Sentosa By Far East Hospitality',
-    rating: 4.5,
-    imageCount: 5,
-    latitude: 1.2588,
-    longitude: 103.823,
-    address: '23 Beach View, Sentosa Island',
-    address1: 'Singapore, 098679',
-    distance: 5.4,
-    trustyou: {
-      id: 'ty-1',
-      score: {
-        overall: 9,
-        kaligo_overall: 9,
-        solo: 8,
-        couple: 9,
-        family: 9,
-        business: 8,
-      },
-    },
-    categories: {},
-    amenities_ratings: [],
-    description:
-      'A luxurious resort on Sentosa island, perfect for a relaxing getaway.',
-    amenities: { outdoorPool: true, roomService: true },
-    image_details: {
-      prefix: '/listing/hotel_img_placeholder.png?id=',
-      count: 5,
-      suffix: '',
-    },
-    hires_image_index: '',
-    number_of_images: 5,
-    default_image_index: 0,
-    imgix_url: '',
-    cloudflare_image_url: '',
-    checkin_time: '15:00',
-    // Price properties
-    price: 311,
-    searchRank: 1,
-    price_type: 'per_night',
-    free_cancellation: true,
-    rooms_available: 5,
-    max_cash_payment: 311,
-    coverted_max_cash_payment: 311,
-    points: 5000,
-    bonuses: 0,
-    bonus_programs: [],
-    bonus_tiers: [],
-    lowest_price: 311,
-    converted_price: 311,
-    lowest_converted_price: 311,
-    market_rates: [{ supplier: 'supplier-a', rate: 320 }],
-  };
+  const hotel = location.state?.hotel as (Hotel & Price) | undefined;
 
   const [stayDates, setStayDates] = useState<StayDatesState>({
     checkinDate: null,
@@ -84,6 +30,9 @@ export default function BookingPage() {
     name: '',
   });
 
+  if (!hotel) {
+    return <div>No hotel selected. Please go back to the listing page.</div>;
+  }
 
   const numberOfNights =
     stayDates.checkinDate && stayDates.checkoutDate
@@ -120,43 +69,12 @@ export default function BookingPage() {
         : '/listing/hotel_img_placeholder.png',
   };
 
-  const handlePaymentSuccess = () => {
-    // Navigate to booking confirmation page on successful payment
-    navigate('/booking/confirmation', {
-      state: {
-        bookingDetails,
-        hotel,
-        totalAmount: (hotel.price ?? 0) * numberOfNights,
-      },
-    });
-  };
-
-  const handlePaymentError = (error: string) => {
-    // Console error for now
-    // TODO: add a toast saying it failed, ya lazy bum
-    console.error('Payment failed:', error);
-  };
-
   const policyDetails = {
     guaranteePolicy: 'Credit Card is required at the time of booking.',
     cancelPolicy:
       'Reservation must be cancelled by 3pm local time 1 day before arrival to avoid penalty of 1 night room and tax.',
     costPerNight: hotel.price ?? 0,
     numberOfNights,
-    bookingData: {
-      hotelId: hotel.id,
-      hotelName: hotel.name,
-      checkInDate: bookingDetails.checkInDate,
-      checkOutDate: bookingDetails.checkOutDate,
-      guests: bookingDetails.guests,
-      pricePerNight: hotel.price ?? 0,
-      numberOfNights,
-      totalAmount: (hotel.price ?? 0) * numberOfNights,
-      whatsIncluded: bookingDetails.whatsIncluded,
-      imageUrl: bookingDetails.imageUrl,
-    },
-    onPaymentSuccess: handlePaymentSuccess,
-    onPaymentError: handlePaymentError,
   };
 
   return (
