@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import type { CreateBookingRequest } from '../../../../types/Booking';
+import PaymentForm from './PaymentForm';
 import styles from './bookingform.module.css';
 
 // Define props for the component based on the Figma design
@@ -6,6 +9,9 @@ interface BookingFormProps {
   cancelPolicy: string;
   costPerNight: number;
   numberOfNights: number;
+  bookingData?: CreateBookingRequest; // Booking data to pass to payment
+  onPaymentSuccess?: () => void;
+  onPaymentError?: (error: string) => void;
 }
 
 export default function BookingForm({
@@ -13,8 +19,26 @@ export default function BookingForm({
   cancelPolicy,
   costPerNight,
   numberOfNights,
+  bookingData,
+  onPaymentSuccess,
+  onPaymentError,
 }: BookingFormProps) {
   const totalCost = costPerNight * numberOfNights;
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+
+  const handlePaymentSuccess = () => {
+    setPaymentError(null);
+    if (onPaymentSuccess) {
+      onPaymentSuccess();
+    }
+  };
+
+  const handlePaymentError = (error: string) => {
+    setPaymentError(error);
+    if (onPaymentError) {
+      onPaymentError(error);
+    }
+  };
 
   return (
     <div className={styles.container}>
@@ -42,48 +66,18 @@ export default function BookingForm({
         </div>
       </div>
 
-      <div className={styles.personalDetails}>
-        <h3>Personal Details</h3>
-        <form>
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label htmlFor="firstName">FIRST NAME</label>
-              <input type="text" id="firstName" name="firstName" />
-            </div>
-            <div className={styles.formGroup}>
-              <label htmlFor="lastName">LAST NAME</label>
-              <input type="text" id="lastName" name="lastName" />
-            </div>
-          </div>
-          <div className={styles.formGroup}>
-            <label htmlFor="email">EMAIL</label>
-            <input type="email" id="email" name="email" />
-          </div>
-          <div className={styles.formGroup}>
-            <label htmlFor="phone">PHONE NUMBER</label>
-            <input type="tel" id="phone" name="phone" />
-          </div>
-          <div className={styles.formGroup}>
-            <label htmlFor="creditCard">Credit card</label>
-            <input type="text" id="creditCard" name="creditCard" />
-          </div>
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label htmlFor="expiry">Expiry</label>
-              <input type="text" id="expiry" name="expiry" />
-            </div>
-            <div className={styles.formGroup}>
-              <label htmlFor="cvv">CVV</label>
-              <input type="text" id="cvv" name="cvv" />
-            </div>
-            <div className={styles.formGroup}>
-              <label htmlFor="postalCode">Postal Code</label>
-              <input type="text" id="postalCode" name="postalCode" />
-            </div>
-          </div>
-          <button type="submit" className={styles.reserveButton}>RESERVE</button>
-        </form>
-      </div>
+      <PaymentForm
+        amount={totalCost * 100} // Convert to cents for Stripe
+        bookingData={bookingData}
+        onPaymentSuccess={handlePaymentSuccess}
+        onPaymentError={handlePaymentError}
+      />
+
+      {paymentError && (
+        <div className={styles.errorMessage}>
+          <p>Payment Error: {paymentError}</p>
+        </div>
+      )}
     </div>
   );
 }
