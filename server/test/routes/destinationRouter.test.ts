@@ -8,6 +8,7 @@ import {
 import { Destination } from '../../../types/Destination';
 import generateRobustWorstBoundaryCases from '../utils/generateRobustWorst';
 import { searchDestinationsInBounds } from '../../models/destinationModel';
+import { getAllDestinations } from '../../models/destinationModel';
 
 // Test /api/destination/random route
 describe.skip('GET /api/destination/random?count={}', () => {
@@ -204,9 +205,19 @@ describe('GET /api/destination/bounds?minLat={}&maxLat={}&minLng={}&maxLng={}', 
       state: 'TestState',
     }));
 
+    // Ensure clean state before test
+    await deleteTestDestinations();
+    
     try {
       await insertTestDestinations(testDestinations);
+      
+      // Verify we have exactly 25 destinations inserted
+      const allDests = await getAllDestinations();
+      const testDests = allDests.filter(d => d.dest_id.startsWith('Test_'));
+      console.log(`Inserted ${testDests.length} test destinations`);
+      
       const res = await searchDestinationsInBounds(bounds);
+      console.log(`Found ${res.length} destinations within bounds`);
       expect(res).toHaveLength(25);
     } finally {
       await deleteTestDestinations();
