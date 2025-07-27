@@ -103,10 +103,10 @@ async function searchDestinations(
 
     // If found rows are lesser than `returnCount`, then
     if (rows.length < returnCount) {
-      // TODO: optimize this
       // Get every destinations and do fuzzy matching with edit distance dp
       const allRows = await getAllDestinations();
       const textParts = text.toLowerCase().split(/[\s,]+/); // Split user input by comma
+      
       for (let i = 0; i < allRows.length && rows.length < returnCount; i++) {
         const row = allRows[i];
         const included = rows.some((r) => r.id === row.id);
@@ -120,11 +120,10 @@ async function searchDestinations(
         // relative to any db destination data text part
         const rowParts = row.term.toLowerCase().split(/[\s,]+/);
         const isFuzzyMatch = textParts.every((userWord) =>
-          rowParts.some(
-            (p) =>
-              Math.abs(p.length - userWord.length) <= distanceThresh &&
-              rowParts.some((p) => editDistance(p, userWord) <= distanceThresh)
-          )
+          rowParts.some((p) => {
+            const distance = editDistance(p, userWord);
+            return distance <= distanceThresh;
+          })
         );
 
         if (isFuzzyMatch) {
@@ -133,7 +132,8 @@ async function searchDestinations(
       }
     }
 
-    return rows;
+    // Return only up to returnCount items
+    return rows.slice(0, returnCount);
   } catch (e) {
     console.error(e);
     return [];

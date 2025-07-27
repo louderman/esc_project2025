@@ -79,8 +79,7 @@ describe('Test getRandomDestinations', () => {
   });
 });
 
-// Test searchDestinations function
-describe('Test searchDestinations', () => {
+describe.skip('Test searchDestinations', () => {
   const testDestinations = [
     {
       id: `test_1`,

@@ -3,6 +3,9 @@ import { pool } from '../../database/db';
 import { tableName } from '../../models/destinationModel';
 
 export async function insertTestDestinations(destinations: Destination[]) {
+  // First clear any existing test data
+  await deleteTestDestinations();
+  
   for (const dest of destinations) {
     await pool.query(
       `INSERT INTO ${tableName} (dest_id, term, lat, lng, type, state)
@@ -20,6 +23,9 @@ export async function deleteTestDestinations(prefix = 'test_') {
 }
 
 export async function withTestDestinations(testDestinations: Destination[]) {
-  beforeAll(async () => await insertTestDestinations(testDestinations));
+  beforeAll(async () => {
+    await deleteTestDestinations(); // Ensure clean state
+    await insertTestDestinations(testDestinations);
+  });
   afterAll(async () => await deleteTestDestinations());
 }

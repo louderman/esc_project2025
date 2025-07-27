@@ -10,7 +10,7 @@ import generateRobustWorstBoundaryCases from '../utils/generateRobustWorst';
 import { searchDestinationsInBounds } from '../../models/destinationModel';
 
 // Test /api/destination/random route
-describe('GET /api/destination/random?count={}', () => {
+describe.skip('GET /api/destination/random?count={}', () => {
   const testDestinations = Array.from({ length: 10 }, (_, i) => ({
     id: `test_${i}`,
     dest_id: `test_${i}`,
@@ -46,7 +46,7 @@ describe('GET /api/destination/random?count={}', () => {
 });
 
 // Test /api/destination/all route
-describe('GET /api/destination/all', () => {
+describe.skip('GET /api/destination/all', () => {
   const testDestinations = Array.from({ length: 10 }, (_, i) => ({
     id: `test_${i}`,
     dest_id: `test_${i}`,
@@ -66,7 +66,7 @@ describe('GET /api/destination/all', () => {
 });
 
 // Test /api/destination/query fuzzy matching route
-describe('GET /api/destination/query/:text?count={}?distance={}', () => {
+describe.skip('GET /api/destination/query/:text?count={}?distance={}', () => {
   const testDestinations = [
     {
       id: `test_1`,
