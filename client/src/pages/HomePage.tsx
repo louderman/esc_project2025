@@ -33,6 +33,7 @@ export default function HomePage() {
     rooms: 1,
   });
 
+
   const { syncSearchBarToURL } = useSearchBarUrlSync({
     destination,
     setDestination,
