@@ -18,7 +18,7 @@ export default function ListingCard({
   const navigate = useNavigate();
 
   const handleView = () => {
-    navigate('/booking/confirmation', { state: { hotel, stayDates } });
+    navigate('/booking', { state: { hotel, stayDates } });
   };
 
   const userRating = hotel.categories.overall?.score;
