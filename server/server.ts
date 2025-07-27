@@ -28,7 +28,6 @@ app.use('/api/hotel-price', priceRouter);
 app.use('/api/hotel', hotelRouter);
 app.use('/api/auth', authRouter);
 
-// --- HOTEL DETAIL ROUTES ---
 
 // Test route for hotel-detail
 app.get('/api/hotel-detail/test', (req, res) => {
@@ -81,7 +80,6 @@ app.get('/api/hotel-detail/combined/:hotelId', async (req, res) => {
 
     const hotelData = await hotelResponse.json();
 
-    // Try to fetch prices, but don't fail if not available
     let pricesData = { rooms: [] };
     if (pricesResponse.ok) {
       pricesData = await pricesResponse.json();
@@ -99,8 +97,6 @@ app.get('/api/hotel-detail/combined/:hotelId', async (req, res) => {
     });
   }
 });
-
-// --- END HOTEL DETAIL ROUTES ---
 
 app.listen(5000, () => {
   console.log('Server listening on port 5000.');
