@@ -187,6 +187,8 @@ describe('GET /api/destination/bounds?minLat={}&maxLat={}&minLng={}&maxLng={}', 
       maxLng: 4.511,
     };
 
+    console.log('Bounds:', bounds);
+
     const testDestinations = generateRobustWorstBoundaryCases(
       {
         minX: bounds.minLat,
@@ -205,6 +207,9 @@ describe('GET /api/destination/bounds?minLat={}&maxLat={}&minLng={}&maxLng={}', 
       state: 'TestState',
     }));
 
+    console.log('Generated test destinations:', testDestinations.length);
+    console.log('First few destinations:', testDestinations.slice(0, 3));
+
     // Ensure clean state before test
     await deleteTestDestinations();
     
@@ -215,9 +220,11 @@ describe('GET /api/destination/bounds?minLat={}&maxLat={}&minLng={}&maxLng={}', 
       const allDests = await getAllDestinations();
       const testDests = allDests.filter(d => d.dest_id.startsWith('Test_'));
       console.log(`Inserted ${testDests.length} test destinations`);
+      console.log('Sample inserted destinations:', testDests.slice(0, 3));
       
       const res = await searchDestinationsInBounds(bounds);
       console.log(`Found ${res.length} destinations within bounds`);
+      console.log('Sample found destinations:', res.slice(0, 3));
       expect(res).toHaveLength(25);
     } finally {
       await deleteTestDestinations();

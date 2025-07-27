@@ -206,6 +206,8 @@ describe('Test searchDestinationsInBounds (worst robust boundary testing)', () =
       maxLng: 1.511,
     };
 
+    console.log('Bounds:', bounds);
+
     // Generate all the points for worst robust boundary,
     // for (minLat, minLng) <= (X, Y) <= (maxLat, maxLng), only 25 out of 45 points should be returned.
     const testDestinations = generateRobustWorstBoundaryCases(
@@ -226,6 +228,9 @@ describe('Test searchDestinationsInBounds (worst robust boundary testing)', () =
       state: 'TestState',
     }));
 
+    console.log('Generated test destinations:', testDestinations.length);
+    console.log('First few destinations:', testDestinations.slice(0, 3));
+
     // Ensure clean state before test
     await deleteTestDestinations();
     
@@ -236,9 +241,11 @@ describe('Test searchDestinationsInBounds (worst robust boundary testing)', () =
       const allDests = await getAllDestinations();
       const testDests = allDests.filter(d => d.dest_id.startsWith('Test_'));
       console.log(`Inserted ${testDests.length} test destinations`);
+      console.log('Sample inserted destinations:', testDests.slice(0, 3));
       
       const res = await searchDestinationsInBounds(bounds);
       console.log(`Found ${res.length} destinations within bounds`);
+      console.log('Sample found destinations:', res.slice(0, 3));
       expect(res).toHaveLength(25);
       expect(
         res.every(
