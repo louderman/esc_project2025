@@ -1,41 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import SearchBar from '../components/listing/SearchBar/SearchBar';
 
 import styles from './pastbookingpage.module.css';
-
-import type { DestinationState } from '../components/listing/SearchBar/DestinationInput/DestinationInput';
-import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
-import type { OccupancyState } from '../components/listing/SearchBar/GuestInput/GuestInput';
 
 export default function PastBookingPage() {
   const navigate = useNavigate();
   
-  const [userDest, setUserDest] = useState<string>('');
-  const [stayDates, setStayDates] = useState<StayDatesState>({
-    checkinDate: null,
-    checkoutDate: null,
-  });
-  const [occupancy, setOccupancy] = useState<OccupancyState>({
-    adults: 2,
-    children: 0,
-    rooms: 1,
-  });
-    const [destination, setDestination] = useState<DestinationState>({
-    id: '',
-    name: '',
-  });
 
 const bookings = {
   //Put static details here currently
   id: 1211,
   hotel_name: "Oasia Resort Sentosa By Far East Hospitality",
     hotel_address: "23 Beach View Rd, Palawan Ridge, Sentosa Island",
-    check_in: "20th May 2025",
-    check_out: "22nd May 2025",
+    check_in: "28th July 2025",
+    check_out: "30th July 2025",
     status: "Confirmed",
-    image_url: '/listing/hotel_img_placeholder.png',
-};
+    //image_url: '/listing/hotel_img_placeholder.png
+    imageCount: 0, 
+    image_details: {
+      prefix: '/listing/hotel_img_placeholder.png?id=',
+      suffix: '',
+    },
+  };
 
   const handleCardClick = () => {
     navigate('/booking/confirmation');
@@ -64,10 +50,14 @@ const bookings = {
               aria-label={`View details for booking at ${bookings.hotel_name}`}
             >
               <img
-                className={styles.bookingImg}
-                src={bookings.image_url}
-                alt={bookings.hotel_name}
-              />
+  className={styles.bookingImg}
+  src={
+    bookings.imageCount > 0
+      ? `${bookings.image_details.prefix}0${bookings.image_details.suffix}`
+      : '/listing/hotel_img_placeholder.png'
+  }
+  alt={bookings.hotel_name}
+/>
               <div className={styles.cardRight}>
                 <div className={styles.hotelName}>{bookings.hotel_name}</div>
                 <div className={styles.hotelAddress}>
