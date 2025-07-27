@@ -53,38 +53,38 @@ router.post('/create-payment-intent', async (req, res) => {
       payment_method: paymentMethodId,
       confirm: true,
       confirmation_method: 'manual', // Disable authentication for testing
-      return_url: `https://localhost:5173/booking/confirmation?bookingId=${bookingId}`
+      return_url: `https://localhost:5173/booking/confirmation?bookingId=${bookingId}`,
     });
 
     // Update booking with payment intent ID
     booking.paymentIntentId = paymentIntent.id;
     bookings.set(bookingId, booking);
 
-    
     // Check if payment requires additional action (like 3D Secure)
     if (paymentIntent.status === 'requires_action') {
       return res.json({
         requires_action: true,
         payment_intent: {
           id: paymentIntent.id,
-          client_secret: paymentIntent.client_secret
-        }
+          client_secret: paymentIntent.client_secret,
+        },
       });
     } else if (paymentIntent.status === 'succeeded') {
       // Payment succeeded without additional authentication
       // Update booking status
       booking.status = 'confirmed';
       bookings.set(bookingId, booking);
-      
-      res.json({ 
-        success: true, 
+
+      res.json({
+        success: true,
         payment_intent_id: paymentIntent.id,
-        booking_id: bookingId
+        booking_id: bookingId,
       });
     } else {
-      res.status(400).json({ error: 'Payment failed with status: ' + paymentIntent.status });
+      res
+        .status(400)
+        .json({ error: 'Payment failed with status: ' + paymentIntent.status });
     }
-
   } catch (e) {
     // Handle specific card errors sent by Stripe
     if (e instanceof Stripe.errors.StripeCardError) {
@@ -92,20 +92,22 @@ router.post('/create-payment-intent', async (req, res) => {
     }
     // Handle other generic errors
     console.error(e);
-    return res.status(500).json({ error: 'An internal server error occurred.' });
+    return res
+      .status(500)
+      .json({ error: 'An internal server error occurred.' });
   }
 });
 
 // Get booking by ID
 router.get('/booking/:bookingId', (req, res) => {
   const { bookingId } = req.params;
-  
+
   const booking = bookings.get(bookingId);
-  
+
   if (!booking) {
     return res.status(404).json({ error: 'Booking not found' });
   }
-  
+
   res.json({ booking });
 });
 
@@ -115,4 +117,4 @@ router.get('/bookings', (req, res) => {
   res.json({ bookings: allBookings });
 });
 
-export default router;
+export { router };
