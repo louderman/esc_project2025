@@ -6,6 +6,7 @@ import process from 'process';
 import express from 'express';
 import cors from 'cors';
 
+import { cleanup } from './database/db';
 
 import { sync as syncUser } from './models/userModel';
 import { sync as syncDest } from './models/destinationModel';
