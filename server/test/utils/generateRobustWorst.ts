@@ -57,5 +57,8 @@ export default function generateRobustWorstBoundaryCases(
     }
   }
   
+  console.log(`Generated ${points.length} points for bounds:`, bounds);
+  console.log('Sample points:', points.slice(0, 3));
+  
   return points;
 }
