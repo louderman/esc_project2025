@@ -121,7 +121,7 @@ export default function ListingPage() {
       return true; // stop polling if there is error
     }
   }, [stayDates, occupancy, destId]);
-  usePollingAsync(fetchPrice, 2000, startPolling);
+  usePollingAsync(fetchPrice, 2000, startPolling, true);
 
   useEffect(() => {
     const fetchHotel = async () => {
@@ -183,15 +183,12 @@ export default function ListingPage() {
   return (
     <div className={styles.container}>
       {showMap && (
-        <Map
-          loading={loading.hotel || loading.price}
-          hotels={hotelsWithPrice}
-          sortedHotels={sortedHotels}
-          stayDates={stayDates}
-          occupancy={occupancy}
-          listingDispatch={listingDispatch}
-          listingState={listingState}
-        />
+        <></>
+        // <Map
+        //   stayDates={stayDates}
+        //   occupancy={occupancy}
+        //   initDest={destination}
+        // />
       )}
       <div className={styles.searchbarSection}>
         <SearchBar
