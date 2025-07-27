@@ -37,19 +37,12 @@ const bookings = {
     image_url: '/listing/hotel_img_placeholder.png',
 };
 
+  const handleCardClick = () => {
+    navigate('/booking/confirmation');
+  };
+
   return (
     <div className={styles.container}>
-      <section className={styles.searchbarSection}>
-        <SearchBar
-          destination={destination}
-          setDestination={setDestination}
-          stayDates={stayDates}
-          setStayDates={setStayDates}
-          occupancy={occupancy}
-          setOccupancy={setOccupancy}
-          onSubmit={() => {}}
-        />
-      </section>
 
       {/* Main content section */}
       <section className={styles.mainSection}>
@@ -62,7 +55,14 @@ const bookings = {
 
 <div className={styles.cardsContainer}>
             {/* Past Booking Hotel Card */}
-            <div className={styles.bookingCard}>
+            <div className={styles.bookingCard}
+            onClick={handleCardClick}
+              style={{ cursor: 'pointer' }} 
+              tabIndex={0}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleCardClick(); }}
+              role="button"
+              aria-label={`View details for booking at ${bookings.hotel_name}`}
+            >
               <img
                 className={styles.bookingImg}
                 src={bookings.image_url}
