@@ -3,6 +3,11 @@ import { PriceResponse } from '../../types/Price';
 
 const router = express.Router();
 
+// Test route to verify the router is working
+router.get('/test', (req, res) => {
+  res.json({ message: 'Hotel detail router is working', timestamp: new Date().toISOString() });
+});
+
 // Define the error response type for reusability
 interface ErrorResponse {
   searchCompleted: boolean | null;
@@ -12,39 +17,81 @@ interface ErrorResponse {
   hotels: any[];
 }
 
-// Define the route parameter interface
-interface RouteParams {
-  dest_id: string;
-}
+// Route to get hotel details by ID
+router.get('/hotel/:hotelId', async (req, res) => {
+  const { hotelId } = req.params;
 
-router.get('/query/:dest_id', async (
-  req,
-  res
-) => {
-  const { dest_id } = req.params;
-
-  if (!dest_id?.trim()) {
+  if (!hotelId?.trim()) {
     return res.status(400).json({
-      searchCompleted: null,
-      completed: true,
-      status: 'Missing destination ID',
-      currency: null,
-      hotels: [],
+      error: 'Missing hotel ID'
+    });
+  }
+
+  const url = `https://hotelapi.loyalty.dev/api/hotels/${hotelId}`;
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        Accept: 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(`[Hotel Detail API Error] ${response.status}: ${text}`);
+      return res.status(response.status).json({
+        error: `Upstream error: ${response.status}`
+      });
+    }
+
+    const data = await response.json();
+    return res.json(data);
+  } catch (err) {
+    console.error('[Hotel Detail API Fetch Error]', err);
+    return res.status(500).json({
+      error: 'Internal server error while fetching hotel details'
+    });
+  }
+});
+
+// Route to get hotel prices by ID
+router.get('/hotel/:hotelId/prices', async (req, res) => {
+  const { hotelId } = req.params;
+  const { 
+    destination_id, 
+    checkin, 
+    checkout, 
+    lang = 'en_US', 
+    currency = 'SGD', 
+    country_code = 'SG', 
+    guests = '2', 
+    partner_id = '1' 
+  } = req.query;
+
+  if (!hotelId?.trim()) {
+    return res.status(400).json({
+      error: 'Missing hotel ID'
+    });
+  }
+
+  if (!destination_id || !checkin || !checkout) {
+    return res.status(400).json({
+      error: 'Missing required parameters: destination_id, checkin, checkout'
     });
   }
 
   const queryParams = new URLSearchParams({
-    destination_id: dest_id,
-    checkin: '2025-10-01',
-    checkout: '2025-10-07',
-    lang: 'en_US',
-    currency: 'SGD',
-    country_code: 'SG',
-    guests: '2',
-    partner_id: '1',
+    destination_id: destination_id as string,
+    checkin: checkin as string,
+    checkout: checkout as string,
+    lang: lang as string,
+    currency: currency as string,
+    country_code: country_code as string,
+    guests: guests as string,
+    partner_id: partner_id as string,
   });
 
-  const url = `https://hotelapi.loyalty.dev/api/hotels/prices?${queryParams.toString()}`;
+  const url = `https://hotelapi.loyalty.dev/api/hotels/${hotelId}/prices?${queryParams.toString()}`;
 
   try {
     const response = await fetch(url, {
@@ -57,24 +104,81 @@ router.get('/query/:dest_id', async (
       const text = await response.text();
       console.error(`[Hotel Price API Error] ${response.status}: ${text}`);
       return res.status(response.status).json({
-        searchCompleted: false,
-        completed: false,
-        status: `Upstream error: ${response.status}`,
-        currency: null,
-        hotels: [],
+        error: `Upstream error: ${response.status}`
       });
     }
 
-    const data: PriceResponse = await response.json();
+    const data = await response.json();
     return res.json(data);
   } catch (err) {
     console.error('[Hotel Price API Fetch Error]', err);
     return res.status(500).json({
-      searchCompleted: false,
-      completed: false,
-      status: 'Internal server error while fetching hotel prices',
-      currency: null,
-      hotels: [],
+      error: 'Internal server error while fetching hotel prices'
+    });
+  }
+});
+
+// Combined route to get both hotel details and prices
+router.get('/combined/:hotelId', async (req, res) => {
+  const { hotelId } = req.params;
+  const { 
+    destination_id, 
+    checkin, 
+    checkout, 
+    lang = 'en_US', 
+    currency = 'SGD', 
+    country_code = 'SG', 
+    guests = '2', 
+    partner_id = '1' 
+  } = req.query;
+
+  if (!hotelId?.trim()) {
+    return res.status(400).json({
+      error: 'Missing hotel ID'
+    });
+  }
+
+  try {
+    // Fetch hotel details and prices in parallel
+    const [hotelResponse, pricesResponse] = await Promise.all([
+      fetch(`https://hotelapi.loyalty.dev/api/hotels/${hotelId}`, {
+        headers: { Accept: 'application/json' }
+      }),
+      fetch(`https://hotelapi.loyalty.dev/api/hotels/${hotelId}/prices?${new URLSearchParams({
+        destination_id: destination_id as string,
+        checkin: checkin as string,
+        checkout: checkout as string,
+        lang: lang as string,
+        currency: currency as string,
+        country_code: country_code as string,
+        guests: guests as string,
+        partner_id: partner_id as string,
+      })}`, {
+        headers: { Accept: 'application/json' }
+      })
+    ]);
+
+    if (!hotelResponse.ok) {
+      throw new Error(`Hotel details API error: ${hotelResponse.status}`);
+    }
+
+    if (!pricesResponse.ok) {
+      throw new Error(`Hotel prices API error: ${pricesResponse.status}`);
+    }
+
+    const [hotelData, pricesData] = await Promise.all([
+      hotelResponse.json(),
+      pricesResponse.json()
+    ]);
+
+    return res.json({
+      hotel: hotelData,
+      prices: pricesData
+    });
+  } catch (err) {
+    console.error('[Combined Hotel API Fetch Error]', err);
+    return res.status(500).json({
+      error: 'Internal server error while fetching hotel data'
     });
   }
 });

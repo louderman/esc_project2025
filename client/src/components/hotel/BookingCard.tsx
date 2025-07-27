@@ -4,15 +4,46 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Users, Star } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 interface BookingCardProps {
   price: number;
   rating: number;
   reviewCount: number;
   hotelName: string;
+  hotelId?: string;
 }
 
-const BookingCard = ({ price, rating, reviewCount, hotelName }: BookingCardProps) => {
+const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId }: BookingCardProps) => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const handleReserveNow = () => {
+    // Get current URL parameters
+    const checkin = searchParams.get('checkin') || '2025-10-01';
+    const checkout = searchParams.get('checkout') || '2025-10-07';
+    const adults = searchParams.get('adults') || '2';
+    const children = searchParams.get('children') || '0';
+    const rooms = searchParams.get('rooms') || '1';
+    const destinationId = searchParams.get('destination_id') || '';
+
+    // Build booking URL with all necessary parameters
+    const bookingParams = new URLSearchParams({
+      hotelId: hotelId || '',
+      checkin,
+      checkout,
+      adults,
+      children,
+      rooms,
+      destination_id: destinationId,
+      price: price.toString(),
+      hotelName
+    });
+
+    // Navigate to booking page with all the data
+    navigate(`/booking?${bookingParams.toString()}`);
+  };
+
   return (
     <Card className="sticky top-6 shadow-lg">
       <CardHeader className="pb-4">
@@ -49,7 +80,8 @@ const BookingCard = ({ price, rating, reviewCount, hotelName }: BookingCardProps
                 id="checkin"
                 type="date" 
                 className="pl-9"
-                defaultValue="2024-12-15"
+                value={searchParams.get('checkin') || '2025-10-01'}
+                readOnly
               />
             </div>
           </div>
@@ -61,7 +93,8 @@ const BookingCard = ({ price, rating, reviewCount, hotelName }: BookingCardProps
                 id="checkout"
                 type="date" 
                 className="pl-9"
-                defaultValue="2024-12-18"
+                value={searchParams.get('checkout') || '2025-10-07'}
+                readOnly
               />
             </div>
           </div>
@@ -69,7 +102,7 @@ const BookingCard = ({ price, rating, reviewCount, hotelName }: BookingCardProps
         
         <div>
           <Label htmlFor="guests" className="text-sm font-medium">Guests</Label>
-          <Select defaultValue="2">
+          <Select value={`${searchParams.get('adults') || '2'}`} disabled>
             <SelectTrigger>
               <div className="flex items-center">
                 <Users size={16} className="mr-2 text-muted-foreground" />
@@ -100,7 +133,11 @@ const BookingCard = ({ price, rating, reviewCount, hotelName }: BookingCardProps
           </div>
         </div>
         
-        <Button className="w-full bg-primary hover:bg-primary/90" size="lg">
+        <Button 
+          className="w-full bg-primary hover:bg-primary/90" 
+          size="lg"
+          onClick={handleReserveNow}
+        >
           Reserve Now
         </Button>
         

@@ -68,7 +68,7 @@ export default function ListingPage() {
   });
 
   const destIdRaw = searchParams.get('destId');
-  const destId = destIdRaw ? JSON.parse(destIdRaw) : '';
+  const destId = destIdRaw || '';
   const startPolling = !!stayDates.checkinDate && !!stayDates.checkoutDate;
 
   const fetchPrice = useCallback(async () => {
@@ -125,6 +125,14 @@ export default function ListingPage() {
       console.log('fetching hotel');
       // setHotels(INIT_HOTELS);
       // return;
+
+      // Don't fetch if destId is empty
+      if (!destId) {
+        console.log('destId is empty, skipping hotel fetch');
+        setLoading((prev) => ({ ...prev, hotel: false }));
+        return;
+      }
+
       const controller = new AbortController();
       const signal = controller.signal;
       console.log("destId value:", destId); // Add this before the fetch
@@ -148,7 +156,7 @@ export default function ListingPage() {
       }
     };
     fetchHotel();
-  }, []);
+  }, [destId]); // Add destId to the dependency array
 
   // Stitch, filter, and sort the hotels here
   const hotelsWithPrice = usePricedHotels(hotels, prices);

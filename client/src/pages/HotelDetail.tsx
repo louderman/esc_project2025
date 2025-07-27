@@ -18,6 +18,8 @@ type Hotel = {
   description: string;
   amenities: Record<string, boolean>;
   images: string[];
+  latitude?: number;
+  longitude?: number;
 };
 
 type Room = {
@@ -29,6 +31,10 @@ type Room = {
   occupancy: number;
   bed_type: string;
   size: string;
+  description?: string;
+  long_description?: string;
+  amenities?: string[];
+  key?: string;
 };
 
 type ApiResponse = {
@@ -40,53 +46,91 @@ const HotelDetail = () => {
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchParam] = useSearchParams();
-  const hotelId = searchParam.get('hotel_id');
+  const { hotelId } = useParams<{ hotelId: string }>();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     const fetchHotelData = async () => {
+      if (!hotelId) {
+        setError('No hotel ID provided');
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        const response = await fetch(`/api/hotel/combined/${hotelId}`, {
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            'X-Request-Source': 'hotel-detail-page'
-          }
-        });
+        setError(null);
+
+        // Get URL parameters
+        const destinationId = searchParams.get('destination_id') || 'WD0M';
+        const checkin = searchParams.get('checkin') || '2025-10-01';
+        const checkout = searchParams.get('checkout') || '2025-10-07';
+        const adults = searchParams.get('adults') || '2';
+        const children = searchParams.get('children') || '0';
+        const roomCount = searchParams.get('rooms') || '1';
+        const lang = searchParams.get('lang') || 'en_US';
+        const currency = searchParams.get('currency') || 'SGD';
+        const countryCode = searchParams.get('country_code') || 'SG';
+
+        // Build guests string for API
+        const guests = Array(parseInt(roomCount)).fill(parseInt(adults)).join('|');
+
+        // Fetch combined hotel data
+        const response = await fetch(`/api/hotel-detail/combined/${hotelId}?${new URLSearchParams({
+          destination_id: destinationId,
+          checkin,
+          checkout,
+          guests,
+          lang,
+          currency,
+          country_code: countryCode,
+          partner_id: '1'
+        })}`);
 
         if (!response.ok) {
           throw new Error(`Error fetching hotel data: ${response.status}`);
         }
 
         const result = await response.json();
-        const rooms: Room[] = result.prices.hotels.map((room: any) => ({
-          id: room.id || room.room_type,
-          room_type: room.room_type || 'Room',
-          price: room.price || 0,
-          free_cancellation: room.free_cancellation || false,
-          image: room.image || 'https://via.placeholder.com/600x400?text=Room',
-          occupancy: room.occupancy || 2,
-          bed_type: room.bed_type || 'N/A',
-          size: room.size || 'N/A'
-        }));
 
+        // Transform hotel data
         const hotel: Hotel = {
           id: result.hotel.id,
           name: result.hotel.name,
           rating: result.hotel.rating,
-          reviewCount: result.hotel.review_count || 0,
-          address1: result.hotel.address1,
+          reviewCount: 2847, // Default value since API doesn't provide this
+          address1: result.hotel.address,
           description: result.hotel.description || 'No description provided.',
           amenities: result.hotel.amenities || {},
-          images: result.hotel.images || [
-            'https://via.placeholder.com/800x600?text=Hotel+Image'
-          ]
+          images: result.hotel.image_details ? 
+            Array.from({ length: Math.min(result.hotel.image_details.count, 5) }, (_, i) => 
+              `${result.hotel.image_details.prefix}${i}${result.hotel.image_details.suffix}`
+            ) : [
+              'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=800&h=600&fit=crop',
+              'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=800&h=600&fit=crop',
+              'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&h=600&fit=crop'
+            ],
+          latitude: result.hotel.latitude,
+          longitude: result.hotel.longitude
         };
 
-        setData({ hotel, rooms });
+        // Transform room data
+        const roomData: Room[] = result.prices.rooms?.map((room: any, index: number) => ({
+          id: room.key || `room-${index}`,
+          room_type: room.room_normalized_description || 'Room',
+          price: Math.round(room.price) || 0,
+          free_cancellation: room.free_cancellation || false,
+          image: room.images?.[0] || `https://images.unsplash.com/photo-${['1649972904349-6e44c42644a7', '1581091226825-a6a2a5aee158', '1721322800607-8c38375eef04'][index % 3]}?w=600&h=400&fit=crop`,
+          occupancy: parseInt(adults) + parseInt(children),
+          bed_type: 'King bed', // Default value
+          size: '35', // Default value
+          description: room.description,
+          long_description: room.long_description,
+          amenities: room.amenities,
+          key: room.key
+        })) || [];
+
+        setData({ hotel, rooms: roomData });
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
@@ -94,8 +138,8 @@ const HotelDetail = () => {
       }
     };
 
-    if (hotelId) fetchHotelData();
-  }, [hotelId]);
+    fetchHotelData();
+  }, [hotelId, searchParams]);
 
   if (loading) {
     return (
@@ -182,6 +226,7 @@ const HotelDetail = () => {
               rating={data.hotel.rating}
               reviewCount={data.hotel.reviewCount}
               hotelName={data.hotel.name}
+              hotelId={hotelId}
             />
           </div>
         </div>
