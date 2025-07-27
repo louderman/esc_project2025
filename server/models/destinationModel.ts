@@ -157,7 +157,7 @@ async function searchDestinationsInBounds({
   const [rows] = (await pool.query(
     `
         SELECT * FROM destination
-        WHERE ROUND(LAT, 4) BETWEEN ROUND(?, 4) AND ROUND(?, 4) AND ROUND(LNG, 4) BETWEEN ROUND(?, 4) AND ROUND(?, 4);
+        WHERE lat BETWEEN ? AND ? AND lng BETWEEN ? AND ?;
     `,
     [minLat, maxLat, minLng, maxLng]
   )) as [Destination[], FieldPacket[]];
