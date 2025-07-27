@@ -1,28 +1,41 @@
 import express from 'express';
 import cors from 'cors';
+import process from 'process';
+import { cleanup } from './database/db';
 
-console.log('Starting main server...');
+import { router as destRouter } from './routes/destination';
+import { router as priceRouter } from './routes/hotel-price';
+import { router as hotelRouter } from './routes/hotel';
+import { router as authRouter } from './routes/auth';
+
+import { sync as syncDest } from './models/destination';
+import { sync as syncUser } from './models/userModel';
+
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup);
+
+syncDest();
+syncUser();
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-console.log('Setting up routes...');
+// General routes for everyone
+app.use('/api/destination', destRouter);
+app.use('/api/hotel-price', priceRouter);
+app.use('/api/hotel', hotelRouter);
+app.use('/api/auth', authRouter);
 
-// Basic test route
-app.get('/', (req, res) => {
-  console.log('Root route accessed');
-  res.json({ message: 'Main server is working!' });
-});
+// --- HOTEL DETAIL ROUTES ---
 
-// Test hotel detail route
+// Test route for hotel-detail
 app.get('/api/hotel-detail/test', (req, res) => {
-  console.log('Hotel detail test route accessed');
   res.json({ message: 'Hotel detail route is working!' });
 });
 
-// Combined route to get both hotel details and prices
+// Combined hotel detail and prices route
 app.get('/api/hotel-detail/combined/:hotelId', async (req, res) => {
   const { hotelId } = req.params;
   const { 
@@ -35,9 +48,6 @@ app.get('/api/hotel-detail/combined/:hotelId', async (req, res) => {
     guests = '2', 
     partner_id = '1' 
   } = req.query;
-
-  console.log('Combined route accessed with hotelId:', hotelId);
-  console.log('Query parameters:', req.query);
 
   if (!hotelId?.trim()) {
     return res.status(400).json({
@@ -58,46 +68,23 @@ app.get('/api/hotel-detail/combined/:hotelId', async (req, res) => {
       partner_id: partner_id as string,
     })}`;
 
-    console.log('Fetching hotel details from:', hotelUrl);
-    console.log('Fetching prices from:', pricesUrl);
-
-    // First, fetch hotel details
-    const hotelResponse = await fetch(hotelUrl, {
-      headers: { Accept: 'application/json' }
-    });
-
-    console.log('Hotel response status:', hotelResponse.status);
+    // Fetch hotel details and prices in parallel
+    const [hotelResponse, pricesResponse] = await Promise.all([
+      fetch(hotelUrl, { headers: { Accept: 'application/json' } }),
+      fetch(pricesUrl, { headers: { Accept: 'application/json' } })
+    ]);
 
     if (!hotelResponse.ok) {
       const hotelErrorText = await hotelResponse.text();
-      console.error('Hotel API error:', hotelResponse.status, hotelErrorText);
       throw new Error(`Hotel details API error: ${hotelResponse.status} - ${hotelErrorText}`);
     }
 
     const hotelData = await hotelResponse.json();
-    console.log('Successfully fetched hotel data');
 
-    // Then, try to fetch prices (but don't fail if prices aren't available)
+    // Try to fetch prices, but don't fail if not available
     let pricesData = { rooms: [] };
-    try {
-      const pricesResponse = await fetch(pricesUrl, {
-        headers: { Accept: 'application/json' }
-      });
-
-      console.log('Prices response status:', pricesResponse.status);
-
-      if (pricesResponse.ok) {
-        pricesData = await pricesResponse.json();
-        console.log('Successfully fetched prices data');
-      } else {
-        console.log('Prices not available for this hotel/parameters, using empty prices');
-        // Return hotel data with empty prices instead of failing
-        pricesData = { rooms: [] };
-      }
-    } catch (pricesError) {
-      console.log('Error fetching prices, using empty prices:', pricesError);
-      // Continue with empty prices
-      pricesData = { rooms: [] };
+    if (pricesResponse.ok) {
+      pricesData = await pricesResponse.json();
     }
 
     return res.json({
@@ -113,10 +100,8 @@ app.get('/api/hotel-detail/combined/:hotelId', async (req, res) => {
   }
 });
 
-app.listen(5001, () => {
-  console.log('Main server listening on port 5001.');
-  console.log('Available routes:');
-  console.log('  GET /');
-  console.log('  GET /api/hotel-detail/test');
-  console.log('  GET /api/hotel-detail/combined/:hotelId');
+// --- END HOTEL DETAIL ROUTES ---
+
+app.listen(5000, () => {
+  console.log('Server listening on port 5000.');
 });

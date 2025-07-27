@@ -12,36 +12,35 @@ interface BookingCardProps {
   reviewCount: number;
   hotelName: string;
   hotelId?: string;
+  hasRooms?: boolean; // Add this prop
 }
 
-const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId }: BookingCardProps) => {
+const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms = false }: BookingCardProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   const handleReserveNow = () => {
-    // Get current URL parameters
-    const checkin = searchParams.get('checkin') || '2025-10-01';
-    const checkout = searchParams.get('checkout') || '2025-10-07';
-    const adults = searchParams.get('adults') || '2';
-    const children = searchParams.get('children') || '0';
-    const rooms = searchParams.get('rooms') || '1';
-    const destinationId = searchParams.get('destination_id') || '';
+    // Only allow booking if rooms are available
+    if (!hasRooms) return;
 
-    // Build booking URL with all necessary parameters
-    const bookingParams = new URLSearchParams({
-      hotelId: hotelId || '',
-      checkin,
-      checkout,
-      adults,
-      children,
-      rooms,
-      destination_id: destinationId,
-      price: price.toString(),
-      hotelName
-    });
-
-    // Navigate to booking page with all the data
-    navigate(`/booking?${bookingParams.toString()}`);
+    // Build URL parameters for hotel detail page
+    const params = new URLSearchParams();
+    
+    if (searchParams.get('checkin')) {
+      params.set('checkin', searchParams.get('checkin')!);
+    }
+    if (searchParams.get('checkout')) {
+      params.set('checkout', searchParams.get('checkout')!);
+    }
+    params.set('adults', searchParams.get('adults') || '2');
+    params.set('children', searchParams.get('children') || '0');
+    params.set('rooms', searchParams.get('rooms') || '1');
+    params.set('destination_id', searchParams.get('destination_id') || '');
+    params.set('price', price.toString());
+    params.set('hotelName', hotelName);
+    params.set('hotelId', hotelId || '');
+    
+    navigate(`/booking?${params.toString()}`);
   };
 
   return (
@@ -64,8 +63,14 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId }: Booking
             </div>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-bold">${price}</div>
-            <div className="text-sm text-hotel-text-secondary">per night</div>
+            {hasRooms && price > 0 ? (
+              <>
+                <div className="text-2xl font-bold">${price}</div>
+                <div className="text-sm text-hotel-text-secondary">per night</div>
+              </>
+            ) : (
+              <div className="text-sm text-hotel-text-secondary">No availability</div>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -118,28 +123,43 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId }: Booking
           </Select>
         </div>
         
-        <div className="border-t pt-4">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm">3 nights</span>
-            <span className="text-sm">${price * 3}</span>
+        {hasRooms && price > 0 ? (
+          <>
+            <div className="border-t pt-4">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm">3 nights</span>
+                <span className="text-sm">${price * 3}</span>
+              </div>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm">Taxes & fees</span>
+                <span className="text-sm">$45</span>
+              </div>
+              <div className="flex justify-between items-center font-semibold text-lg border-t pt-2">
+                <span>Total</span>
+                <span>${(price * 3) + 45}</span>
+              </div>
+            </div>
+            
+            <Button 
+              className="w-full bg-primary hover:bg-primary/90" 
+              size="lg"
+              onClick={handleReserveNow}
+            >
+              Reserve Now
+            </Button>
+          </>
+        ) : (
+          <div className="text-center py-4">
+            <p className="text-sm text-gray-600 mb-4">No rooms available for selected dates</p>
+            <Button 
+              className="w-full bg-gray-400 cursor-not-allowed" 
+              size="lg"
+              disabled
+            >
+              No Availability
+            </Button>
           </div>
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm">Taxes & fees</span>
-            <span className="text-sm">$45</span>
-          </div>
-          <div className="flex justify-between items-center font-semibold text-lg border-t pt-2">
-            <span>Total</span>
-            <span>${(price * 3) + 45}</span>
-          </div>
-        </div>
-        
-        <Button 
-          className="w-full bg-primary hover:bg-primary/90" 
-          size="lg"
-          onClick={handleReserveNow}
-        >
-          Reserve Now
-        </Button>
+        )}
         
         <p className="text-xs text-hotel-text-secondary text-center">
           Free cancellation until 24 hours before check-in

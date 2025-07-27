@@ -115,20 +115,25 @@ const HotelDetail = () => {
         };
 
         // Transform room data
-        const roomData: Room[] = result.prices.rooms?.map((room: any, index: number) => ({
-          id: room.key || `room-${index}`,
-          room_type: room.room_normalized_description || 'Room',
-          price: Math.round(room.price) || 0,
-          free_cancellation: room.free_cancellation || false,
-          image: room.images?.[0] || `https://images.unsplash.com/photo-${['1649972904349-6e44c42644a7', '1581091226825-a6a2a5aee158', '1721322800607-8c38375eef04'][index % 3]}?w=600&h=400&fit=crop`,
-          occupancy: parseInt(adults) + parseInt(children),
-          bed_type: 'King bed', // Default value
-          size: '35', // Default value
-          description: room.description,
-          long_description: room.long_description,
-          amenities: room.amenities,
-          key: room.key
-        })) || [];
+        const roomData: Room[] = result.prices.rooms?.map((room: any, index: number) => {
+          console.log(`Room ${index}:`, room); // Debug logging
+          return {
+            id: room.key || `room-${index}`,
+            room_type: room.room_normalized_description || 'Room',
+            price: Math.round(room.price) || 0,
+            free_cancellation: room.free_cancellation || false,
+            image: room.images?.[0] || `https://images.unsplash.com/photo-${['1649972904349-6e44c42644a7', '1581091226825-a6a2a5aee158', '1721322800607-8c38375eef04'][index % 3]}?w=600&h=400&fit=crop`,
+            occupancy: parseInt(adults) + parseInt(children),
+            bed_type: 'King bed', // Default value
+            size: '35', // Default value
+            description: room.description,
+            long_description: room.long_description,
+            amenities: room.amenities,
+            key: room.key
+          };
+        }) || [];
+
+        console.log('Number of rooms available:', roomData.length); // Debug logging
 
         setData({ hotel, rooms: roomData });
       } catch (err) {
@@ -222,18 +227,32 @@ const HotelDetail = () => {
           {/* Right Column - Booking Card */}
           <div className="lg:col-span-1">
             <BookingCard 
-              price={data.rooms[0]?.price || 331}
+              price={data.rooms.length > 0 ? data.rooms[0].price : 0}
               rating={data.hotel.rating}
               reviewCount={data.hotel.reviewCount}
               hotelName={data.hotel.name}
               hotelId={hotelId}
+              hasRooms={data.rooms.length > 0} // Add this prop
             />
           </div>
         </div>
 
         {/* Room Options */}
         <div className="mb-12">
-          <RoomOptions rooms={data.rooms} />
+          {data.rooms.length > 0 ? (
+            <RoomOptions rooms={data.rooms} />
+          ) : (
+            <div className="text-center py-8">
+              <h3 className="text-xl font-semibold mb-2">No rooms available</h3>
+              <p className="text-gray-600 mb-4">
+                No rooms are currently available for the selected dates and parameters.
+              </p>
+              <div className="space-y-2 text-sm text-gray-500">
+                <p>Try different dates or contact the hotel directly.</p>
+                <p>You can also check back later for availability updates.</p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Location */}
