@@ -6,12 +6,12 @@ import type { Price } from '../../../types/Price';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
 ///SearchBar/DateInput/DateInput
 function formatDate(date: Date | null): string {
-  if (!date) return "N/A";
+  if (!date) return 'N/A';
 
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
   }).format(date);
 }
 
@@ -54,7 +54,10 @@ export default function BookingConfirmation() {
   return (
     <div className={styles.bookingpage}>
       <div className={styles.bookingbox}>
-        <h1 className={styles.bookingtitle} style={{ marginBottom: '1rem', marginTop: '1rem' }}>
+        <h1
+          className={styles.bookingtitle}
+          style={{ marginBottom: '1rem', marginTop: '1rem' }}
+        >
           Booking Confirmed!
         </h1>
         <p className={styles.bookingsubtitle}>
@@ -71,11 +74,15 @@ export default function BookingConfirmation() {
           </div>
           <div className={styles.detailitem}>
             <div className={styles.label}>Check-in Date</div>
-            <div className={styles.value}>{formatDate(stayDates?.checkinDate ?? null)}</div>
+            <div className={styles.value}>
+              {formatDate(stayDates?.checkinDate ?? null)}
+            </div>
           </div>
           <div className={styles.detailitem}>
             <div className={styles.label}>Check-out Date</div>
-            <div className={styles.value}>{formatDate(stayDates?.checkoutDate ?? null)}</div>
+            <div className={styles.value}>
+              {formatDate(stayDates?.checkoutDate ?? null)}
+            </div>
           </div>
           <div className={styles.detailitem}>
             <div className={styles.label}>Total</div>
@@ -88,8 +95,15 @@ export default function BookingConfirmation() {
         </div>
 
         <div className={styles.roomdetail}>
-          <p className={styles.label} style={{ marginBottom: '1rem', marginTop: '2.5rem' }}>Details:</p>
-          <p className={`${styles.value} ${styles.bold}`}>Standard Single Room</p>
+          <p
+            className={styles.label}
+            style={{ marginBottom: '1rem', marginTop: '2.5rem' }}
+          >
+            Details:
+          </p>
+          <p className={`${styles.value} ${styles.bold}`}>
+            Standard Single Room
+          </p>
         </div>
       </div>
 
@@ -124,12 +138,8 @@ export default function BookingConfirmation() {
 
           <div className={styles.textcontent}>
             <div className={styles.hotelinfo}>
-              <h2 className={styles.hotelname}>
-                {hotel.name}
-              </h2>
-              <p className={styles.hoteladdress}>
-                {hotel.address}
-              </p>
+              <h2 className={styles.hotelname}>{hotel.name}</h2>
+              <p className={styles.hoteladdress}>{hotel.address}</p>
             </div>
           </div>
         </div>
