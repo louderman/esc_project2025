@@ -64,11 +64,11 @@
 }
 
 /* Show checkmark when selected */
-.inputContainer input:checked ~ .checkmark::after {
+.inputContainer input:checked + .checkmark::after {
   display: block;
 }
 
-.inputContainer input:checked ~ .checkmark {
+.inputContainer input:checked + .checkmark {
   border-color: rgb(224, 130, 68);
 }
 
