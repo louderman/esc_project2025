@@ -1,15 +1,16 @@
 // server/validators/hotelValidator.ts
-import { Request } from 'express';
+import { Destination } from '../../types/Destination';
 
-export function validateHotelParams(params: any): { uid: string } {
-  if (!params.uid || typeof params.uid !== 'string') {
-    const error = new Error('Invalid UID parameter');
+export function validateHotelParams(params: any): { dest_id: string } {
+  if (!params.dest_id || typeof params.dest_id !== 'string') {
+    const error = new Error('Invalid dest_id parameter');
+    error.name = 'ValidationError';
     (error as any).validationErrors = {
-      uid: 'UID must be a non-empty string'
+      dest_id: 'dest_id must be a non-empty string'
     };
     throw error;
   }
-  return { uid: params.uid };
+  return { dest_id: params.dest_id };
 }
 
 export default { validateHotelParams };

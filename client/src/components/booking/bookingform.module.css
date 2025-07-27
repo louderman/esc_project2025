@@ -91,3 +91,18 @@
 .reserveButton:hover {
   background-color: #e49512;
 }
+
+.errorMessage {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #ffeaea;
+  border: 1px solid #ffcdd2;
+  border-radius: 4px;
+}
+
+.errorMessage p {
+  color: #d32f2f;
+  font-size: 0.9rem;
+  margin: 0;
+  font-weight: 500;
+}
