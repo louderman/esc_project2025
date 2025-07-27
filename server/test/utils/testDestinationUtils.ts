@@ -6,13 +6,22 @@ export async function insertTestDestinations(destinations: Destination[]) {
   // First clear any existing test data
   await deleteTestDestinations();
   
+  console.log(`Attempting to insert ${destinations.length} test destinations`);
+  
   for (const dest of destinations) {
-    await pool.query(
-      `INSERT INTO ${tableName} (dest_id, term, lat, lng, type, state)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [dest.dest_id, dest.term, dest.lat, dest.lng, dest.type, dest.state]
-    );
+    try {
+      await pool.query(
+        `INSERT INTO ${tableName} (dest_id, term, lat, lng, type, state)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [dest.dest_id, dest.term, dest.lat, dest.lng, dest.type, dest.state]
+      );
+    } catch (error) {
+      console.error('Error inserting destination:', dest, error);
+      throw error;
+    }
   }
+  
+  console.log(`Successfully inserted ${destinations.length} test destinations`);
 }
 
 export async function deleteTestDestinations(prefix = 'test_') {
