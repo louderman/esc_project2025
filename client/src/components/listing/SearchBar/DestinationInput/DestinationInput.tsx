@@ -5,10 +5,8 @@ import { type Destination } from '../../../../../../types/Destination';
 import { useDebounceAsync } from '../../../../hooks/useDebounceAsync';
 import { useSearchParams } from 'react-router-dom';
 
-// TODO: replace onMouseDown?
-
 export type DestinationState = {
-  id: string; // null if user input destination name not in destination.json file
+  id: string; 
   name: string;
 };
 

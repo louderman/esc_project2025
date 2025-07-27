@@ -1,4 +1,4 @@
-import mysql from 'mysql2/promise';
+import { createPool } from 'mysql2';
 
 // Create a connection pool to the database
 const pool = mysql.createPool({
@@ -6,16 +6,9 @@ const pool = mysql.createPool({
   port: 53042,
   user: 'pub',
   password: 'asbestosSnOrter8&',
-  database: 'hotel',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+  database: process.env.NODE_ENV === 'test' ? 'hotel_test' : 'hotel',
+}).promise();
 
-/**
- * Cleanup function for graceful shutdown.
- * Only call this if you're shutting down the server (e.g., in SIGINT or test teardown).
- */
 async function cleanup() {
   try {
     await pool.end();

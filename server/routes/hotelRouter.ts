@@ -17,7 +17,7 @@ router.get('/query', async (req, res) => {
   const response = await fetch(url);
   const data: Hotel[] = await response.json();
   // console.log(data);
-  console.log('called');
+  // console.log('called');
 
   res.send(data);
 });

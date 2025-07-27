@@ -50,7 +50,7 @@ router.post('/login', function (req, res) {
       res.status(200).json({
         message: 'Login successful.',
         userId: user.id,
-        name: user.name
+        name: user.name,
       });
     })
     .catch((err) => {

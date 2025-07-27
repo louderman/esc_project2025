@@ -21,7 +21,7 @@ router.get('/query', async (req, res) => {
     isNaN(checkoutDate.getTime()) ||
     isNaN(guestCount)
   ) {
-    res.status(400).json({ error: 'Invalid date or guest count' });
+    return res.status(400).json({ error: 'Invalid date or guest count' });
   }
 
   const url = `https://hotelapi.loyalty.dev/api/hotels/prices?destination_id=${dest_id}&checkin=${checkin}&checkout=${checkout}&lang=en_US&currency=SGD&country_code=SG&guests=${guestCount}&partner_id=1`;
