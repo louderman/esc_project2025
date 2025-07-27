@@ -1,28 +1,28 @@
-// const mysql = require('mysql2');
-import { createPool } from 'mysql2';
+import mysql from 'mysql2/promise';
 
-const pool = createPool({
+// Create a connection pool to the database
+const pool = mysql.createPool({
   host: 'back.r3po.org',
   port: 53042,
   user: 'pub',
   password: 'asbestosSnOrter8&',
   database: 'hotel',
-}).promise();
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
 
-// const pool = createPool({
-//   host: 'localhost',  
-//   port: 3306,
-//   user: 'user',  
-//   password: 'password',
-//   database: 'hotel',
-// }).promise();
-
+/**
+ * Cleanup function for graceful shutdown.
+ * Only call this if you're shutting down the server (e.g., in SIGINT or test teardown).
+ */
 async function cleanup() {
-  await pool.end();
+  try {
+    await pool.end();
+    console.log('Database pool closed.');
+  } catch (err) {
+    console.error('Error closing pool:', err);
+  }
 }
 
 export { pool, cleanup };
-
-// CREATE USER 'your_username'@'your_host' IDENTIFIED BY 'your_password';
-// GRANT ALL PRIVILEGES ON db_name.* TO 'your_username'@'localhost';
-// FLUSH PRIVILEGES;

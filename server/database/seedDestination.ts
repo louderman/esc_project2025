@@ -22,7 +22,7 @@ async function seed() {
       `
         INSERT INTO ${tableName} (dest_id, term, lat, lng, type, state) VALUES (?, ?, ?, ?, ?, ?)
         `,
-      [o.uid, o.term, o.lat, o.lng, o.type, o.state]
+      [o.dest_id, o.term, o.lat, o.lng, o.type, o.state]
     );
   }
 

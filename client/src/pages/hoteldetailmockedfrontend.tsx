@@ -8,7 +8,7 @@ import RoomOptions from '../components/hotel/RoomOptions';
 import LocationMap from '../components/hotel/LocationMap';
 import { Star } from 'lucide-react';
 
-// Data types
+// Mock data types
 type Hotel = {
   id: string;
   name: string;
@@ -41,52 +41,77 @@ const HotelDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchParam] = useSearchParams();
-  const hotelId = searchParam.get('hotel_id');
+  const hotelId = searchParam.get('hotel_id')// Use this to fetch the id from the url and use it in the backend
 
   useEffect(() => {
     const fetchHotelData = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        const response = await fetch(`/api/hotel/combined/${hotelId}`, {
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            'X-Request-Source': 'hotel-detail-page'
-          }
-        });
+        
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
-        if (!response.ok) {
-          throw new Error(`Error fetching hotel data: ${response.status}`);
-        }
-
-        const result = await response.json();
-        const rooms: Room[] = result.prices.hotels.map((room: any) => ({
-          id: room.id || room.room_type,
-          room_type: room.room_type || 'Room',
-          price: room.price || 0,
-          free_cancellation: room.free_cancellation || false,
-          image: room.image || 'https://via.placeholder.com/600x400?text=Room',
-          occupancy: room.occupancy || 2,
-          bed_type: room.bed_type || 'N/A',
-          size: room.size || 'N/A'
-        }));
-
-        const hotel: Hotel = {
-          id: result.hotel.id,
-          name: result.hotel.name,
-          rating: result.hotel.rating,
-          reviewCount: result.hotel.review_count || 0,
-          address1: result.hotel.address1,
-          description: result.hotel.description || 'No description provided.',
-          amenities: result.hotel.amenities || {},
-          images: result.hotel.images || [
-            'https://via.placeholder.com/800x600?text=Hotel+Image'
+        // Enhanced mock data
+        const mockHotel: Hotel = {
+          id: hotelId || 'park-royal-singapore',
+          name: 'Park Royal Collection Marina Bay',
+          rating: 4.5,
+          reviewCount: 2847,
+          address1: '6 Raffles Boulevard, Marina Bay, Singapore 039594',
+          description: 'Park Royal Collection Marina Bay offers luxury accommodation in the heart of Singapore\'s business district. Located within walking distance of Marina Bay Sands, Gardens by the Bay, and the Singapore Flyer, this contemporary hotel features elegantly appointed rooms with stunning city and bay views. Each room is equipped with modern amenities and thoughtful touches to ensure a comfortable stay for both business and leisure travelers.',
+          amenities: {
+            wifi: true,
+            airConditioning: true,
+            pool: true,
+            gym: true,
+            breakfast: true,
+            parking: true,
+            restaurant: true
+          },
+          images: [
+            'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=800&h=600&fit=crop',
+            'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=800&h=600&fit=crop',
+            'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&h=600&fit=crop'
           ]
         };
 
-        setData({ hotel, rooms });
+        const mockRooms: Room[] = [
+          {
+            id: 'deluxe-room',
+            room_type: 'Deluxe Room',
+            price: 331,
+            free_cancellation: true,
+            image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=600&h=400&fit=crop',
+            occupancy: 2,
+            bed_type: 'King bed',
+            size: '35'
+          },
+          {
+            id: 'premier-room',
+            room_type: 'Premier Room',
+            price: 405,
+            free_cancellation: true,
+            image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=600&h=400&fit=crop',
+            occupancy: 2,
+            bed_type: 'King bed',
+            size: '42'
+          },
+          {
+            id: 'suite',
+            room_type: 'Executive Suite',
+            price: 650,
+            free_cancellation: false,
+            image: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=600&h=400&fit=crop',
+            occupancy: 4,
+            bed_type: 'King bed + Sofa bed',
+            size: '65'
+          }
+        ];
+
+        setData({
+          hotel: mockHotel,
+          rooms: mockRooms
+        });
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
@@ -94,7 +119,7 @@ const HotelDetail = () => {
       }
     };
 
-    if (hotelId) fetchHotelData();
+    fetchHotelData();
   }, [hotelId]);
 
   if (loading) {
@@ -110,7 +135,7 @@ const HotelDetail = () => {
       </div>
     );
   }
-
+  
   if (error) {
     return (
       <div className="min-h-screen bg-background">
@@ -129,7 +154,7 @@ const HotelDetail = () => {
       </div>
     );
   }
-
+  
   if (!data) {
     return (
       <div className="min-h-screen bg-background">
@@ -200,4 +225,5 @@ const HotelDetail = () => {
   );
 };
 
-export default HotelDetail;
+ export default HotelDetail;
+

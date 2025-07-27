@@ -30,6 +30,6 @@ app.use('/api/hotel', hotelRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/hotel-detail',detailRouter);
 
-app.listen(55510, () => { //port number used
+app.listen(5001, () => { //port number used
   console.log('Server listening on port 55500.');
 });

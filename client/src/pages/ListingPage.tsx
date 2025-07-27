@@ -120,7 +120,6 @@ export default function ListingPage() {
     }
   }, [stayDates, occupancy, destId]);
   usePollingAsync(fetchPrice, 2000, startPolling);
-
   useEffect(() => {
     const fetchHotel = async () => {
       console.log('fetching hotel');
@@ -128,7 +127,7 @@ export default function ListingPage() {
       // return;
       const controller = new AbortController();
       const signal = controller.signal;
-
+      console.log("destId value:", destId); // Add this before the fetch
       try {
         const response = await fetch(`/api/hotel/query?dest_id=${destId}`, {
           signal,

@@ -1,22 +1,21 @@
+//Not really needed right now 
 import React, { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { useParams } from 'react-router-dom';
 import styles from './HotelDetailPage.module.css';
+import { hotelApiService, HotelDetails, RoomPrice } from '../services/hotelApi';
+import { useUrlParams, buildGuestsString } from '../hooks/hotel_details/useUrlParams.ts';
 
-// ===== TESTING CONFIGURATION =====
-const MOCK_MODE = true; // Set to false when ready to test real API
-const MOCK_DELAY = 800; // Simulate network latency in ms
-
-// Simplified type definitions for testing
+// Transformed data types for UI
 type Hotel = {
   id: string;
   name: string;
   rating: number;
-  reviewCount: number;
-  address1: string;
+  address: string;
   description: string;
   amenities: Record<string, boolean>;
   images: string[];
+  latitude?: number;
+  longitude?: number;
 };
 
 type Room = {
@@ -25,110 +24,134 @@ type Room = {
   price: number;
   free_cancellation: boolean;
   image: string;
-  occupancy: number;
-  bed_type: string;
-  size: string;
+  description: string;
+  long_description: string;
+  amenities: string[];
+  key: string;
 };
 
 type ApiResponse = {
   hotel: Hotel;
   rooms: Room[];
+  searchParams: {
+    checkin: string;
+    checkout: string;
+    adults: number;
+    children: number;
+    rooms: number;
+  };
 };
 
 const HotelDetailPage = (): ReactNode => {
-  const { hotelId } = useParams<{ hotelId: string }>();
+  const urlParams = useUrlParams();
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+
+  // Transform API data to UI format
+  const transformHotelData = (apiHotel: HotelDetails): Hotel => ({
+    id: apiHotel.id,
+    name: apiHotel.name,
+    rating: apiHotel.rating,
+    address: apiHotel.address,
+    description: apiHotel.description,
+    amenities: apiHotel.amenities,
+    images: hotelApiService.generateMultipleImageUrls(apiHotel.image_details, 5),
+    latitude: apiHotel.latitude,
+    longitude: apiHotel.longitude
+  });
+
+  const transformRoomData = (apiRooms: RoomPrice[]): Room[] => {
+    return apiRooms.map((room, index) => ({
+      id: room.key,
+      room_type: room.room_normalized_description,
+      price: Math.round(room.price),
+      free_cancellation: room.free_cancellation,
+      image: room.images[0] || `https://images.unsplash.com/photo-${['1649972904349-6e44c42644a7', '1581091226825-a6a2a5aee158', '1721322800607-8c38375eef04'][index % 3]}?w=600&h=400&fit=crop`,
+      description: room.description,
+      long_description: room.long_description,
+      amenities: room.amenities,
+      key: room.key
+    }));
+  };
 
   useEffect(() => {
     const fetchHotelData = async () => {
+      if (!urlParams) return;
+
       try {
         setLoading(true);
-        
-        if (MOCK_MODE) {
-          // Simulate network delay
-          await new Promise(resolve => setTimeout(resolve, MOCK_DELAY));
+        setError(null);
 
-          // Enhanced mock data
-          const mockHotel: Hotel = {
-            id: hotelId || 'park-royal-singapore',
-            name: 'Park Royal Collection Marina Bay',
-            rating: 4.5,
-            reviewCount: 2847,
-            address1: '6 Raffles Boulevard, Marina Bay, Singapore 039594',
-            description: 'Park Royal Collection Marina Bay offers luxury accommodation in the heart of Singapore\'s business district. Located within walking distance of Marina Bay Sands, Gardens by the Bay, and the Singapore Flyer, this contemporary hotel features elegantly appointed rooms with stunning city and bay views.',
-            amenities: {
-              wifi: true,
-              airConditioning: true,
-              pool: true,
-              gym: true,
-              breakfast: true,
-              parking: true,
-              restaurant: true
-            },
-            images: [
-              'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=800&h=600&fit=crop',
-              'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=800&h=600&fit=crop',
-              'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&h=600&fit=crop'
-            ]
-          };
+        // Build guests string for API
+        const guestsString = buildGuestsString(urlParams.adults, urlParams.children, urlParams.rooms);
 
-          const mockRooms: Room[] = [
-            {
-              id: 'deluxe-room',
-              room_type: 'Deluxe Room',
-              price: 331,
-              free_cancellation: true,
-              image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=600&h=400&fit=crop',
-              occupancy: 2,
-              bed_type: 'King bed',
-              size: '35'
-            },
-            {
-              id: 'premier-room',
-              room_type: 'Premier Room',
-              price: 405,
-              free_cancellation: true,
-              image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=600&h=400&fit=crop',
-              occupancy: 2,
-              bed_type: 'King bed',
-              size: '42'
-            },
-            {
-              id: 'suite',
-              room_type: 'Executive Suite',
-              price: 650,
-              free_cancellation: false,
-              image: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=600&h=400&fit=crop',
-              occupancy: 4,
-              bed_type: 'King bed + Sofa bed',
-              size: '65'
-            }
-          ];
+        // Fetch hotel details and prices in parallel
+        const [hotelDetails, hotelPrices] = await Promise.all([
+          hotelApiService.getHotelDetails(urlParams.hotelId),
+          hotelApiService.getHotelPrices(urlParams.hotelId, {
+            destinationId: urlParams.destinationId,
+            checkin: urlParams.checkin,
+            checkout: urlParams.checkout,
+            guests: guestsString,
+            lang: urlParams.lang,
+            currency: urlParams.currency,
+            countryCode: urlParams.countryCode
+          })
+        ]);
 
-          setData({
-            hotel: mockHotel,
-            rooms: mockRooms
-          });
-          return;
-        }
+        const transformedData: ApiResponse = {
+          hotel: transformHotelData(hotelDetails),
+          rooms: transformRoomData(hotelPrices.rooms),
+          searchParams: {
+            checkin: urlParams.checkin,
+            checkout: urlParams.checkout,
+            adults: urlParams.adults,
+            children: urlParams.children,
+            rooms: urlParams.rooms
+          }
+        };
 
-        /* REAL API IMPLEMENTATION (COMMENTED OUT)
-        const response = await fetch(`/api/hotels/${hotelId}`);
-        if (!response.ok) throw new Error('Failed to fetch');
-        const result = await response.json();
-        setData(result);
-        */
+        setData(transformedData);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
+        console.error('Error fetching hotel data:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load hotel data');
       } finally {
         setLoading(false);
       }
     };
 
     fetchHotelData();
-  }, [hotelId]);
+  }, [urlParams]);
+
+  const handleRoomSelect = (room: Room) => {
+    setSelectedRoom(room);
+    // You can add booking logic here
+    console.log('Selected room:', room);
+  };
+
+  const handleReserve = () => {
+    if (!data) return;
+    
+    const reservationData = {
+      hotel: data.hotel,
+      room: selectedRoom || data.rooms[0],
+      searchParams: data.searchParams,
+      urlParams
+    };
+    
+    console.log('Making reservation:', reservationData);
+    // Implement reservation logic here
+  };
+
+  const formatDate = (dateString: string): string => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
   if (loading) {
     return (
@@ -197,9 +220,23 @@ const HotelDetailPage = (): ReactNode => {
               ))}
               <span className={styles.ratingScore}>{data.hotel.rating}</span>
             </div>
-            <span className={styles.reviewCount}>({data.hotel.reviewCount} reviews)</span>
           </div>
-          <p className={styles.address}>{data.hotel.address1}</p>
+          <p className={styles.address}>{data.hotel.address}</p>
+          
+          {/* Search Summary */}
+          <div className={styles.searchSummary}>
+            <span>{formatDate(data.searchParams.checkin)} - {formatDate(data.searchParams.checkout)}</span>
+            <span>•</span>
+            <span>{data.searchParams.adults} adult{data.searchParams.adults > 1 ? 's' : ''}</span>
+            {data.searchParams.children > 0 && (
+              <>
+                <span>•</span>
+                <span>{data.searchParams.children} child{data.searchParams.children > 1 ? 'ren' : ''}</span>
+              </>
+            )}
+            <span>•</span>
+            <span>{data.searchParams.rooms} room{data.searchParams.rooms > 1 ? 's' : ''}</span>
+          </div>
         </div>
 
         {/* Content Grid */}
@@ -257,29 +294,43 @@ const HotelDetailPage = (): ReactNode => {
                 <div className={styles.dateInputs}>
                   <div className={styles.inputGroup}>
                     <label>Check-in</label>
-                    <input type="date" className={styles.dateInput} />
+                    <input 
+                      type="date" 
+                      className={styles.dateInput} 
+                      value={data.searchParams.checkin}
+                      readOnly
+                    />
                   </div>
                   <div className={styles.inputGroup}>
                     <label>Check-out</label>
-                    <input type="date" className={styles.dateInput} />
+                    <input 
+                      type="date" 
+                      className={styles.dateInput} 
+                      value={data.searchParams.checkout}
+                      readOnly
+                    />
                   </div>
                 </div>
                 
                 <div className={styles.inputGroup}>
-                  <label>Guests</label>
-                  <select className={styles.guestSelect}>
-                    <option>2 guests</option>
-                    <option>1 guest</option>
-                    <option>3 guests</option>
-                    <option>4 guests</option>
-                  </select>
+                  <label>Guests & Rooms</label>
+                  <div className={styles.guestInfo}>
+                    <span>{data.searchParams.adults + data.searchParams.children} guests</span>
+                    <span>•</span>
+                    <span>{data.searchParams.rooms} room{data.searchParams.rooms > 1 ? 's' : ''}</span>
+                  </div>
                 </div>
                 
-                <button className={styles.bookButton}>
-                  Reserve
+                <button 
+                  className={styles.bookButton}
+                  onClick={handleReserve}
+                >
+                  Reserve {selectedRoom ? selectedRoom.room_type : 'Room'}
                 </button>
                 
-                <p className={styles.freeCancel}>Free cancellation for 48 hours</p>
+                <p className={styles.freeCancel}>
+                  {selectedRoom?.free_cancellation ? 'Free cancellation available' : 'Check cancellation policy'}
+                </p>
               </div>
             </div>
           </div>
@@ -290,7 +341,10 @@ const HotelDetailPage = (): ReactNode => {
           <h2>Choose your room</h2>
           <div className={styles.roomGrid}>
             {data.rooms.map(room => (
-              <div key={room.id} className={styles.roomCard}>
+              <div 
+                key={room.id} 
+                className={`${styles.roomCard} ${selectedRoom?.id === room.id ? styles.selectedRoom : ''}`}
+              >
                 <img 
                   src={room.image} 
                   alt={room.room_type}
@@ -298,20 +352,37 @@ const HotelDetailPage = (): ReactNode => {
                 />
                 <div className={styles.roomDetails}>
                   <h3 className={styles.roomType}>{room.room_type}</h3>
-                  <div className={styles.roomSpecs}>
-                    <span>👥 {room.occupancy} guests</span>
-                    <span>🛏️ {room.bed_type}</span>
-                    <span>📐 {room.size} m²</span>
-                  </div>
+                  <p className={styles.roomDescription}>{room.description}</p>
+                  
+                  {room.amenities.length > 0 && (
+                    <div className={styles.roomAmenities}>
+                      {room.amenities.slice(0, 3).map((amenity, index) => (
+                        <span key={index} className={styles.amenityTag}>
+                          {amenity}
+                        </span>
+                      ))}
+                      {room.amenities.length > 3 && (
+                        <span className={styles.moreAmenities}>
+                          +{room.amenities.length - 3} more
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  
                   <div className={styles.roomPrice}>
                     <span className={styles.roomPriceAmount}>${room.price}</span>
                     <span className={styles.roomPriceNight}>per night</span>
                   </div>
+                  
                   {room.free_cancellation && (
                     <span className={styles.freeCancel}>Free cancellation</span>
                   )}
-                  <button className={styles.selectRoomButton}>
-                    Select Room
+                  
+                  <button 
+                    className={`${styles.selectRoomButton} ${selectedRoom?.id === room.id ? styles.selectedButton : ''}`}
+                    onClick={() => handleRoomSelect(room)}
+                  >
+                    {selectedRoom?.id === room.id ? 'Selected' : 'Select Room'}
                   </button>
                 </div>
               </div>
@@ -323,4 +394,3 @@ const HotelDetailPage = (): ReactNode => {
   );
 };
 
-export default HotelDetailPage;
