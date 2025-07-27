@@ -16,7 +16,7 @@ function TestComponent({
   onStateChange,
 }: {
   navigateSpy: Mock;
-  onDispatchReady?: (dispatch: React.Dispatch<any>) => void;
+  onDispatchReady?: (dispatch: React.Dispatch<React.ReducerAction<typeof listingReducer>>) => void;
   onStateChange?: (state: typeof initialListingState) => void;
 }) {
   const [listingState, listingDispatch] = useReducer(
@@ -73,7 +73,7 @@ describe('useControlPanelUrlSync', () => {
 
   it('Check correctly updates URL on filter and sort options change', async () => {
     const navigateSpy = vi.fn();
-    let dispatch: React.Dispatch<any> = () => {};
+    let dispatch: React.Dispatch<React.ReducerAction<typeof listingReducer>> = () => {};
 
     render(
       <MemoryRouter initialEntries={['/listing']}>

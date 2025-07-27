@@ -71,7 +71,7 @@ export function useSearchBarUrlSync({
     if (destinationName) {
       setDestination((prev) => ({
         ...prev,
-        name: destinationName.replace(/\"/g, '') ?? prev.name,
+        name: destinationName.replace(/"/g, '') ?? prev.name,
       }));
     }
     setStayDates((prev) => ({

@@ -18,7 +18,7 @@ describe('useDebounceAsync', () => {
 
     const { result } = renderHook(() => useDebounceAsync(mockFn, 500));
 
-    let promise: Promise<any>;
+    let promise: Promise<string>;
     act(() => {
       promise = result.current('arg1');
     });

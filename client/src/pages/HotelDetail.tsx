@@ -115,21 +115,21 @@ const HotelDetail = () => {
         };
 
         // Transform room data
-        const roomData: Room[] = result.prices.rooms?.map((room: any, index: number) => {
+        const roomData: Room[] = result.prices.rooms?.map((room: Record<string, unknown>, index: number) => {
           console.log(`Room ${index}:`, room); // Debug logging
           return {
-            id: room.key || `room-${index}`,
-            room_type: room.room_normalized_description || 'Room',
-            price: Math.round(room.price) || 0,
-            free_cancellation: room.free_cancellation || false,
-            image: room.images?.[0] || `https://images.unsplash.com/photo-${['1649972904349-6e44c42644a7', '1581091226825-a6a2a5aee158', '1721322800607-8c38375eef04'][index % 3]}?w=600&h=400&fit=crop`,
+            id: (room.key as string) || `room-${index}`,
+            room_type: (room.room_normalized_description as string) || 'Room',
+            price: Math.round((room.price as number) || 0),
+            free_cancellation: (room.free_cancellation as boolean) || false,
+            image: ((room.images as string[])?.[0]) || `https://images.unsplash.com/photo-${['1649972904349-6e44c42644a7', '1581091226825-a6a2a5aee158', '1721322800607-8c38375eef04'][index % 3]}?w=600&h=400&fit=crop`,
             occupancy: parseInt(adults) + parseInt(children),
             bed_type: 'King bed', // Default value
             size: '35', // Default value
-            description: room.description,
-            long_description: room.long_description,
-            amenities: room.amenities,
-            key: room.key
+            description: room.description as string,
+            long_description: room.long_description as string,
+            amenities: room.amenities as string[],
+            key: room.key as string
           };
         }) || [];
 

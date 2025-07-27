@@ -1,8 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import process from 'process';
-import express from 'express';
-import cors from 'cors';
 
 import { cleanup } from './database/db';
 

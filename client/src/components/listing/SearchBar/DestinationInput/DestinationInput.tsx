@@ -47,7 +47,7 @@ export default function DestinationInput({
       setSuggestedDests(dests);
     }
     fetchInitialDest();
-  }, []);
+  }, [searchParams]);
 
   const debouncedFetch = useDebounceAsync(async (userInput: string) => {
     const controller = new AbortController();

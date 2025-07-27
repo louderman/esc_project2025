@@ -1,7 +1,7 @@
 import { createPool } from 'mysql2';
 
 // Create a connection pool to the database
-const pool = mysql.createPool({
+const pool = createPool({
   host: 'back.r3po.org',
   port: 53042,
   user: 'pub',
