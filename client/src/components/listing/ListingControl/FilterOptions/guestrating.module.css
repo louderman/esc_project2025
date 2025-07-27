@@ -43,7 +43,7 @@
   position: absolute;
   border: 2px solid rgb(206, 206, 206);
   border-radius: 50%;
-  top: 0;
+  box-sizing: border-box;
   left: 0;
   height: 18px;
   width: 18px;
@@ -57,18 +57,18 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background-color: rgb(252, 125, 75);
 }
 
 /* Show checkmark when selected */
-.inputContainer input:checked + .checkmark::after {
+.inputContainer input:checked ~ .checkmark::after {
   display: block;
 }
 
-.inputContainer input:checked + .checkmark {
+.inputContainer input:checked ~ .checkmark {
   border-color: rgb(224, 130, 68);
 }
 
