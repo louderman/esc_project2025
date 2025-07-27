@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react';
 type ControlPanelUrlSyncOptions = {
   listingState: ListingState;
   listingDispatch: React.Dispatch<ListingAction>;
-  navigate: NavigateFunction;
+  navigate?: NavigateFunction;
 };
 
 /**
@@ -94,7 +94,7 @@ export function useControlPanelUrlSync({
 
     syncParam('sortBy', listingState.sortBy);
 
-    if (hasChanged) {
+    if (hasChanged && !!navigate) {
       navigate(`${location.pathname}?${urlParams.toString()}`, {
         replace: true,
       });
