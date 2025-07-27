@@ -25,7 +25,6 @@ app.use('/api/destination', destRouter);
 app.use('/api/hotel-price', priceRouter);
 app.use('/api/hotel', hotelRouter);
 app.use('/api/auth', authRouter);
-app.use('/api/payment', paymentRouter);
 
 process.on('SIGINT', cleanup);
 process.on('SIGTERM', cleanup);
