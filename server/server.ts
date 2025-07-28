@@ -70,16 +70,18 @@ app.get('/api/hotel-detail/combined/:hotelId', async (req, res) => {
 
   try {
     const hotelUrl = `https://hotelapi.loyalty.dev/api/hotels/${hotelId}`;
-    const pricesUrl = `https://hotelapi.loyalty.dev/api/hotels/${hotelId}/prices?${new URLSearchParams({
-      destination_id: destination_id as string,
-      checkin: checkin as string,
-      checkout: checkout as string,
-      lang: lang as string,
-      currency: currency as string,
-      country_code: country_code as string,
-      guests: guests as string,
-      partner_id: partner_id as string,
-    })}`;
+            const pricesUrl = `https://hotelapi.loyalty.dev/api/hotels/${hotelId}/prices?${new URLSearchParams({
+          destination_id: destination_id as string,
+          checkin: checkin as string,
+          checkout: checkout as string,
+          lang: lang as string,
+          currency: currency as string,
+          country_code: country_code as string,
+          guests: guests as string,
+          partner_id: '1089',
+          landing_page: 'wl-acme-earn',
+          product_type: 'earn'
+        })}`;
 
     // Fetch hotel details and prices in parallel
     const [hotelResponse, pricesResponse] = await Promise.all([
