@@ -15,14 +15,6 @@
     "jsx": "react-jsx",
 
     /* Linting */
-<<<<<<< HEAD
-    "strict": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noImplicitAny": false,
-    "noFallthroughCasesInSwitch": false,
-
-=======
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -31,7 +23,6 @@
     "noUncheckedSideEffectImports": true,
 
     /* Path mapping */
->>>>>>> origin/main
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
