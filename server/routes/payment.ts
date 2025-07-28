@@ -2,10 +2,12 @@ import express from 'express';
 import Stripe from 'stripe';
 import { BookingData } from '../../types/Booking';
 
-// This will be initialized with your secret key in server.ts
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-06-30.basil',
-});
+// Initialize Stripe only if secret key is provided
+const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-06-30.basil',
+    })
+  : null;
 
 const router = express.Router();
 
@@ -31,6 +33,13 @@ router.post('/create-payment-intent', async (req, res) => {
 
   if (!bookingData) {
     return res.status(400).json({ error: 'Missing booking data' });
+  }
+
+  // Check if Stripe is configured
+  if (!stripe) {
+    return res.status(503).json({ 
+      error: 'Payment processing is not configured. Please set up Stripe API keys.' 
+    });
   }
 
   // Create booking record
@@ -87,7 +96,7 @@ router.post('/create-payment-intent', async (req, res) => {
 
   } catch (e) {
     // Handle specific card errors sent by Stripe
-    if (e instanceof Stripe.errors.StripeCardError) {
+    if (stripe && e instanceof Stripe.errors.StripeCardError) {
       return res.status(400).json({ error: e.message });
     }
     // Handle other generic errors
