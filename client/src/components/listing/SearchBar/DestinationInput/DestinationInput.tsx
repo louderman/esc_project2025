@@ -64,6 +64,11 @@ export default function DestinationInput({
   const debouncedFetch = useDebounceAsync(async (userInput: string) => {
     const controller = new AbortController();
 
+    // Don't make API call if input is empty or too short
+    if (!userInput || userInput.trim().length < 2) {
+      return [];
+    }
+
     try {
       const res = await fetch(`/api/destination/query/${userInput}?count=10`, {
         signal: controller.signal,
@@ -87,12 +92,23 @@ export default function DestinationInput({
     const inputValue = e.target.value;
 
     setDestination((prev) => ({ ...prev, name: inputValue }));
-    const dests = await debouncedFetch(e.target.value);
-    setSuggestedDests(dests);
-    setDestination((prev) => ({
-      ...prev,
-      id: dests.length > 0 ? dests[0].dest_id : '',
-    }));
+    
+    // Only call debouncedFetch if input has meaningful content
+    if (inputValue && inputValue.trim().length >= 2) {
+      const dests = await debouncedFetch(e.target.value);
+      setSuggestedDests(dests);
+      setDestination((prev) => ({
+        ...prev,
+        id: dests.length > 0 ? dests[0].dest_id : '',
+      }));
+    } else {
+      // Clear suggestions if input is empty or too short
+      setSuggestedDests([]);
+      setDestination((prev) => ({
+        ...prev,
+        id: '',
+      }));
+    }
   }
 
   return (

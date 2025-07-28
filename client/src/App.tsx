@@ -27,7 +27,8 @@ function App() {
           <Route path='/register' element={<RegisterPage />} />
           <Route path='/past_booking' element={<PastBookingPage />} />
           <Route path="/hotel/:hotelId" element={<HotelDetail />} />
-          <Route path="/hotel_detail" element={<HotelDetailPageTest />} />
+          <Route path="/hotel_detail" element={<HotelDetail />} />
+          <Route path="/hotel_detail_test" element={<HotelDetailPageTest />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>

@@ -1,5 +1,5 @@
-import { Button } from "@/components/hotel/ui/button";
-import { Input } from "@/components/hotel/ui/input";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 import { Search, MapPin, Phone, Globe } from "lucide-react";
 
 const HotelHeader = () => {

@@ -1,10 +1,11 @@
 import { Button } from "@/components/hotel/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/hotel/ui/card";
-import { Input } from "@/components/hotel/ui/input";
 import { Label } from "@/components/hotel/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/hotel/ui/select";
-import { Calendar, Users, Star } from "lucide-react";
+import { Users, Star } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import Calendar from "@/components/listing/SearchBar/DateInput/Calendar/Calendar";
+import type { StayDatesState } from "@/components/listing/SearchBar/DateInput/DateInput";
 
 interface AvailabilityInfo {
   requestedRooms: number;
@@ -32,6 +33,64 @@ interface BookingCardProps {
 const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms = false, availability }: BookingCardProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [showCheckinCal, setShowCheckinCal] = useState(false);
+  const [showCheckoutCal, setShowCheckoutCal] = useState(false);
+  
+  // Parse dates from URL parameters
+  const checkinDate = searchParams.get('checkin')?.replace(/"/g, '') || '2025-10-01';
+  const checkoutDate = searchParams.get('checkout')?.replace(/"/g, '') || '2025-10-07';
+  
+  // Create stayDates state that persists across renders
+  const [stayDates, setStayDatesState] = useState<StayDatesState>({
+    checkinDate: new Date(checkinDate),
+    checkoutDate: new Date(checkoutDate)
+  });
+  
+  // Update stayDates when URL parameters change
+  useEffect(() => {
+    const newCheckinDate = searchParams.get('checkin')?.replace(/"/g, '') || '2025-10-01';
+    const newCheckoutDate = searchParams.get('checkout')?.replace(/"/g, '') || '2025-10-07';
+    
+    setStayDatesState({
+      checkinDate: new Date(newCheckinDate),
+      checkoutDate: new Date(newCheckoutDate)
+    });
+  }, [searchParams]);
+  
+  const setStayDates = (newDates: StayDatesState | ((prev: StayDatesState) => StayDatesState)) => {
+    const dates = typeof newDates === 'function' ? newDates(stayDates) : newDates;
+    
+    if (dates.checkinDate && dates.checkoutDate) {
+      // Update the local state first
+      setStayDatesState(dates);
+      
+      // Then update the URL and refresh the page
+      const currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.set('checkin', dates.checkinDate.toISOString().split('T')[0]);
+      currentUrl.searchParams.set('checkout', dates.checkoutDate.toISOString().split('T')[0]);
+      window.location.href = currentUrl.toString();
+    }
+  };
+  
+  const calWrapperRef = useRef<HTMLDivElement>(null);
+  const checkinButtonRef = useRef<HTMLButtonElement>(null);
+  const checkoutButtonRef = useRef<HTMLButtonElement>(null);
+  
+  useEffect(() => {
+    function handleClickOutside(ev: MouseEvent) {
+      if (
+        !calWrapperRef.current?.contains(ev.target as Node) &&
+        !checkinButtonRef.current?.contains(ev.target as Node) &&
+        !checkoutButtonRef.current?.contains(ev.target as Node)
+      ) {
+        setShowCheckinCal(false);
+        setShowCheckoutCal(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleReserveNow = () => {
     // Only allow booking if rooms are available
@@ -41,18 +100,18 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
     const params = new URLSearchParams();
     
     if (searchParams.get('checkin')) {
-      params.set('checkin', searchParams.get('checkin')!);
+      params.set('checkin', searchParams.get('checkin')!.replace(/"/g, ''));
     }
     if (searchParams.get('checkout')) {
-      params.set('checkout', searchParams.get('checkout')!);
+      params.set('checkout', searchParams.get('checkout')!.replace(/"/g, ''));
     }
     params.set('adult', searchParams.get('adult') || '2');
     params.set('child', searchParams.get('child') || '0');
     params.set('room', searchParams.get('room') || '1');
-    params.set('destId', searchParams.get('destId') || '');
+    params.set('destId', (searchParams.get('destId') || '').replace(/"/g, ''));
     params.set('price', price.toString());
     params.set('hotelName', hotelName);
-    params.set('hotelId', hotelId || '');
+    params.set('hotelId', (hotelId || '').replace(/"/g, ''));
     
     navigate(`/booking?${params.toString()}`);
   };
@@ -94,27 +153,45 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
           <div>
             <Label htmlFor="checkin" className="text-sm font-medium">Check-in</Label>
             <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
-              <Input 
-                id="checkin"
-                type="date" 
-                className="pl-9"
-                value={searchParams.get('checkin') || '2025-10-01'}
-                readOnly
+              <img 
+                src='/listing/calendar.svg' 
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10 cursor-pointer"
+                onClick={() => setShowCheckinCal(!showCheckinCal)}
               />
+              <button
+                ref={checkinButtonRef}
+                onClick={() => setShowCheckinCal(!showCheckinCal)}
+                className="w-full text-left px-9 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {checkinDate}
+              </button>
+              {showCheckinCal && (
+                <div className="absolute top-full left-0 z-20 mt-1" ref={calWrapperRef}>
+                  <Calendar stayDates={stayDates} setStayDates={setStayDates} />
+                </div>
+              )}
             </div>
           </div>
           <div>
             <Label htmlFor="checkout" className="text-sm font-medium">Check-out</Label>
             <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
-              <Input 
-                id="checkout"
-                type="date" 
-                className="pl-9"
-                value={searchParams.get('checkout') || '2025-10-07'}
-                readOnly
+              <img 
+                src='/listing/calendar.svg' 
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10 cursor-pointer"
+                onClick={() => setShowCheckoutCal(!showCheckoutCal)}
               />
+              <button
+                ref={checkoutButtonRef}
+                onClick={() => setShowCheckoutCal(!showCheckoutCal)}
+                className="w-full text-left px-9 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {checkoutDate}
+              </button>
+              {showCheckoutCal && (
+                <div className="absolute top-full left-0 z-20 mt-1" ref={calWrapperRef}>
+                  <Calendar stayDates={stayDates} setStayDates={setStayDates} />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -162,7 +239,7 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
                 const checkout = searchParams.get('checkout');
                 const nights = checkin && checkout ? 
                   Math.round((new Date(checkout).getTime() - new Date(checkin).getTime()) / (1000 * 60 * 60 * 24)) : 3;
-                const rooms = availability?.validRoomCount || parseInt(searchParams.get('rooms') || '1');
+                const rooms = availability?.validRoomCount || parseInt(searchParams.get('room') || '1');
                 const totalPrice = price * nights * rooms;
                 const taxes = Math.round(totalPrice * 0.1); // 10% taxes
                 

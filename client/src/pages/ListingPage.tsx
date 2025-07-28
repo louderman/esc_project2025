@@ -71,10 +71,10 @@ export default function ListingPage() {
 
   const destIdRaw = searchParams.get('destId');
   const destId = destIdRaw ? JSON.parse(destIdRaw) : '';
-  const startPolling = !!stayDates.checkinDate && !!stayDates.checkoutDate && !!destId;
+  const startPolling = !!stayDates.checkinDate && !!stayDates.checkoutDate;
 
   const fetchPrice = useCallback(async () => {
-    if (!stayDates.checkinDate || !stayDates.checkoutDate || !destId) {
+    if (!stayDates.checkinDate || !stayDates.checkoutDate) {
       return false;
     }
 
@@ -125,12 +125,11 @@ export default function ListingPage() {
 
   useEffect(() => {
     const fetchHotel = async () => {
-      if (!destId) {
+      if (!destId || destId.trim() === '') {
         console.log('No destination ID available, skipping hotel fetch');
         setLoading((prev) => ({ ...prev, hotel: false }));
         return;
       }
-
       console.log('fetching hotel');
       // setHotels(INIT_HOTELS);
       // return;

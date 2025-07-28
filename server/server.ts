@@ -122,8 +122,8 @@ syncDest();
 
 // process.env.NODE_ENV === 'test' only when we run `npm run test`
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(5000, () => {
-    console.log('Server listening on port 5000.');
+  app.listen(5001, () => {
+  console.log('Server listening on port 5001.');
   });
 }
 

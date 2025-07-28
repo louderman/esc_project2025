@@ -60,8 +60,11 @@ const HotelDetail = () => {
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { hotelId } = useParams<{ hotelId: string }>();
+  const { hotelId: pathHotelId } = useParams<{ hotelId: string }>();
   const [searchParams] = useSearchParams();
+  
+  // Get hotelId from either path parameter or query parameter
+  const hotelId = pathHotelId || searchParams.get('hotelId')?.replace(/"/g, '') || '';
 
   useEffect(() => {
     const fetchHotelData = async () => {
@@ -75,10 +78,10 @@ const HotelDetail = () => {
         setLoading(true);
         setError(null);
 
-        // Get URL parameters from listing page
-        const destinationId = searchParams.get('destId') || 'WD0M';
-        const checkin = searchParams.get('checkin') || '2025-10-01';
-        const checkout = searchParams.get('checkout') || '2025-10-07';
+        // Get URL parameters from listing page (remove quotes from values)
+        const destinationId = searchParams.get('destId')?.replace(/"/g, '') || 'WD0M';
+        const checkin = searchParams.get('checkin')?.replace(/"/g, '') || '2025-10-01';
+        const checkout = searchParams.get('checkout')?.replace(/"/g, '') || '2025-10-07';
         
         // Parse adults and children from URL (note: 'adult' and 'child' not 'adults' and 'children')
         const adults = searchParams.get('adult') || '2';

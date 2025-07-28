@@ -51,5 +51,5 @@ export function usePollingAsync(
     return () => {
       stop.current = true;
     };
-  }, [callback, start]);
+  }, [start]); // Removed callback from dependencies since it's already stable
 }
