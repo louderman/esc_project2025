@@ -76,14 +76,14 @@ const HotelDetail = () => {
         setError(null);
 
         // Get URL parameters from listing page
-        const destinationId = searchParams.get('destination_id') || 'WD0M';
+        const destinationId = searchParams.get('destId') || 'WD0M';
         const checkin = searchParams.get('checkin') || '2025-10-01';
         const checkout = searchParams.get('checkout') || '2025-10-07';
         
-        // Parse adults and children from URL
-        const adults = searchParams.get('adults') || '2';
-        const children = searchParams.get('children') || '0';
-        const roomCount = searchParams.get('rooms') || '1';
+        // Parse adults and children from URL (note: 'adult' and 'child' not 'adults' and 'children')
+        const adults = searchParams.get('adult') || '2';
+        const children = searchParams.get('child') || '0';
+        const roomCount = searchParams.get('room') || '1';
         const lang = searchParams.get('lang') || 'en_US';
         const currency = searchParams.get('currency') || 'SGD';
         const countryCode = searchParams.get('country_code') || 'SG';
@@ -96,9 +96,10 @@ const HotelDetail = () => {
         const guests = Array(parseInt(roomCount)).fill(guestsPerRoom).join('|');
         
         console.log('URL Parameters received:', {
-          adultsParam: searchParams.get('adults'),
-          childrenParam: searchParams.get('children'),
-          roomsParam: searchParams.get('rooms'),
+          adultParam: searchParams.get('adult'),
+          childParam: searchParams.get('child'),
+          roomParam: searchParams.get('room'),
+          destIdParam: searchParams.get('destId'),
           parsedAdults: adults,
           parsedChildren: children,
           parsedRooms: roomCount,

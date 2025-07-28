@@ -46,10 +46,10 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
     if (searchParams.get('checkout')) {
       params.set('checkout', searchParams.get('checkout')!);
     }
-    params.set('adults', searchParams.get('adults') || '2');
-    params.set('children', searchParams.get('children') || '0');
-    params.set('rooms', searchParams.get('rooms') || '1');
-    params.set('destination_id', searchParams.get('destination_id') || '');
+    params.set('adult', searchParams.get('adult') || '2');
+    params.set('child', searchParams.get('child') || '0');
+    params.set('room', searchParams.get('room') || '1');
+    params.set('destId', searchParams.get('destId') || '');
     params.set('price', price.toString());
     params.set('hotelName', hotelName);
     params.set('hotelId', hotelId || '');
@@ -123,12 +123,12 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
           <Label htmlFor="guests" className="text-sm font-medium">Guests & Rooms</Label>
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span>Adults: {availability?.validAdults || searchParams.get('adults') || '2'}</span>
-              <span>Children: {availability?.validChildren || searchParams.get('children') || '0'}</span>
+              <span>Adults: {availability?.validAdults || searchParams.get('adult') || '2'}</span>
+              <span>Children: {availability?.validChildren || searchParams.get('child') || '0'}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span>Total Guests: {(availability?.validAdults || parseInt(searchParams.get('adults') || '2')) + (availability?.validChildren || parseInt(searchParams.get('children') || '0'))}</span>
-              <span>Rooms: {availability?.validRoomCount || searchParams.get('rooms') || '1'}</span>
+              <span>Total Guests: {(availability?.validAdults || parseInt(searchParams.get('adult') || '2')) + (availability?.validChildren || parseInt(searchParams.get('child') || '0'))}</span>
+              <span>Rooms: {availability?.validRoomCount || searchParams.get('room') || '1'}</span>
             </div>
             
             {/* Show availability warnings */}
