@@ -215,17 +215,12 @@ describe('GET /api/destination/bounds?minLat={}&maxLat={}&minLng={}&maxLng={}', 
     
     try {
       await insertTestDestinations(testDestinations);
-      
-      // Verify we have exactly 25 destinations inserted
-      const allDests = await getAllDestinations();
-      const testDests = allDests.filter(d => d.dest_id.startsWith('Test_'));
-      console.log(`Inserted ${testDests.length} test destinations`);
-      console.log('Sample inserted destinations:', testDests.slice(0, 3));
-      
-      const res = await searchDestinationsInBounds(bounds);
-      console.log(`Found ${res.length} destinations within bounds`);
-      console.log('Sample found destinations:', res.slice(0, 3));
-      expect(res).toHaveLength(25);
+      const res = await request(app).get(
+        `/api/destination/bounds?minLat=${bounds.minLat}&maxLat=${bounds.maxLat}&minLng=${bounds.minLng}&maxLng=${bounds.maxLng}`
+      );
+      // const res = await searchDestinationsInBounds(bounds);
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveLength(25);
     } finally {
       await deleteTestDestinations();
     }
