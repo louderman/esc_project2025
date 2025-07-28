@@ -1,9 +1,5 @@
-<<<<<<< HEAD
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-=======
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
->>>>>>> origin/main
 
 interface Props {
   children: ReactNode;
