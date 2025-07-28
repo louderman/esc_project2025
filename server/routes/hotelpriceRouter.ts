@@ -24,7 +24,7 @@ router.get('/query', async (req, res) => {
     return res.status(400).json({ error: 'Invalid date or guest count' });
   }
 
-  const url = `https://hotelapi.loyalty.dev/api/hotels/prices?destination_id=${dest_id}&checkin=${checkin}&checkout=${checkout}&lang=en_US&currency=SGD&country_code=SG&guests=${guestCount}&partner_id=1`;
+  const url = `https://hotelapi.loyalty.dev/api/hotels/prices?destination_id=${dest_id}&checkin=${checkin}&checkout=${checkout}&lang=en_US&currency=SGD&country_code=SG&guests=${guestCount}&partner_id=1089&landing_page=wl-acme-earn&product_type=earn`;
   // console.log(url);
   // const url = `https://hotelapi.loyalty.dev/api/hotels/prices?destination_id=${dest_id}&checkin=2025-10-01&checkout=2025-10-07&lang=en_US&currency=SGD&country_code=SG&guests=2&partner_id=1`;
 
