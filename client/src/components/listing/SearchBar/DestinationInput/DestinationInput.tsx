@@ -31,20 +31,32 @@ export default function DestinationInput({
 
   useEffect(() => {
     async function fetchInitialDest() {
-      // TODO: don't hardcode url param
-      const urlDestName = searchParams.get('destName');
-      let url;
-      if (urlDestName && urlDestName.length > 0) {
-        url = `/api/destination/query/${urlDestName}?count=10`;
-      } else {
-        url = `/api/destination/random?count=5`;
-      }
+      try {
+        // TODO: don't hardcode url param
+        const urlDestName = searchParams.get('destName');
+        let url;
+        if (urlDestName && urlDestName.length > 0) {
+          url = `/api/destination/query/${urlDestName}?count=10`;
+        } else {
+          url = `/api/destination/random?count=5`;
+        }
 
-      const res = await fetch(url, {
-        method: 'GET',
-      });
-      const dests: Destination[] = await res.json();
-      setSuggestedDests(dests);
+        const res = await fetch(url, {
+          method: 'GET',
+        });
+        
+        if (!res.ok) {
+          console.error('Failed to fetch destinations:', res.status);
+          setSuggestedDests([]);
+          return;
+        }
+        
+        const dests: Destination[] = await res.json();
+        setSuggestedDests(Array.isArray(dests) ? dests : []);
+      } catch (error) {
+        console.error('Error fetching destinations:', error);
+        setSuggestedDests([]);
+      }
     }
     fetchInitialDest();
   }, [searchParams]);
@@ -56,8 +68,14 @@ export default function DestinationInput({
       const res = await fetch(`/api/destination/query/${userInput}?count=10`, {
         signal: controller.signal,
       });
+      
+      if (!res.ok) {
+        console.error('Failed to fetch destinations:', res.status);
+        return [];
+      }
+      
       const dests: Destination[] = await res.json();
-      return dests;
+      return Array.isArray(dests) ? dests : [];
     } catch (e) {
       if (e instanceof Error && e.name !== 'AbortError') {
         console.error(e);
