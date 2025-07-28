@@ -1,5 +1,7 @@
 import express from 'express';
 import { PriceResponse } from '../../types/Price';
+import fs from 'fs';
+import path from 'path';
 const router = express.Router();
 
 /**
@@ -28,11 +30,42 @@ router.get('/query', async (req, res) => {
   // console.log(url);
   // const url = `https://hotelapi.loyalty.dev/api/hotels/prices?destination_id=${dest_id}&checkin=2025-10-01&checkout=2025-10-07&lang=en_US&currency=SGD&country_code=SG&guests=2&partner_id=1`;
 
-  const response = await fetch(url);
-  const data: PriceResponse = await response.json();
-  // console.log(data);
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error(`External API error: ${response.status} ${response.statusText}`);
+      // Fallback to mock data when external API fails
+      const mockDataPath = path.join(__dirname, '../public/mockHotelData.json');
+      const mockData = JSON.parse(fs.readFileSync(mockDataPath, 'utf8'));
+      res.send(mockData.prices);
+      return;
+    }
+    
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.error('External API returned non-JSON response:', contentType);
+      // Fallback to mock data when external API fails
+      const mockDataPath = path.join(__dirname, '../public/mockHotelData.json');
+      const mockData = JSON.parse(fs.readFileSync(mockDataPath, 'utf8'));
+      res.send(mockData.prices);
+      return;
+    }
+    
+    const data: PriceResponse = await response.json();
+    // console.log(data);
 
-  res.send(data);
+    res.send(data);
+  } catch (error) {
+    console.error('Error fetching price data:', error);
+    // Fallback to mock data when external API fails
+    try {
+      const mockDataPath = path.join(__dirname, '../public/mockHotelData.json');
+      const mockData = JSON.parse(fs.readFileSync(mockDataPath, 'utf8'));
+      res.send(mockData.prices);
+    } catch (mockError) {
+      res.status(500).json({ error: 'Failed to fetch price data and no mock data available' });
+    }
+  }
 });
 
 export { router };

@@ -154,12 +154,14 @@ async function searchDestinationsInBounds({
   [minLat, maxLat] = minLat < maxLat ? [minLat, maxLat] : [maxLat, minLat];
   [minLng, maxLng] = minLng < maxLng ? [minLng, maxLng] : [maxLng, minLng];
 
+  // Add small epsilon to handle floating-point precision issues
+  const epsilon = 0.0001;
   const [rows] = (await pool.query(
     `
         SELECT * FROM destination
-        WHERE lat BETWEEN ? AND ? AND lng BETWEEN ? AND ?;
+        WHERE lat >= ? AND lat <= ? AND lng >= ? AND lng <= ?;
     `,
-    [minLat, maxLat, minLng, maxLng]
+    [minLat - epsilon, maxLat + epsilon, minLng - epsilon, maxLng + epsilon]
   )) as [Destination[], FieldPacket[]];
 
   return rows;

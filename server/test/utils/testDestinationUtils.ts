@@ -24,9 +24,9 @@ export async function insertTestDestinations(destinations: Destination[]) {
   console.log(`Successfully inserted ${destinations.length} test destinations`);
 }
 
-export async function deleteTestDestinations(prefix = 'test_') {
+export async function deleteTestDestinations(prefix = 'Test_') {
   await pool.query(
-    `DELETE FROM ${tableName} WHERE LOWER(dest_id) LIKE LOWER(?)`,
+    `DELETE FROM ${tableName} WHERE dest_id LIKE ?`,
     [`${prefix}%`]
   );
 }

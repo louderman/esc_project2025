@@ -242,6 +242,7 @@ describe('Test searchDestinationsInBounds (worst robust boundary testing)', () =
       const testDests = allDests.filter(d => d.dest_id.startsWith('Test_'));
       console.log(`Inserted ${testDests.length} test destinations`);
       console.log('Sample inserted destinations:', testDests.slice(0, 3));
+
       
       const res = await searchDestinationsInBounds(bounds);
       console.log(`Found ${res.length} destinations within bounds`);

@@ -1,0 +1,63 @@
+{
+  "hotels": [
+    {
+      "id": "A6Dz",
+      "name": "Grand Paradise Hotel",
+      "rating": 4.5,
+      "address1": "123 Beachfront Ave",
+      "description": "Luxury beachfront resort with amazing views",
+      "amenities": {
+        "airConditioning": true,
+        "pool": true,
+        "wifi": true
+      }
+    },
+    {
+      "id": "B7Ea",
+      "name": "City Center Hotel",
+      "rating": 4.2,
+      "address1": "456 Downtown St",
+      "description": "Modern hotel in the heart of the city",
+      "amenities": {
+        "airConditioning": true,
+        "wifi": true,
+        "gym": true
+      }
+    }
+  ],
+  "prices": {
+    "hotels": [
+      {
+        "id": "A6Dz",
+        "rooms": [
+          {
+            "id": "room1",
+            "price_type": "Deluxe King",
+            "price": 299.99,
+            "free_cancellation": true,
+            "rooms_available": 5
+          },
+          {
+            "id": "room2",
+            "price_type": "Standard Queen",
+            "price": 199.99,
+            "free_cancellation": true,
+            "rooms_available": 8
+          }
+        ]
+      },
+      {
+        "id": "B7Ea",
+        "rooms": [
+          {
+            "id": "room3",
+            "price_type": "Executive Suite",
+            "price": 399.99,
+            "free_cancellation": true,
+            "rooms_available": 3
+          }
+        ]
+      }
+    ]
+  }
+} 
