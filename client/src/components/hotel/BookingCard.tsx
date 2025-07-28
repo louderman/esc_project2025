@@ -106,38 +106,48 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
         </div>
         
         <div>
-          <Label htmlFor="guests" className="text-sm font-medium">Guests</Label>
-          <Select value={`${searchParams.get('adults') || '2'}`} disabled>
-            <SelectTrigger>
-              <div className="flex items-center">
-                <Users size={16} className="mr-2 text-muted-foreground" />
-                <SelectValue />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1">1 Guest</SelectItem>
-              <SelectItem value="2">2 Guests</SelectItem>
-              <SelectItem value="3">3 Guests</SelectItem>
-              <SelectItem value="4">4 Guests</SelectItem>
-            </SelectContent>
-          </Select>
+          <Label htmlFor="guests" className="text-sm font-medium">Guests & Rooms</Label>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span>Adults: {searchParams.get('adults') || '2'}</span>
+              <span>Children: {searchParams.get('children') || '0'}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span>Total Guests: {parseInt(searchParams.get('adults') || '2') + parseInt(searchParams.get('children') || '0')}</span>
+              <span>Rooms: {searchParams.get('rooms') || '1'}</span>
+            </div>
+          </div>
         </div>
         
         {hasRooms && price > 0 ? (
           <>
             <div className="border-t pt-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm">3 nights</span>
-                <span className="text-sm">${price * 3}</span>
-              </div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm">Taxes & fees</span>
-                <span className="text-sm">$45</span>
-              </div>
-              <div className="flex justify-between items-center font-semibold text-lg border-t pt-2">
-                <span>Total</span>
-                <span>${(price * 3) + 45}</span>
-              </div>
+              {(() => {
+                const checkin = searchParams.get('checkin');
+                const checkout = searchParams.get('checkout');
+                const nights = checkin && checkout ? 
+                  Math.round((new Date(checkout).getTime() - new Date(checkin).getTime()) / (1000 * 60 * 60 * 24)) : 3;
+                const rooms = parseInt(searchParams.get('rooms') || '1');
+                const totalPrice = price * nights * rooms;
+                const taxes = Math.round(totalPrice * 0.1); // 10% taxes
+                
+                return (
+                  <>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm">{nights} night{nights !== 1 ? 's' : ''} × {rooms} room{rooms !== 1 ? 's' : ''}</span>
+                      <span className="text-sm">${totalPrice}</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm">Taxes & fees</span>
+                      <span className="text-sm">${taxes}</span>
+                    </div>
+                    <div className="flex justify-between items-center font-semibold text-lg border-t pt-2">
+                      <span>Total</span>
+                      <span>${totalPrice + taxes}</span>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
             
             <Button 

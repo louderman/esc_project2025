@@ -61,7 +61,7 @@ const HotelDetail = () => {
         setLoading(true);
         setError(null);
 
-        // Get URL parameters
+        // Get URL parameters from listing page
         const destinationId = searchParams.get('destination_id') || 'WD0M';
         const checkin = searchParams.get('checkin') || '2025-10-01';
         const checkout = searchParams.get('checkout') || '2025-10-07';
@@ -72,7 +72,7 @@ const HotelDetail = () => {
         const currency = searchParams.get('currency') || 'SGD';
         const countryCode = searchParams.get('country_code') || 'SG';
 
-        // Build guests string for API
+        // Build guests string for API - format: "adults|adults" for each room
         const guests = Array(parseInt(roomCount)).fill(parseInt(adults)).join('|');
 
         // Fetch combined hotel data
@@ -83,8 +83,7 @@ const HotelDetail = () => {
           guests,
           lang,
           currency,
-          country_code: countryCode,
-          partner_id: '1'
+          country_code: countryCode
         })}`);
 
         if (!response.ok) {
@@ -150,6 +149,16 @@ const HotelDetail = () => {
             key: 'demo-room-1'
           });
         }
+
+        console.log('Parsed URL parameters:', {
+          destinationId,
+          checkin,
+          checkout,
+          adults,
+          children,
+          roomCount,
+          guests
+        });
 
         console.log('Number of rooms available:', roomData.length); // Debug logging
 
