@@ -206,8 +206,12 @@ describe('GET /api/destination/bounds?minLat={}&maxLat={}&minLng={}&maxLng={}', 
 
     try {
       await insertTestDestinations(testDestinations);
-      const res = await searchDestinationsInBounds(bounds);
-      expect(res).toHaveLength(25);
+      const res = await request(app).get(
+        `/api/destination/bounds?minLat=${bounds.minLat}&maxLat=${bounds.maxLat}&minLng=${bounds.minLng}&maxLng=${bounds.maxLng}`
+      );
+      // const res = await searchDestinationsInBounds(bounds);
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveLength(25);
     } finally {
       await deleteTestDestinations();
     }
