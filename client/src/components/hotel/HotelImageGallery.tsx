@@ -1,10 +1,5 @@
 import { useState } from "react";
-<<<<<<< HEAD
-import heroImage from "@/assets/hotel-room-hero.jpg";
-import { Button } from "@/components/ui/button";
-=======
 import { Button } from "@/components/hotel/ui/button";
->>>>>>> origin/main
 import { Camera } from "lucide-react";
 
 interface HotelImageGalleryProps {
@@ -16,10 +11,6 @@ const HotelImageGallery = ({ images, hotelName }: HotelImageGalleryProps) => {
   const [currentImage, setCurrentImage] = useState(0);
   
   const defaultImages = [
-<<<<<<< HEAD
-    heroImage,
-=======
->>>>>>> origin/main
     "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=800&h=600&fit=crop",
     "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=800&h=600&fit=crop",
     "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&h=600&fit=crop"
