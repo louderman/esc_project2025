@@ -105,9 +105,8 @@ All colors MUST be HSL.
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+  /* Remove global border application to prevent conflicts */
+  /* Individual components should handle their own borders */
 
 html,
 body {
@@ -115,13 +114,15 @@ body {
   font-family: 'Inter', sans-serif;
 }
 
-input,
-textarea,
-button {
+/* Only apply font-family to elements that don't have existing styles */
+input:not([class*="register"]):not([class*="login"]),
+textarea:not([class*="register"]):not([class*="login"]),
+button:not([class*="register"]):not([class*="login"]) {
   font-family: inherit;
 }
 
-button {
+/* Only apply cursor pointer to buttons that don't have existing styles */
+button:not([class*="register"]):not([class*="login"]) {
   cursor: pointer;
 }
 }
