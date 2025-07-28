@@ -37,9 +37,23 @@ type Room = {
   key?: string;
 };
 
+type AvailabilityInfo = {
+  requestedRooms: number;
+  availableRooms: number;
+  validRoomCount: number;
+  requestedAdults: number;
+  requestedChildren: number;
+  totalRequestedGuests: number;
+  maxGuestCapacity: number;
+  validGuestCapacity: number;
+  validAdults: number;
+  validChildren: number;
+};
+
 type ApiResponse = {
   hotel: Hotel;
   rooms: Room[];
+  availability: AvailabilityInfo;
 };
 
 const HotelDetail = () => {
@@ -65,15 +79,33 @@ const HotelDetail = () => {
         const destinationId = searchParams.get('destination_id') || 'WD0M';
         const checkin = searchParams.get('checkin') || '2025-10-01';
         const checkout = searchParams.get('checkout') || '2025-10-07';
+        
+        // Parse adults and children from URL
         const adults = searchParams.get('adults') || '2';
         const children = searchParams.get('children') || '0';
         const roomCount = searchParams.get('rooms') || '1';
         const lang = searchParams.get('lang') || 'en_US';
         const currency = searchParams.get('currency') || 'SGD';
         const countryCode = searchParams.get('country_code') || 'SG';
+        
+        // Calculate total guests (adults + children)
+        const totalGuests = parseInt(adults) + parseInt(children);
 
-        // Build guests string for API - format: "adults|adults" for each room
-        const guests = Array(parseInt(roomCount)).fill(parseInt(adults)).join('|');
+        // Build guests string for API - format: "guests_per_room|guests_per_room" for each room
+        const guestsPerRoom = Math.ceil(totalGuests / parseInt(roomCount));
+        const guests = Array(parseInt(roomCount)).fill(guestsPerRoom).join('|');
+        
+        console.log('URL Parameters received:', {
+          adultsParam: searchParams.get('adults'),
+          childrenParam: searchParams.get('children'),
+          roomsParam: searchParams.get('rooms'),
+          parsedAdults: adults,
+          parsedChildren: children,
+          parsedRooms: roomCount,
+          totalGuests,
+          guestsPerRoom,
+          guestsString: guests
+        });
 
         // Fetch combined hotel data
         const response = await fetch(`/api/hotel-detail/combined/${hotelId}?${new URLSearchParams({
@@ -150,19 +182,78 @@ const HotelDetail = () => {
           });
         }
 
+        // Validate room availability and guest capacity
+        const requestedRooms = parseInt(roomCount);
+        const requestedAdults = parseInt(adults);
+        const requestedChildren = parseInt(children);
+        const totalRequestedGuests = totalGuests; // Use the calculated total
+        
+        // Calculate total available rooms and guest capacity
+        const totalAvailableRooms = roomData.length;
+        const maxGuestCapacity = roomData.reduce((total, room) => total + room.occupancy, 0);
+        
+        // Validate room count
+        const validRoomCount = Math.min(requestedRooms, totalAvailableRooms);
+        
+        // Validate guest capacity
+        const validGuestCapacity = Math.min(totalRequestedGuests, maxGuestCapacity);
+        
+        // Calculate valid guests per room
+        const validGuestsPerRoom = Math.ceil(validGuestCapacity / validRoomCount);
+        
+        // Adjust adults and children proportionally if needed
+        let validAdults = requestedAdults;
+        let validChildren = requestedChildren;
+        
+        if (totalRequestedGuests > validGuestCapacity) {
+          const ratio = validGuestCapacity / totalRequestedGuests;
+          validAdults = Math.floor(requestedAdults * ratio);
+          validChildren = validGuestCapacity - validAdults;
+        }
+
+        console.log('Availability validation:', {
+          requestedRooms,
+          totalAvailableRooms,
+          validRoomCount,
+          requestedAdults,
+          requestedChildren,
+          totalRequestedGuests,
+          maxGuestCapacity,
+          validGuestCapacity,
+          validAdults,
+          validChildren
+        });
+
         console.log('Parsed URL parameters:', {
           destinationId,
           checkin,
           checkout,
-          adults,
-          children,
-          roomCount,
-          guests
+          adults: validAdults.toString(),
+          children: validChildren.toString(),
+          roomCount: validRoomCount.toString(),
+          totalGuests: validGuestCapacity,
+          guestsPerRoom: validGuestsPerRoom,
+          guests: Array(validRoomCount).fill(validGuestsPerRoom).join('|')
         });
 
         console.log('Number of rooms available:', roomData.length); // Debug logging
 
-        setData({ hotel, rooms: roomData });
+        setData({ 
+          hotel, 
+          rooms: roomData,
+          availability: {
+            requestedRooms,
+            availableRooms: totalAvailableRooms,
+            validRoomCount,
+            requestedAdults,
+            requestedChildren,
+            totalRequestedGuests,
+            maxGuestCapacity,
+            validGuestCapacity,
+            validAdults,
+            validChildren
+          }
+        });
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
@@ -259,7 +350,8 @@ const HotelDetail = () => {
               reviewCount={data.hotel.reviewCount}
               hotelName={data.hotel.name}
               hotelId={hotelId}
-              hasRooms={data.rooms.length > 0} // Add this prop
+              hasRooms={data.rooms.length > 0}
+              availability={data.availability}
             />
           </div>
         </div>
