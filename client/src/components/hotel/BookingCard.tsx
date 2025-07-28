@@ -6,16 +6,30 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar, Users, Star } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
+interface AvailabilityInfo {
+  requestedRooms: number;
+  availableRooms: number;
+  validRoomCount: number;
+  requestedAdults: number;
+  requestedChildren: number;
+  totalRequestedGuests: number;
+  maxGuestCapacity: number;
+  validGuestCapacity: number;
+  validAdults: number;
+  validChildren: number;
+}
+
 interface BookingCardProps {
   price: number;
   rating: number;
   reviewCount: number;
   hotelName: string;
   hotelId?: string;
-  hasRooms?: boolean; // Add this prop
+  hasRooms?: boolean;
+  availability?: AvailabilityInfo;
 }
 
-const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms = false }: BookingCardProps) => {
+const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms = false, availability }: BookingCardProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -109,13 +123,34 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
           <Label htmlFor="guests" className="text-sm font-medium">Guests & Rooms</Label>
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span>Adults: {searchParams.get('adults') || '2'}</span>
-              <span>Children: {searchParams.get('children') || '0'}</span>
+              <span>Adults: {availability?.validAdults || searchParams.get('adults') || '2'}</span>
+              <span>Children: {availability?.validChildren || searchParams.get('children') || '0'}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span>Total Guests: {parseInt(searchParams.get('adults') || '2') + parseInt(searchParams.get('children') || '0')}</span>
-              <span>Rooms: {searchParams.get('rooms') || '1'}</span>
+              <span>Total Guests: {(availability?.validAdults || parseInt(searchParams.get('adults') || '2')) + (availability?.validChildren || parseInt(searchParams.get('children') || '0'))}</span>
+              <span>Rooms: {availability?.validRoomCount || searchParams.get('rooms') || '1'}</span>
             </div>
+            
+            {/* Show availability warnings */}
+            {availability && (
+              <div className="space-y-1">
+                {availability.requestedRooms > availability.availableRooms && (
+                  <div className="text-xs text-orange-600 bg-orange-50 p-2 rounded">
+                    ⚠️ Only {availability.availableRooms} room{availability.availableRooms !== 1 ? 's' : ''} available (requested {availability.requestedRooms})
+                  </div>
+                )}
+                {availability.totalRequestedGuests > availability.maxGuestCapacity && (
+                  <div className="text-xs text-orange-600 bg-orange-50 p-2 rounded">
+                    ⚠️ Maximum {availability.maxGuestCapacity} guest{availability.maxGuestCapacity !== 1 ? 's' : ''} allowed (requested {availability.totalRequestedGuests})
+                  </div>
+                )}
+                {(availability.requestedAdults !== availability.validAdults || availability.requestedChildren !== availability.validChildren) && (
+                  <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
+                    ℹ️ Guest count adjusted to fit room capacity
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
         
@@ -127,7 +162,7 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
                 const checkout = searchParams.get('checkout');
                 const nights = checkin && checkout ? 
                   Math.round((new Date(checkout).getTime() - new Date(checkin).getTime()) / (1000 * 60 * 60 * 24)) : 3;
-                const rooms = parseInt(searchParams.get('rooms') || '1');
+                const rooms = availability?.validRoomCount || parseInt(searchParams.get('rooms') || '1');
                 const totalPrice = price * nights * rooms;
                 const taxes = Math.round(totalPrice * 0.1); // 10% taxes
                 
