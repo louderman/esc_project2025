@@ -94,9 +94,8 @@ const HotelDetail = () => {
         // Calculate total guests (adults + children)
         const totalGuests = parseInt(adults) + parseInt(children);
 
-        // Build guests string for API - format: "guests_per_room|guests_per_room" for each room
-        const guestsPerRoom = Math.ceil(totalGuests / parseInt(roomCount));
-        const guests = Array(parseInt(roomCount)).fill(guestsPerRoom).join('|');
+        // Use simple guest count like ListingPage does
+        const guests = totalGuests.toString();
         
         console.log('URL Parameters received:', {
           adultParam: searchParams.get('adult'),
@@ -107,12 +106,11 @@ const HotelDetail = () => {
           parsedChildren: children,
           parsedRooms: roomCount,
           totalGuests,
-          guestsPerRoom,
           guestsString: guests
         });
 
-        // Fetch combined hotel data
-        const response = await fetch(`/api/hotel-detail/combined/${hotelId}?${new URLSearchParams({
+        // Fetch hotel details first
+        const hotelResponse = await fetch(`/api/hotel-detail/combined/${hotelId}?${new URLSearchParams({
           destination_id: destinationId,
           checkin,
           checkout,
@@ -122,11 +120,31 @@ const HotelDetail = () => {
           country_code: countryCode
         })}`);
 
-        if (!response.ok) {
-          throw new Error(`Error fetching hotel data: ${response.status}`);
+        if (!hotelResponse.ok) {
+          throw new Error(`Error fetching hotel data: ${hotelResponse.status}`);
         }
 
-        const result = await response.json();
+        const hotelResult = await hotelResponse.json();
+        
+        // Fetch prices separately like ListingPage does
+        const priceResponse = await fetch(`/api/hotel-price/query?dest_id=${destinationId}&checkin=${checkin}&checkout=${checkout}&guests=${guests}`);
+        
+        let priceResult = { hotels: [] };
+        if (priceResponse.ok) {
+          priceResult = await priceResponse.json();
+        }
+        
+        console.log('Hotel API Response:', hotelResult);
+        console.log('Price API Response:', priceResult);
+        
+        // Combine the results
+        const result = {
+          hotel: hotelResult.hotel,
+          prices: priceResult
+        };
+        
+        console.log('API Response:', result); // Debug logging
+        console.log('Prices data:', result.prices); // Debug logging
 
         // Transform hotel data
         const hotel: Hotel = {
@@ -149,22 +167,34 @@ const HotelDetail = () => {
           longitude: result.hotel.longitude
         };
 
-        // Transform room data
-        const roomData: Room[] = result.prices?.rooms?.map((room: Record<string, unknown>, index: number) => {
-          console.log(`Room ${index}:`, room); // Debug logging
+        // Transform room data - use hotels array from price API
+        const hotels = result.prices?.hotels || [];
+        const roomData: Room[] = hotels.map((hotel: Record<string, unknown>, index: number) => {
+          console.log(`Hotel ${index}:`, hotel); // Debug logging
+          
+          // Extract price from the correct field
+          let price = 0;
+          if (hotel.price) {
+            price = Math.round(hotel.price as number);
+          } else if (hotel.lowest_price) {
+            price = Math.round(hotel.lowest_price as number);
+          } else if (hotel.converted_price) {
+            price = Math.round(hotel.converted_price as number);
+          }
+          
           return {
-            id: (room.key as string) || `room-${index}`,
-            room_type: (room.room_normalized_description as string) || 'Room',
-            price: Math.round((room.price as number) || 0),
-            free_cancellation: (room.free_cancellation as boolean) || false,
-            image: ((room.images as string[])?.[0]) || `https://images.unsplash.com/photo-${['1649972904349-6e44c42644a7', '1581091226825-a6a2a5aee158', '1721322800607-8c38375eef04'][index % 3]}?w=600&h=400&fit=crop`,
+            id: (hotel.id as string) || `hotel-${index}`,
+            room_type: 'Standard Room', // Default since price API doesn't provide room details
+            price: price,
+            free_cancellation: (hotel.free_cancellation as boolean) || false,
+            image: `https://images.unsplash.com/photo-${['1649972904349-6e44c42644a7', '1581091226825-a6a2a5aee158', '1721322800607-8c38375eef04'][index % 3]}?w=600&h=400&fit=crop`,
             occupancy: parseInt(adults) + parseInt(children),
             bed_type: 'King bed', // Default value
             size: '35', // Default value
-            description: room.description as string,
-            long_description: room.long_description as string,
-            amenities: room.amenities as string[],
-            key: room.key as string
+            description: 'Standard room with modern amenities',
+            long_description: 'Comfortable room with all necessary amenities for a pleasant stay',
+            amenities: ['WiFi', 'TV', 'Air Conditioning'],
+            key: hotel.id as string
           };
         }) || [];
 
