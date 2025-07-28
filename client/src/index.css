@@ -109,7 +109,24 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+<<<<<<< HEAD
   body {
     @apply bg-background text-foreground;
   }
+=======
+html,
+body {
+  height: 100%;
+  font-family: 'Inter', sans-serif;
+}
+
+input,
+textarea,
+button {
+  font-family: inherit;
+}
+
+button {
+  cursor: pointer;
+>>>>>>> origin/main
 }

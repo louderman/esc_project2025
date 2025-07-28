@@ -1,4 +1,5 @@
 .container {
+<<<<<<< HEAD
   min-height: 100vh;
   background-color: #f5f7fa;
 }
@@ -469,3 +470,475 @@
 .selectedButton:hover {
   background: #1e7e34;
 }
+=======
+    min-height: 100vh;
+    background-color: #f5f7fa;
+  }
+  
+  .loading, .error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    text-align: center;
+  }
+  
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e2e8f0;
+    border-top: 4px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .retryButton {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 1rem;
+  }
+  
+  .retryButton:hover {
+    background: #2563eb;
+  }
+  
+  .header {
+    background: #3b82f6;
+    color: white;
+    padding: 1rem 0;
+  }
+  
+  .headerContent {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  .headerActions {
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+  
+  .hotelHeader {
+    margin-bottom: 2rem;
+  }
+  
+  .hotelName {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #1e293b;
+  }
+  
+  .rating {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .stars {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  
+  .starFilled {
+    color: #fbbf24;
+  }
+  
+  .starEmpty {
+    color: #d1d5db;
+  }
+  
+  .ratingScore {
+    font-weight: 600;
+    margin-left: 0.5rem;
+  }
+  
+  .reviewCount {
+    color: #64748b;
+  }
+  
+  .address {
+    color: #64748b;
+    font-size: 0.875rem;
+  }
+  
+  .searchSummary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .contentGrid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    margin-bottom: 3rem;
+  }
+  
+  @media (max-width: 768px) {
+    .contentGrid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .leftColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  .imageGallery {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .mainImage {
+    width: 100%;
+    height: 400px;
+    overflow: hidden;
+  }
+  
+  .heroImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .thumbnails {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.5rem;
+    padding: 1rem;
+  }
+  
+  .thumbnail {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .thumbnail:hover {
+    opacity: 0.8;
+  }
+  
+  .hotelInfo {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .hotelInfo h2 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    color: #1e293b;
+  }
+  
+  .hotelInfo h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 1.5rem 0 1rem 0;
+    color: #1e293b;
+  }
+  
+  .description {
+    color: #475569;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+  
+  .amenities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .amenity {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+  }
+  
+  .rightColumn {
+    position: relative;
+  }
+  
+  .bookingCard {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+    position: sticky;
+    top: 2rem;
+  }
+  
+  .priceHeader {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  
+  .price {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #1e293b;
+  }
+  
+  .perNight {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin-left: 0.5rem;
+  }
+  
+  .bookingForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .dateInputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  
+  .inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .inputGroup label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+  }
+  
+  .dateInput, .guestSelect {
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 1rem;
+  }
+  
+  .dateInput:focus, .guestSelect:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  
+  .guestInfo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .bookButton {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .bookButton:hover {
+    background: #2563eb;
+  }
+  
+  .freeCancel {
+    text-align: center;
+    color: #059669;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  
+  .roomOptions {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .roomOptions h2 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1.5rem;
+    color: #1e293b;
+  }
+  
+  .roomGrid {
+    display: grid;
+    gap: 1.5rem;
+  }
+  
+  .roomCard {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+  
+  .roomCard:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .selectedRoom {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
+  }
+  
+  @media (max-width: 768px) {
+    .roomCard {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .roomImage {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 6px;
+  }
+  
+  .roomDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .roomType {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e293b;
+  }
+  
+  .roomDescription {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 12px;
+    line-height: 1.4;
+  }
+  
+  .roomAmenities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  
+  .amenityTag {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  
+  .moreAmenities {
+    color: #666;
+    font-size: 12px;
+    font-style: italic;
+  }
+  
+  .roomSpecs {
+    display: flex;
+    gap: 1rem;
+    color: #64748b;
+    font-size: 0.875rem;
+  }
+  
+  .roomPrice {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  
+  .roomPriceAmount {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #1e293b;
+  }
+  
+  .roomPriceNight {
+    color: #64748b;
+    font-size: 0.875rem;
+  }
+  
+  .selectRoomButton {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    align-self: flex-start;
+    transition: background-color 0.2s;
+  }
+  
+  .selectRoomButton:hover {
+    background: #2563eb;
+  }
+  
+  .selectedButton {
+    background: #28a745;
+  }
+  
+  .selectedButton:hover {
+    background: #1e7e34;
+  }
+>>>>>>> origin/main

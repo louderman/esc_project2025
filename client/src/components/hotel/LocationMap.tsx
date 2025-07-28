@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+=======
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/hotel/ui/card";
+>>>>>>> origin/main
 import { MapPin, Navigation } from "lucide-react";
 
 interface LocationMapProps {

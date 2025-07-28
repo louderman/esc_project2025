@@ -1,5 +1,9 @@
 import { Link } from "react-router-dom";
+<<<<<<< HEAD
 import { Button } from "@/components/ui/button";
+=======
+import { Button } from "@/components/hotel/ui/button";
+>>>>>>> origin/main
 
 const Index = () => {
   return (
