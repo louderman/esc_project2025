@@ -1,16 +1,8 @@
-<<<<<<< HEAD
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-=======
 import { Button } from "@/components/hotel/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/hotel/ui/card";
 import { Input } from "@/components/hotel/ui/input";
 import { Label } from "@/components/hotel/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/hotel/ui/select";
->>>>>>> origin/main
 import { Calendar, Users, Star } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
