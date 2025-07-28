@@ -11,10 +11,16 @@ const pool = createPool({
 
 async function cleanup() {
   try {
-    await pool.end();
-    console.log('Database pool closed.');
+    // Check if pool is already closed before trying to end it
+    if (pool && typeof pool.end === 'function') {
+      await pool.end();
+      console.log('Database pool closed.');
+    }
   } catch (err) {
-    console.error('Error closing pool:', err);
+    // Only log if it's not a "pool already closed" error
+    if (err && typeof err === 'object' && 'code' in err && err.code !== 'POOL_CLOSED') {
+      console.error('Error closing pool:', err);
+    }
   }
 }
 

@@ -28,6 +28,20 @@ app.use('/api/hotel', hotelRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/payment', paymentRouter);
 
+// Debug route to check if server is working
+app.get('/api/debug', (req, res) => {
+  res.json({ 
+    message: 'Server is working!',
+    routes: [
+      '/api/destination',
+      '/api/hotel-price', 
+      '/api/hotel',
+      '/api/auth',
+      '/api/payment'
+    ]
+  });
+});
+
 
 // Test route for hotel-detail
 app.get('/api/hotel-detail/test', (req, res) => {
