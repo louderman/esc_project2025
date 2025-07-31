@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { describe } from 'vitest';
@@ -22,7 +22,7 @@ beforeEach(() => {
       });
     }
 
-    if (url.includes('/api/destination/query/Par')) {
+    if (url.includes('/api/destination/query')) {
       console.log('called');
       return Promise.resolve({
         ok: true,
@@ -62,28 +62,31 @@ describe('DestinationInput', () => {
     });
   });
 
-  //   it('Test shows suggestions for partial input "Par"', async () => {
-  //     vi.useFakeTimers();
-  //     const input = screen.getByPlaceholderText(/Destination/);
+  it('Test shows suggestions for partial input "Par"', async () => {
+    //     vi.useFakeTimers();
+    const input = screen.getByPlaceholderText(/Destination/);
 
-  // await userEvent.type(input, 'Par');
-  // vi.advanceTimersByTime(500);
-  // await Promise.resolve();
-  // await Promise.resolve();
+    await userEvent.click(input);
+    await waitFor(async () => await userEvent.type(input, 'Par'));
 
-  // expect(screen.queryAllByRole('listitem')).toHaveLength(5);
+    // vi.advanceTimersByTime(500);
+    await Promise.resolve();
+    console.log(screen.getByRole('input'));
+    // await Promise.resolve();
 
-  // vi.advanceTimersByTime(500);
+    // expect(screen.queryAllByRole('listitem')).toHaveLength(5);
 
-  // await Promise.resolve();
-  // await Promise.resolve();
+    // vi.advanceTimersByTime(500);
 
-  // await waitFor(() => {
-  //   const items = screen.getAllByRole('listitem');
-  //   expect(items).toHaveLength(1);
-  //   expect(items[0]).toHaveTextContent(/Paris/);
-  // });
+    // await Promise.resolve();
+    // await Promise.resolve();
 
-  // vi.useRealTimers();
-  //   });
+    // await waitFor(() => {
+    //   const items = screen.getAllByRole('listitem');
+    //   expect(items).toHaveLength(1);
+    //   expect(items[0]).toHaveTextContent(/Paris/);
+    // });
+
+    // vi.useRealTimers();
+  });
 });
