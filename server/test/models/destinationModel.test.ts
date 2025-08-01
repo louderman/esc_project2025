@@ -103,7 +103,7 @@ describe('Test getRandomDestinations', () => {
   });
 });
 
-describe.skip('Test searchDestinations', () => {
+describe('Test searchDestinations', () => {
   const testDestinations = [
     {
       id: `test_1`,

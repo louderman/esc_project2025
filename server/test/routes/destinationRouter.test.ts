@@ -11,7 +11,7 @@ import { searchDestinationsInBounds } from '../../models/destinationModel';
 import { getAllDestinations } from '../../models/destinationModel';
 
 // Test /api/destination/random route
-describe.skip('GET /api/destination/random?count={}', () => {
+describe('GET /api/destination/random?count={}', () => {
   const testDestinations = Array.from({ length: 10 }, (_, i) => ({
     id: `test_${i}`,
     dest_id: `test_${i}`,
@@ -47,7 +47,7 @@ describe.skip('GET /api/destination/random?count={}', () => {
 });
 
 // Test /api/destination/all route
-describe.skip('GET /api/destination/all', () => {
+describe('GET /api/destination/all', () => {
   const testDestinations = Array.from({ length: 10 }, (_, i) => ({
     id: `test_${i}`,
     dest_id: `test_${i}`,
@@ -67,7 +67,7 @@ describe.skip('GET /api/destination/all', () => {
 });
 
 // Test /api/destination/query fuzzy matching route
-describe.skip('GET /api/destination/query/:text?count={}?distance={}', () => {
+describe('GET /api/destination/query/:text?count={}?distance={}', () => {
   const testDestinations = [
     {
       id: `test_1`,
