@@ -38,7 +38,7 @@ router.get(['/query/:text', '/query/'], async function (req, res) {
   const distance = isNaN(distanceRaw) ? 2 : distanceRaw;
 
   const text = req.params.text;
-  // console.log(text);
+  // console.log('text', text);
   if (!text) {
     res.status(400).json({ message: 'no query text param given' });
     return;
@@ -63,7 +63,6 @@ router.get(['/bounds'], async function (req, res) {
   }
   const [minLat, maxLat] = lat1 < lat2 ? [lat1, lat2] : [lat2, lat1];
   const [minLng, maxLng] = lng1 < lng2 ? [lng1, lng2] : [lng2, lng1];
-  console.log(minLat, maxLat, minLng, maxLng);
   const destinations = await searchDestinationsInBounds({
     minLat,
     maxLat,
