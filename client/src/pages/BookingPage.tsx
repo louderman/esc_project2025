@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import type { Hotel } from '../../../types/Hotel';
 import type { Price } from '../../../types/Price';
 import BookingForm from '../components/booking/BookingForm';
@@ -12,9 +12,90 @@ import styles from './bookingpage.module.css';
 
 export default function BookingPage() {
   const navigate = useNavigate();
-  // commented until I get listing data
-  // const hotel = location.state?.hotel as (Hotel & Price) | undefined;
-  const hotel: Hotel & Price = {
+  const location = useLocation();
+  
+  // Get data from navigation state
+  const stateData = location.state as {
+    bookingDetails?: {
+      selectedRoom: any;
+      numberOfGuests: {
+        adults: number;
+        children: number;
+        total: number;
+      };
+      numberOfNights: number;
+      numberOfRooms: number;
+      checkinDate: string;
+      checkoutDate: string;
+      totalAmount: number;
+      pricePerNight: number;
+    };
+    hotel?: {
+      id: string;
+      name: string;
+      rating: number;
+      reviewCount: number;
+      price: number;
+    };
+    totalAmount?: number;
+  } | undefined;
+
+  // Use state data if available, otherwise fall back to mock data
+  const hotel: Hotel & Price = stateData?.hotel ? {
+    // Hotel properties
+    id: stateData.hotel.id,
+    name: stateData.hotel.name,
+    rating: stateData.hotel.rating,
+    imageCount: 5,
+    latitude: 1.2588,
+    longitude: 103.823,
+    address: '23 Beach View, Sentosa Island',
+    address1: 'Singapore, 098679',
+    distance: 5.4,
+    trustyou: {
+      id: 'ty-1',
+      score: {
+        overall: 9,
+        kaligo_overall: 9,
+        solo: 8,
+        couple: 9,
+        family: 9,
+        business: 8,
+      },
+    },
+    categories: {},
+    amenities_ratings: [],
+    description:
+      'A luxurious resort on Sentosa island, perfect for a relaxing getaway.',
+    amenities: { outdoorPool: true, roomService: true },
+    image_details: {
+      prefix: '/listing/hotel_img_placeholder.png?id=',
+      count: 5,
+      suffix: '',
+    },
+    hires_image_index: '',
+    number_of_images: 5,
+    default_image_index: 0,
+    imgix_url: '',
+    cloudflare_image_url: '',
+    checkin_time: '15:00',
+    // Price properties
+    price: stateData.hotel.price,
+    searchRank: 1,
+    price_type: 'per_night',
+    free_cancellation: true,
+    rooms_available: 5,
+    max_cash_payment: stateData.hotel.price,
+    coverted_max_cash_payment: stateData.hotel.price,
+    points: 5000,
+    bonuses: 0,
+    bonus_programs: [],
+    bonus_tiers: [],
+    lowest_price: stateData.hotel.price,
+    converted_price: stateData.hotel.price,
+    lowest_converted_price: stateData.hotel.price,
+    market_rates: [{ supplier: 'supplier-a', rate: stateData.hotel.price }],
+  } : {
     // Hotel properties
     id: 'mock-oasia-1',
     name: 'Oasia Resort Sentosa By Far East Hospitality',

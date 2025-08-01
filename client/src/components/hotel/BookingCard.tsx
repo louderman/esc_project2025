@@ -96,24 +96,60 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
     // Only allow booking if rooms are available
     if (!hasRooms) return;
 
-    // Build URL parameters for hotel detail page
-    const params = new URLSearchParams();
-    
-    if (searchParams.get('checkin')) {
-      params.set('checkin', searchParams.get('checkin')!.replace(/"/g, ''));
-    }
-    if (searchParams.get('checkout')) {
-      params.set('checkout', searchParams.get('checkout')!.replace(/"/g, ''));
-    }
-    params.set('adult', searchParams.get('adult') || '2');
-    params.set('child', searchParams.get('child') || '0');
-    params.set('room', searchParams.get('room') || '1');
-    params.set('destId', (searchParams.get('destId') || '').replace(/"/g, ''));
-    params.set('price', price.toString());
-    params.set('hotelName', hotelName);
-    params.set('hotelId', (hotelId || '').replace(/"/g, ''));
-    
-    navigate(`/booking?${params.toString()}`);
+    // Calculate number of nights
+    const checkin = searchParams.get('checkin')?.replace(/"/g, '') || searchParams.get('checkin');
+    const checkout = searchParams.get('checkout')?.replace(/"/g, '') || searchParams.get('checkout');
+    const numberOfNights = checkin && checkout ? 
+      Math.round((new Date(checkout).getTime() - new Date(checkin).getTime()) / (1000 * 60 * 60 * 24)) : 1;
+
+    // Get guest information
+    const adults = parseInt(searchParams.get('adults') || searchParams.get('adult') || '2');
+    const children = parseInt(searchParams.get('children') || searchParams.get('child') || '0');
+    const rooms = parseInt(searchParams.get('rooms') || searchParams.get('room') || '1');
+
+    // Calculate total amount
+    const totalAmount = price * numberOfNights * rooms;
+
+    // Prepare booking details
+    const bookingDetails = {
+      selectedRoom: {
+        id: hotelId || 'default',
+        room_type: 'Standard Room',
+        price: price,
+        free_cancellation: true,
+        occupancy: adults + children,
+        bed_type: 'King bed',
+        size: '35',
+        description: 'Standard room with modern amenities',
+        amenities: ['WiFi', 'TV', 'Air Conditioning']
+      },
+      numberOfGuests: {
+        adults: adults,
+        children: children,
+        total: adults + children
+      },
+      numberOfNights: numberOfNights,
+      numberOfRooms: rooms,
+      checkinDate: checkin,
+      checkoutDate: checkout,
+      totalAmount: totalAmount,
+      pricePerNight: price
+    };
+
+    // Navigate to booking page with state
+    navigate('/booking', {
+      state: {
+        bookingDetails,
+        hotel: {
+          id: hotelId,
+          name: hotelName,
+          rating: rating,
+          reviewCount: reviewCount,
+          price: price
+        },
+        totalAmount: totalAmount,
+      },
+    });
   };
 
   return (
