@@ -15,6 +15,7 @@ import { router as priceRouter } from './routes/hotelpriceRouter';
 import { router as hotelRouter } from './routes/hotelRouter';
 import { router as authRouter } from './routes/authRouter';
 import paymentRouter from './routes/payment';
+import { router as hotelDetailRouter } from './routes/hoteldetailRouter';
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use('/api/hotel-price', priceRouter);
 app.use('/api/hotel', hotelRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/payment', paymentRouter);
+app.use('/api/hotel-detail', hotelDetailRouter);
 
 // Debug route to check if server is working
 app.get('/api/debug', (req, res) => {
@@ -37,7 +39,8 @@ app.get('/api/debug', (req, res) => {
       '/api/hotel-price', 
       '/api/hotel',
       '/api/auth',
-      '/api/payment'
+      '/api/payment',
+      '/api/hotel-detail'
     ]
   });
 });

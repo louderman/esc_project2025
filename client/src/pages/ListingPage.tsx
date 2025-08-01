@@ -125,11 +125,6 @@ export default function ListingPage() {
 
   useEffect(() => {
     const fetchHotel = async () => {
-      if (!destId || destId.trim() === '') {
-        console.log('No destination ID available, skipping hotel fetch');
-        setLoading((prev) => ({ ...prev, hotel: false }));
-        return;
-      }
       console.log('fetching hotel');
       // setHotels(INIT_HOTELS);
       // return;
@@ -156,7 +151,7 @@ export default function ListingPage() {
       }
     };
     fetchHotel();
-  }, [destId]);
+  }, []);
 
   // Stitch, filter, and sort the hotels here
   const hotelsWithPrice = usePricedHotels(hotels, prices);

@@ -30,7 +30,11 @@ export default function ListingCard({
     params.set('adults', occupancy.adults.toString());
     params.set('children', occupancy.children.toString());
     params.set('rooms', occupancy.rooms.toString());
-    params.set('destination_id', hotel.id); // Use hotel ID as destination ID for now
+    // Get the destination ID from the current URL (should be passed down from parent)
+    const currentDestId = new URLSearchParams(window.location.search).get('destId');
+    if (currentDestId) {
+      params.set('destination_id', JSON.parse(currentDestId));
+    }
     
     navigate(`/hotel/${hotel.id}?${params.toString()}`);
   };

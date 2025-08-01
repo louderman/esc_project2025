@@ -203,12 +203,12 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
           <Label htmlFor="guests" className="text-sm font-medium">Guests & Rooms</Label>
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span>Adults: {availability?.validAdults || searchParams.get('adult') || '2'}</span>
-              <span>Children: {availability?.validChildren || searchParams.get('child') || '0'}</span>
+              <span>Adults: {searchParams.get('adults') || searchParams.get('adult') || '2'}</span>
+              <span>Children: {searchParams.get('children') || searchParams.get('child') || '0'}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span>Total Guests: {(availability?.validAdults || parseInt(searchParams.get('adult') || '2')) + (availability?.validChildren || parseInt(searchParams.get('child') || '0'))}</span>
-              <span>Rooms: {availability?.validRoomCount || searchParams.get('room') || '1'}</span>
+              <span>Total Guests: {parseInt(searchParams.get('adults') || searchParams.get('adult') || '2') + parseInt(searchParams.get('children') || searchParams.get('child') || '0')}</span>
+              <span>Rooms: {searchParams.get('rooms') || searchParams.get('room') || '1'}</span>
             </div>
             
             {/* Show availability warnings */}
@@ -242,7 +242,7 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
                 const checkout = searchParams.get('checkout');
                 const nights = checkin && checkout ? 
                   Math.round((new Date(checkout).getTime() - new Date(checkin).getTime()) / (1000 * 60 * 60 * 24)) : 3;
-                const rooms = availability?.validRoomCount || parseInt(searchParams.get('room') || '1');
+                const rooms = parseInt(searchParams.get('rooms') || searchParams.get('room') || '1');
                 const totalPrice = price * nights * rooms;
                 const taxes = Math.round(totalPrice * 0.1); // 10% taxes
                 
