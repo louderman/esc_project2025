@@ -1,22 +1,113 @@
-import {
-  APIProvider,
-  Map,
-  AdvancedMarker,
-  Pin,
-  InfoWindow,
-} from '@vis.gl/react-google-maps';
+import { APIProvider, Map, type MapEvent } from '@vis.gl/react-google-maps';
 import styles from './googlemap.module.css';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, type SetStateAction } from 'react';
+import { useDebounceAsync } from '@/hooks/useDebounceAsync';
+import type { Destination } from '../../../../../types/Destination';
+import { mergeClosePoints } from '@/utils/listing/map/gridClustering';
+import DestinationMarker from './Markers/DestinationMarker';
+import type { Hotel } from '../../../../../types/Hotel';
+import type { Price } from '../../../../../types/Price';
+import HotelMarker from './Markers/HotelMarker';
 
 const API_KEY = 'AIzaSyBta33S3S8OPr_m0uL-TNn3UTW8MSVF-L8';
 const MAP_ID = 'a8079e059f31bc15534a6a3a';
 
+export type MapBound = {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+};
+
 // Reference: https://www.youtube.com/watch?v=PfZ4oLftItk&ab_channel=GoogleMapsPlatform
-export default function GoogleMap() {
+export default function GoogleMap({
+  hotels,
+  destinations,
+  setDestinations,
+}: {
+  hotels: (Hotel & Price)[];
+  destinations: Destination[];
+  setDestinations: React.Dispatch<SetStateAction<Destination[]>>;
+}) {
   const center = {
     lat: 1.3521,
     lng: 103.8198,
   };
+  const mapRef = useRef<google.maps.Map | null>(null);
+
+  // TODO: FIX debounce not cancelling previous action
+
+  const mergedHotels = useMemo(() => {
+    if (!mapRef.current) {
+      return [];
+    }
+
+    const hotelLatLngs = hotels.map((h) => [h.latitude, h.longitude]) as [
+      number,
+      number
+    ][];
+    const mergedHotelIndices = mergeClosePoints(
+      hotelLatLngs,
+      mapRef.current,
+      30
+    );
+    const mergedHotels = hotels.filter((_, i) =>
+      mergedHotelIndices.includes(i)
+    );
+    return mergedHotels;
+  }, [mapRef.current, hotels]);
+
+  const debouncedDestFetch = useDebounceAsync(
+    async ({ minLat, maxLat, minLng, maxLng }: MapBound) => {
+      // skip fetch on initial map bound
+      if ([minLat, maxLat, minLng, maxLng].every((v) => v === 0)) {
+        return [];
+      }
+      const controller = new AbortController();
+      try {
+        const url = `/api/destination/bounds?minLat=${minLat}&maxLat=${maxLat}&minLng=${minLng}&maxLng=${maxLng}`;
+        const res = await fetch(url, {
+          signal: controller.signal,
+        });
+        const dests: Destination[] = await res.json();
+        return dests;
+      } catch (e) {
+        if (e instanceof Error && e.name !== 'AbortError') {
+          console.error(e);
+        }
+        return [];
+      }
+    },
+    1500
+  );
+
+  async function handleOnIdle(ev: MapEvent<unknown>) {
+    const bound = ev.map.getBounds();
+    if (!bound) {
+      return;
+    }
+    const ne = bound.getNorthEast();
+    const sw = bound.getSouthWest();
+    const [minLat, maxLat, minLng, maxLng] = [
+      sw.lat(),
+      ne.lat(),
+      sw.lng(),
+      ne.lng(),
+    ];
+    const dests = await debouncedDestFetch({
+      minLat,
+      maxLat,
+      minLng,
+      maxLng,
+    });
+
+    const destLatLngs = dests.map((d) => [d.lat, d.lng]) as [number, number][];
+    const mergedDestIndices = mergeClosePoints(destLatLngs, ev.map, 180);
+    const mergedDests = dests.filter((_, i) => mergedDestIndices.includes(i));
+
+    console.log('mergedDests', mergedDests);
+    setDestinations(mergedDests);
+  }
 
   return (
     <APIProvider apiKey={API_KEY}>
@@ -26,10 +117,17 @@ export default function GoogleMap() {
           defaultZoom={9}
           defaultCenter={center}
           mapId={MAP_ID}
+          onIdle={(ev) => {
+            handleOnIdle(ev);
+            mapRef.current = ev.map;
+          }}
         >
-          <AdvancedMarker position={center}>
-            <div>HERERERERERERERERERE</div>
-          </AdvancedMarker>
+          {destinations.map((d) => (
+            <DestinationMarker destination={d} key={`dest-marker-${d.id}`} />
+          ))}
+          {mergedHotels.map((h) => (
+            <HotelMarker hotel={h} key={`hotel-marker-${h.id}`} />
+          ))}
         </Map>
       </div>
     </APIProvider>
