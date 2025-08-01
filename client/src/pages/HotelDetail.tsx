@@ -365,28 +365,15 @@ const HotelDetail = () => {
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-          {/* Left Column - Images and Info */}
-          <div className="lg:col-span-2 space-y-8">
+        {/* Main Content - Full Width Layout */}
+        <div className="space-y-8 mb-12">
+          {/* Hotel Images and Info */}
+          <div className="space-y-8">
             <HotelImageGallery 
               images={data.hotel.images} 
               hotelName={data.hotel.name} 
             />
             <HotelInfo hotel={data.hotel} />
-          </div>
-
-          {/* Right Column - Booking Card */}
-          <div className="lg:col-span-1">
-            <BookingCard 
-              price={data.rooms.length > 0 ? data.rooms[0].price : 0}
-              rating={data.hotel.rating}
-              reviewCount={data.hotel.reviewCount}
-              hotelName={data.hotel.name}
-              hotelId={hotelId}
-              hasRooms={data.rooms.length > 0}
-              availability={data.availability}
-            />
           </div>
         </div>
 
@@ -406,6 +393,19 @@ const HotelDetail = () => {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Full Width Booking Card - Below Available Rooms */}
+        <div className="mb-12">
+          <BookingCard 
+            price={data.rooms.length > 0 ? data.rooms[0].price : 0}
+            rating={data.hotel.rating}
+            reviewCount={data.hotel.reviewCount}
+            hotelName={data.hotel.name}
+            hotelId={hotelId}
+            hasRooms={data.rooms.length > 0}
+            availability={data.availability}
+          />
         </div>
 
         {/* Location */}

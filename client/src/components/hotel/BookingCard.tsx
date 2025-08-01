@@ -117,39 +117,42 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
   };
 
   return (
-    <Card className="sticky top-6 shadow-lg">
-      <CardHeader className="pb-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <h3 className="font-semibold text-lg">{hotelName}</h3>
-            <div className="flex items-center space-x-2 mt-1">
-              <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <Star 
-                    key={i} 
-                    size={16} 
-                    className={i < Math.floor(rating) ? "fill-hotel-gold text-hotel-gold" : "text-muted-foreground"} 
-                  />
-                ))}
+    <Card className="w-full shadow-xl border-0 bg-gradient-to-r from-white to-gray-50">
+      <CardHeader className="pb-6 border-b border-gray-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-6">
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">{hotelName}</h3>
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star 
+                      key={i} 
+                      size={18} 
+                      className={i < Math.floor(rating) ? "fill-hotel-gold text-hotel-gold" : "text-muted-foreground"} 
+                    />
+                  ))}
+                  <span className="ml-2 text-lg font-semibold">{rating}</span>
+                </div>
+                <span className="text-lg text-hotel-text-secondary">({reviewCount} reviews)</span>
               </div>
-              <span className="text-sm text-hotel-text-secondary">({reviewCount} reviews)</span>
             </div>
           </div>
           <div className="text-right">
             {hasRooms && price > 0 ? (
               <>
-                <div className="text-2xl font-bold">${price}</div>
-                <div className="text-sm text-hotel-text-secondary">per night</div>
+                <div className="text-3xl font-bold text-primary">${price}</div>
+                <div className="text-base text-hotel-text-secondary">per night</div>
               </>
             ) : (
-              <div className="text-sm text-hotel-text-secondary">No availability</div>
+              <div className="text-lg text-hotel-text-secondary">No availability</div>
             )}
           </div>
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
+      <CardContent className="space-y-6 p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <Label htmlFor="checkin" className="text-sm font-medium">Check-in</Label>
             <div className="relative">
@@ -263,7 +266,7 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
             </div>
             
             <Button 
-              className="w-full bg-primary hover:bg-primary/90" 
+              className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-4 text-lg" 
               size="lg"
               onClick={handleReserveNow}
             >
