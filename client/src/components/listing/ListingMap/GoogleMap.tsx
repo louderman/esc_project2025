@@ -11,6 +11,7 @@ import HotelMarker from './Markers/HotelMarker';
 import type { OccupancyState } from '../SearchBar/GuestInput/GuestInput';
 import type { StayDatesState } from '../SearchBar/DateInput/DateInput';
 import type { ListingAction } from '@/reducers/listingReducer';
+import Close from '@/assets/Close';
 
 const API_KEY = 'AIzaSyBta33S3S8OPr_m0uL-TNn3UTW8MSVF-L8';
 const MAP_ID = 'a8079e059f31bc15534a6a3a';
@@ -21,29 +22,34 @@ export type MapBound = {
   minLng: number;
   maxLng: number;
 };
+type LatLng = {
+  lat: number;
+  lng: number;
+};
 
 // Reference: https://www.youtube.com/watch?v=PfZ4oLftItk&ab_channel=GoogleMapsPlatform
 export default function GoogleMap({
+  latLng,
   hotels,
   hoveredHotelId,
   occupancy,
   stayDates,
   destinations,
   setDestinations,
+  setShowMap,
   listingDispatch,
 }: {
+  latLng: LatLng;
   hotels: (Hotel & Price)[];
   hoveredHotelId: string | null;
   occupancy: OccupancyState;
   stayDates: StayDatesState;
   destinations: Destination[];
   setDestinations: React.Dispatch<SetStateAction<Destination[]>>;
+  setShowMap: React.Dispatch<SetStateAction<boolean>>;
   listingDispatch: React.ActionDispatch<[action: ListingAction]>;
 }) {
-  const center = {
-    lat: 1.3521,
-    lng: 103.8198,
-  };
+  const center = latLng;
   const mapRef = useRef<google.maps.Map | null>(null);
 
   // TODO: FIX debounce not cancelling previous action
@@ -134,10 +140,16 @@ export default function GoogleMap({
   return (
     <APIProvider apiKey={API_KEY}>
       <div className={styles.container}>
+        <button
+          className={styles.closeButton}
+          onClick={() => setShowMap(false)}>
+          Close Map <Close className={styles.closeIcon} />
+        </button>
         <Map
           gestureHandling={'greedy'}
           defaultZoom={9}
           defaultCenter={center}
+          fullscreenControl={false}
           mapId={MAP_ID}
           onIdle={(ev) => {
             handleOnIdle(ev);

@@ -9,7 +9,13 @@ import MapListingCard from './MapListingCard';
 import type { OccupancyState } from '../SearchBar/GuestInput/GuestInput';
 import type { StayDatesState } from '../SearchBar/DateInput/DateInput';
 import MapListingCardSkeleton from './MapListingCardSkeleton';
-import { useEffect, useReducer, useRef, useState } from 'react';
+import {
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+  type SetStateAction,
+} from 'react';
 import type { Destination } from '../../../../../types/Destination';
 import { useFetchHotels } from '@/hooks/hotels/useFetchHotels';
 import { useFetchHotelPrices } from '@/hooks/hotels/useFetchHotelPrices';
@@ -17,13 +23,21 @@ import { usePricedHotels } from '@/hooks/hotels/usePricedHotels';
 import { useFilteredHotels } from '@/hooks/hotels/useFilteredHotels';
 
 const ITEMS_PER_PAGE = 10;
+type LatLng = {
+  lat: number;
+  lng: number;
+};
 
 export default function ListingMap({
   stayDates,
   occupancy,
+  latLng,
+  setShowMap,
 }: {
   stayDates: StayDatesState;
   occupancy: OccupancyState;
+  latLng: LatLng;
+  setShowMap: React.Dispatch<SetStateAction<boolean>>;
 }) {
   // TODO: disable bg scrolling if possible
 
@@ -117,12 +131,14 @@ export default function ListingMap({
       </div>
       <div className={styles.mapSection}>
         <GoogleMap
+          latLng={latLng}
           hotels={filteredHotels}
           hoveredHotelId={hoveredHotelId}
           stayDates={stayDates}
           occupancy={occupancy}
           destinations={destinations}
           setDestinations={setDestinations}
+          setShowMap={setShowMap}
           listingDispatch={listingDispatch}
         />
       </div>
