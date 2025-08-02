@@ -74,9 +74,5 @@ export function useFetchHotels(
     return () => controller.abort();
   }, [JSON.stringify(destIds), options?.cache]);
 
-  console.log(
-    'inner hotels',
-    hotels.sort((a, b) => a.id.localeCompare(b.id))
-  );
   return { hotels, loading, error };
 }

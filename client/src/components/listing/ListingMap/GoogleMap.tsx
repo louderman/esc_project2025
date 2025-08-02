@@ -103,6 +103,7 @@ export default function GoogleMap({
     if (!bound) {
       return;
     }
+    console.log(ev.map.getZoom());
     const ne = bound.getNorthEast();
     const sw = bound.getSouthWest();
     const [minLat, maxLat, minLng, maxLng] = [
@@ -147,7 +148,7 @@ export default function GoogleMap({
         </button>
         <Map
           gestureHandling={'greedy'}
-          defaultZoom={9}
+          defaultZoom={13}
           defaultCenter={center}
           fullscreenControl={false}
           mapId={MAP_ID}

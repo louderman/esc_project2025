@@ -107,7 +107,6 @@ export function useFetchHotelPrices(
   }, [cache, JSON.stringify(destIds), stayDates, occupancy]);
 
   const startPolling = !!stayDates.checkinDate && !!stayDates.checkoutDate;
-  console.log('here');
   usePollingAsync(fetchPrice, pollingInterval, startPolling, fetchOnMountOnly);
 
   return { prices, loading, error };

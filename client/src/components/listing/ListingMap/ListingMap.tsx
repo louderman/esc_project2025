@@ -69,9 +69,9 @@ export default function ListingMap({
   //   'hotels',
   //   hotels.sort((a, b) => a.id.localeCompare(b.id))
   // );
-  console.log('prices', prices);
+  //   console.log('prices', prices);
   // console.log('filteredHotels', filteredHotels);
-  console.log('loading', hotelLoading, priceLoading);
+  console.log('loading', 'hotel', hotelLoading, 'price', priceLoading);
 
   const [page, setPage] = useState(1);
   const listingSectionRef = useRef<HTMLDivElement | null>(null);
