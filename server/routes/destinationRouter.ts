@@ -2,7 +2,8 @@ import express from 'express';
 import {
   getAllDestinations,
   getRandomDestinations,
-  searchDestinations,
+  searchDestinationsByDestId,
+  searchDestinationsByName,
   searchDestinationsInBounds,
 } from '../models/destinationModel';
 const router = express.Router();
@@ -29,9 +30,9 @@ router.get('/random', async function (req, res) {
 });
 
 /**
- * GET /query/{text}?distance={distance}?count={count}
+ * GET /query/name/{text}?distance={distance}?count={count}
  */
-router.get(['/query/:text', '/query/'], async function (req, res) {
+router.get(['/query/name/:text', '/query/name/'], async function (req, res) {
   const countRaw = Number(req.query.count);
   const count = isNaN(countRaw) ? 10 : countRaw;
   const distanceRaw = Number(req.query.distance); // Max edit distance
@@ -44,10 +45,26 @@ router.get(['/query/:text', '/query/'], async function (req, res) {
     return;
   }
 
-  const rows = await searchDestinations(text, distance, count);
+  const rows = await searchDestinationsByName(text, distance, count);
 
   res.send(rows);
 });
+
+/**
+ * GET /query/destId/{destId}
+ */
+router.get(
+  ['/query/destId/:destId', '/query/destId/'],
+  async function (req, res) {
+    const destId = req.params.destId;
+    if (!destId) {
+      return res.status(400).json({ message: 'no dest id param given' });
+    }
+
+    const dests = await searchDestinationsByDestId(destId);
+    res.send(dests);
+  }
+);
 
 /**
  * GET /query/bounds?minLat={...}&maxLat={...}&minLng={...}&maxLng={...}
