@@ -20,6 +20,7 @@ import { useSearchBarUrlSync } from '../hooks/url/useSearchBarUrlSync';
 import Map from '../components/listing/ListingMap/ListingMap';
 import { useFetchHotels } from '@/hooks/hotels/useFetchHotels';
 import { useFetchHotelPrices } from '@/hooks/hotels/useFetchHotelPrices';
+import type { Destination } from '../../../types/Destination';
 
 export default function ListingPage() {
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ export default function ListingPage() {
   );
 
   const [page, setPage] = useState(1);
-  const [showMap, setShowMap] = useState(true);
+  const [showMap, setShowMap] = useState(false);
 
   // Sync listing control states with URL, and vice-versa
   useControlPanelUrlSync({
@@ -63,7 +64,7 @@ export default function ListingPage() {
     stayDates,
   });
 
-  // Fetch hotels and prices
+  // Fetch destination, hotels and prices
   const destIdRaw = searchParams.get('destId');
   const destId: string = destIdRaw ? JSON.parse(destIdRaw) : '';
 
@@ -74,6 +75,20 @@ export default function ListingPage() {
     2000
   );
   const { hotels, loading: hotelLoading } = useFetchHotels([destId]);
+  const [destinationObj, setDestinationObj] = useState<Destination | null>(
+    null
+  );
+  useEffect(() => {
+    const fetchDestination = async () => {
+      const res = await fetch(`/api/destination/query/destId/${destId}`);
+      const destObjs: Destination[] = await res.json();
+      setDestinationObj(destObjs[0]);
+    };
+
+    if (destId) {
+      fetchDestination();
+    }
+  }, [destId]);
 
   // Stitch, filter, and sort the hotels here
   const hotelsWithPrice = usePricedHotels(hotels, prices);
@@ -108,7 +123,11 @@ export default function ListingPage() {
         <Map
           stayDates={stayDates}
           occupancy={occupancy}
-          initDest={destination}
+          setShowMap={setShowMap}
+          latLng={{
+            lat: destinationObj?.lat ?? 0,
+            lng: destinationObj?.lng ?? 0,
+          }}
         />
       )}
       <div className={styles.searchbarSection}>
