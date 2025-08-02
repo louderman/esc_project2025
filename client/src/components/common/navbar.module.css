@@ -11,8 +11,12 @@
   margin-inline: auto;
 }
 
-.logoImg {
+.box a {
+  text-decoration: none;
 }
+
+/* .logoImg {
+} */
 
 .appNameText {
   font-size: 1.2rem;
@@ -63,11 +67,11 @@
   cursor: pointer;
 }
 
-.accountButton > span {
+/* .accountButton > span {
 }
 
 .registerButton {
 }
 
 .loginButton {
-}
+} */

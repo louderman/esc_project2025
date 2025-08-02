@@ -15,13 +15,13 @@ function formatDate(date: Date | null) {
   }).format(date);
 }
 
-function calcNights(startDate: Date | null, endDate: Date | null) {
-  if (!startDate || !endDate) {
+function calcNights(checkinDate: Date | null, checkoutDate: Date | null) {
+  if (!checkinDate || !checkoutDate) {
     return 0;
   }
 
   return Math.round(
-    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+    (checkoutDate.getTime() - checkinDate.getTime()) / (1000 * 60 * 60 * 24)
   );
 }
 
@@ -42,7 +42,7 @@ export default function Calendar({
   const today = new Date();
   today.setDate(1);
   today.setHours(0, 0, 0, 0);
-  const [curDate, setCurDate] = useState(stayDates.startDate ?? today);
+  const [curDate, setCurDate] = useState(stayDates.checkinDate ?? today);
   const [hoverDate, setHoverDate] = useState<Date | null>(null);
   const prevDate = useMemo(
     () => new Date(curDate.getFullYear(), curDate.getMonth() - 1),
@@ -60,14 +60,14 @@ export default function Calendar({
 
   let nightCount;
   if (
-    stayDates.startDate &&
-    !stayDates.endDate &&
+    stayDates.checkinDate &&
+    !stayDates.checkoutDate &&
     hoverDate &&
-    hoverDate.getTime() >= stayDates.startDate.getTime()
+    hoverDate.getTime() >= stayDates.checkinDate.getTime()
   ) {
-    nightCount = calcNights(stayDates.startDate, hoverDate);
+    nightCount = calcNights(stayDates.checkinDate, hoverDate);
   } else {
-    nightCount = calcNights(stayDates.startDate, stayDates.endDate);
+    nightCount = calcNights(stayDates.checkinDate, stayDates.checkoutDate);
   }
 
   return (
@@ -76,7 +76,8 @@ export default function Calendar({
         {prevDate.getTime() >= today.getTime() && (
           <button
             onClick={() => setCurDate(prevDate)}
-            className={`${styles.changeMonthBtn} ${styles.leftBtn}`}>
+            className={`${styles.changeMonthBtn} ${styles.leftBtn}`}
+          >
             <img
               src='/common/chevron.svg'
               alt='prev month'
@@ -104,7 +105,8 @@ export default function Calendar({
         {nextDate.getTime() <= maxDate.getTime() && (
           <button
             onClick={() => setCurDate(nextDate)}
-            className={`${styles.changeMonthBtn} ${styles.rightBtn}`}>
+            className={`${styles.changeMonthBtn} ${styles.rightBtn}`}
+          >
             <img
               src='/common/chevron.svg'
               alt='prev month'
@@ -114,11 +116,11 @@ export default function Calendar({
           </button>
         )}
       </div>
-      {stayDates.startDate && (
+      {stayDates.checkinDate && (
         <span className={styles.stayInfoSection}>
-          {formatDate(stayDates.startDate)}
+          {formatDate(stayDates.checkinDate)}
           &nbsp;&nbsp;&mdash;&nbsp;&nbsp;
-          {formatDate(stayDates.endDate ?? hoverDate)}
+          {formatDate(stayDates.checkoutDate ?? hoverDate)}
           <span className={styles.nightCountText}>
             ({nightCount} night{nightCount > 1 ? 's' : ''})
           </span>

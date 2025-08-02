@@ -1,4 +1,3 @@
-// const mysql = require('mysql2');
 import { createPool } from 'mysql2';
 
 const pool = createPool({
@@ -6,15 +5,15 @@ const pool = createPool({
   port: 53042,
   user: 'pub',
   password: 'asbestosSnOrter8&',
-  database: 'hotel',
+  database: process.env.NODE_ENV === 'test' ? 'hotel_test' : 'hotel',
 }).promise();
 
 // const pool = createPool({
-//   host: 'localhost',  
+//   host: 'localhost',
 //   port: 3306,
-//   user: 'user',  
+//   user: 'ItsMeOX',
 //   password: 'password',
-//   database: 'hotel',
+//   database: process.env.NODE_ENV === 'test' ? 'hotel_test' : 'ESC',
 // }).promise();
 
 async function cleanup() {

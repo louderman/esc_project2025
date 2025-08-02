@@ -4,6 +4,8 @@ import ListingCard from './ListingCard';
 import styles from './listings.module.css';
 import type { Price } from '../../../../../types/Price';
 import ListingCardSkeleton from './ListingCardSkeleton';
+import type { StayDatesState } from '../SearchBar/DateInput/DateInput';
+import type { OccupancyState } from '../SearchBar/GuestInput/GuestInput';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -12,13 +14,16 @@ export default function Listings({
   setPage,
   hotels,
   loading,
+  stayDates,
+  occupancy,
 }: {
   page: number;
   setPage: React.Dispatch<SetStateAction<number>>;
   hotels: (Hotel & Price)[];
-  loading: { hotel: boolean; price: boolean };
+  loading: boolean;
+  stayDates: StayDatesState;
+  occupancy: OccupancyState;
 }) {
-  const isLoading = Object.values(loading).some((l) => l);
   const hasHotel = hotels.length > 0;
 
   useEffect(() => {
@@ -44,20 +49,25 @@ export default function Listings({
 
   return (
     <div className={styles.container}>
-      {isLoading &&
+      {loading &&
         Array.from({ length: 3 }).map((_, i) => (
           <ListingCardSkeleton key={`skeleton-${i}`} />
         ))}
 
-      {!isLoading &&
+      {!loading &&
         hasHotel &&
         hotels
           .slice(0, page * ITEMS_PER_PAGE)
           .map((hotel) => (
-            <ListingCard key={`listing-card-${hotel.id}`} hotel={hotel} />
+            <ListingCard
+              stayDates={stayDates}
+              key={`listing-card-${hotel.id}`}
+              hotel={hotel}
+              occupancy={occupancy}
+            />
           ))}
 
-      {!isLoading && !hasHotel && (
+      {!loading && !hasHotel && (
         <div>
           <span className={styles.noHotelText}>No Hotel Found</span>
           <span className={styles.noHotelSubtext}>

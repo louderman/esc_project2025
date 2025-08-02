@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import SearchBar from '../components/listing/SearchBar/SearchBar';
 import styles from './listingpage.module.css';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
@@ -9,95 +9,71 @@ import {
   initialListingState,
   listingReducer,
 } from '../reducers/listingReducer';
-import type { Hotel } from '../../../types/Hotel';
-import type { Price, PriceResponse } from '../../../types/Price';
-import { usePollingAsync } from '../hooks/usePollingAsync';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePricedHotels } from '../hooks/hotels/usePricedHotels';
 import { useFilteredHotels } from '../hooks/hotels/useFilteredHotels';
 import SortPanel from '../components/listing/ListingControl/SortPanel';
 import { useSortedHotels } from '../hooks/hotels/useSortedHotels';
-import { useUrlSync } from '../hooks/url/useUrlSync';
+import { useControlPanelUrlSync } from '../hooks/url/useControlPanelUrlSync';
+import type { DestinationState } from '../components/listing/SearchBar/DestinationInput/DestinationInput';
+import { useSearchBarUrlSync } from '../hooks/url/useSearchBarUrlSync';
+import Map from '../components/listing/ListingMap/ListingMap';
+import { useFetchHotels } from '@/hooks/hotels/useFetchHotels';
+import { useFetchHotelPrices } from '@/hooks/hotels/useFetchHotelPrices';
 
 export default function ListingPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const [userDest, setUserDest] = useState<string>('');
+  const [destination, setDestination] = useState<DestinationState>({
+    id: '',
+    name: '',
+  });
   const [stayDates, setStayDates] = useState<StayDatesState>({
-    startDate: null,
-    endDate: null,
+    checkinDate: null,
+    checkoutDate: null,
   });
   const [occupancy, setOccupancy] = useState<OccupancyState>({
     adults: 1,
     children: 0,
     rooms: 1,
   });
-  const [hotels, setHotels] = useState<Hotel[]>([]);
-  const [prices, setPrices] = useState<Price[]>([]);
   const [listingState, listingDispatch] = useReducer(
     listingReducer,
     initialListingState
   );
-  const [loading, setLoading] = useState({
-    price: true,
-    hotel: true,
-  });
+
   const [page, setPage] = useState(1);
+  const [showMap, setShowMap] = useState(true);
 
-  const fetchPrice = useCallback(async () => {
-    console.log('fetching price');
-    const controller = new AbortController();
-    const signal = controller.signal;
-    try {
-      const response = await fetch(`/api/hotel-price/query/S60X`, { signal });
-      const data: PriceResponse | null = await response.json();
-      if (data === null) {
-        setLoading((prev) => ({ ...prev, price: false }));
-        return true;
-      }
+  // Sync listing control states with URL, and vice-versa
+  useControlPanelUrlSync({
+    listingState,
+    listingDispatch,
+    navigate,
+  });
+  // Sync search bar destination, stay dates, occupancy with URL, and vice-versa
+  const { syncSearchBarToURL } = useSearchBarUrlSync({
+    destination,
+    setDestination,
+    navigate,
+    occupancy,
+    setOccupancy,
+    setStayDates,
+    stayDates,
+  });
 
-      if (data.completed) {
-        setPrices(data.hotels);
-      }
-      setLoading((prev) => ({ ...prev, price: !data.completed }));
-      return data.completed;
-    } catch (err) {
-      if (err instanceof Error && err.name !== 'AbortError') {
-        console.error('Fetch hotel error: ', err);
-      }
-      setLoading((prev) => ({ ...prev, price: false }));
-      return true; // stop polling if there is error
-    }
-  }, []);
-  usePollingAsync(fetchPrice, 2000);
+  // Fetch hotels and prices
+  const destIdRaw = searchParams.get('destId');
+  const destId: string = destIdRaw ? JSON.parse(destIdRaw) : '';
 
-  useEffect(() => {
-    const fetchHotel = async () => {
-      console.log('fetching hotel');
-      // setHotels(INIT_HOTELS);
-      // return;
-      const controller = new AbortController();
-      const signal = controller.signal;
-
-      try {
-        const response = await fetch(`/api/hotel/query/S60X`, { signal });
-        const data: Hotel[] = await response.json();
-        if (data === null) {
-          setLoading((prev) => ({ ...prev, hotel: false }));
-          return;
-        }
-
-        setHotels(data);
-      } catch (err) {
-        if (err instanceof Error && err.name !== 'AbortError') {
-          console.error('Fetch hotel error: ', err);
-        }
-      } finally {
-        setLoading((prev) => ({ ...prev, hotel: false }));
-      }
-    };
-    fetchHotel();
-  }, []);
+  const { prices, loading: priceLoading } = useFetchHotelPrices(
+    [destId],
+    stayDates,
+    occupancy,
+    2000
+  );
+  const { hotels, loading: hotelLoading } = useFetchHotels([destId]);
 
   // Stitch, filter, and sort the hotels here
   const hotelsWithPrice = usePricedHotels(hotels, prices);
@@ -110,13 +86,6 @@ export default function ListingPage() {
   // console.log(hotels);
   // console.log(prices);
   // console.log(hotelsWithPrice);
-
-  // Sync listing control states with URL, and vice-versa
-  useUrlSync({
-    listingState,
-    listingDispatch,
-    navigate,
-  });
 
   // Scroll to top and set page to 1 when listing control state is changed
   const prevListingState = useRef(listingState);
@@ -131,26 +100,49 @@ export default function ListingPage() {
     prevListingState.current = listingState;
   }, [listingState, page]);
 
+  // console.log(sortedHotels);
+
   return (
     <div className={styles.container}>
+      {showMap && (
+        <Map
+          stayDates={stayDates}
+          occupancy={occupancy}
+          initDest={destination}
+        />
+      )}
       <div className={styles.searchbarSection}>
         <SearchBar
-          userDest={userDest}
-          setUserDest={setUserDest}
+          destination={destination}
+          setDestination={setDestination}
           stayDates={stayDates}
           setStayDates={setStayDates}
           occupancy={occupancy}
           setOccupancy={setOccupancy}
+          onSubmit={() => {
+            syncSearchBarToURL();
+          }}
         />
       </div>
       <div className={styles.mainSection}>
         <div className={styles.mainBox}>
-          <div className={styles.filterSection}>
-            <FilterPanel
-              hotels={hotelsWithPrice}
-              listingState={listingState}
-              listingDispatch={listingDispatch}
-            />
+          <div className={styles.sidebar}>
+            <div className={styles.mapTogglerSection}>
+              <button
+                className={styles.mapTogglerBtn}
+                onClick={() => setShowMap(true)}
+              >
+                <img src='/listing/map_pin.svg' />
+                Show on Map
+              </button>
+            </div>
+            <div className={styles.filterSection}>
+              <FilterPanel
+                hotels={hotelsWithPrice}
+                listingState={listingState}
+                listingDispatch={listingDispatch}
+              />
+            </div>
           </div>
           <div className={styles.listingSection}>
             <div className={styles.listingTopSection}>
@@ -164,9 +156,11 @@ export default function ListingPage() {
             </div>
             <Listings
               hotels={sortedHotels}
-              loading={loading}
+              loading={hotelLoading || priceLoading}
               page={page}
               setPage={setPage}
+              stayDates={stayDates}
+              occupancy={occupancy}
             />
           </div>
         </div>
