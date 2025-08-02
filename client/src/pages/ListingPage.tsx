@@ -130,8 +130,7 @@ export default function ListingPage() {
             <div className={styles.mapTogglerSection}>
               <button
                 className={styles.mapTogglerBtn}
-                onClick={() => setShowMap(true)}
-              >
+                onClick={() => setShowMap(true)}>
                 <img src='/listing/map_pin.svg' />
                 Show on Map
               </button>
