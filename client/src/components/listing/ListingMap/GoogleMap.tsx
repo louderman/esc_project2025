@@ -24,12 +24,14 @@ export type MapBound = {
 // Reference: https://www.youtube.com/watch?v=PfZ4oLftItk&ab_channel=GoogleMapsPlatform
 export default function GoogleMap({
   hotels,
+  hoveredHotelId,
   occupancy,
   stayDates,
   destinations,
   setDestinations,
 }: {
   hotels: (Hotel & Price)[];
+  hoveredHotelId: string | null;
   occupancy: OccupancyState;
   stayDates: StayDatesState;
   destinations: Destination[];
@@ -133,9 +135,10 @@ export default function GoogleMap({
           {mergedHotels.map((h) => (
             <HotelMarker
               hotel={h}
-              key={`hotel-marker-${h.id}`}
               occupancy={occupancy}
               stayDates={stayDates}
+              drawAttention={hoveredHotelId !== null && hoveredHotelId === h.id} // weird prop name
+              key={`hotel-marker-${h.id}`}
             />
           ))}
         </Map>

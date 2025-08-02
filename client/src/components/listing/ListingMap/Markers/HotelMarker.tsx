@@ -9,10 +9,12 @@ import type { StayDatesState } from '../../SearchBar/DateInput/DateInput';
 
 export default function HotelMarker({
   hotel,
+  drawAttention,
   occupancy,
   stayDates,
 }: {
   hotel: Hotel & Price;
+  drawAttention: boolean;
   occupancy: OccupancyState;
   stayDates: StayDatesState;
 }) {
@@ -28,9 +30,10 @@ export default function HotelMarker({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         position={{ lat: hotel.latitude, lng: hotel.longitude }}>
-        <div className={styles.hotelPriceBox}>{`SGD ${hotel.price.toFixed(
-          0
-        )}`}</div>
+        <div
+          className={`${styles.hotelPriceBox} ${
+            drawAttention ? styles.drawAttention : ''
+          }`}>{`SGD ${hotel.price.toFixed(0)}`}</div>
       </AdvancedMarker>
       {isHovered && (
         <div>
@@ -40,6 +43,7 @@ export default function HotelMarker({
             className={styles.infobox}>
             <div className={styles.cardContainer}>
               <MapListingCard
+                setHoveredHotelId={() => {}}
                 hotel={hotel}
                 occupancy={occupancy}
                 stayDates={stayDates}

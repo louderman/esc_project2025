@@ -1,3 +1,4 @@
+import type { SetStateAction } from 'react';
 import type { Hotel } from '../../../../../types/Hotel';
 import type { Price } from '../../../../../types/Price';
 import type { StayDatesState } from '../SearchBar/DateInput/DateInput';
@@ -8,10 +9,12 @@ export default function MapListingCard({
   hotel,
   stayDates,
   occupancy,
+  setHoveredHotelId,
 }: {
   hotel: Hotel & Price;
   stayDates: StayDatesState;
   occupancy: OccupancyState;
+  setHoveredHotelId: React.Dispatch<SetStateAction<string | null>>;
 }) {
   const userRating = hotel.categories.overall?.score;
   const checkin = stayDates.checkinDate;
@@ -24,7 +27,10 @@ export default function MapListingCard({
       : 0;
 
   return (
-    <div className={styles.container}>
+    <div
+      className={styles.container}
+      onMouseEnter={() => setHoveredHotelId(hotel.id)}
+      onMouseLeave={() => setHoveredHotelId(null)}>
       {hotel.imageCount > 0 ? (
         <img
           className={styles.image}
