@@ -123,6 +123,7 @@ export default function ListingMap({
           occupancy={occupancy}
           destinations={destinations}
           setDestinations={setDestinations}
+          listingDispatch={listingDispatch}
         />
       </div>
     </div>

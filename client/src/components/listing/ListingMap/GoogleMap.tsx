@@ -10,6 +10,7 @@ import type { Price } from '../../../../../types/Price';
 import HotelMarker from './Markers/HotelMarker';
 import type { OccupancyState } from '../SearchBar/GuestInput/GuestInput';
 import type { StayDatesState } from '../SearchBar/DateInput/DateInput';
+import type { ListingAction } from '@/reducers/listingReducer';
 
 const API_KEY = 'AIzaSyBta33S3S8OPr_m0uL-TNn3UTW8MSVF-L8';
 const MAP_ID = 'a8079e059f31bc15534a6a3a';
@@ -29,6 +30,7 @@ export default function GoogleMap({
   stayDates,
   destinations,
   setDestinations,
+  listingDispatch,
 }: {
   hotels: (Hotel & Price)[];
   hoveredHotelId: string | null;
@@ -36,6 +38,7 @@ export default function GoogleMap({
   stayDates: StayDatesState;
   destinations: Destination[];
   setDestinations: React.Dispatch<SetStateAction<Destination[]>>;
+  listingDispatch: React.ActionDispatch<[action: ListingAction]>;
 }) {
   const center = {
     lat: 1.3521,
@@ -102,6 +105,17 @@ export default function GoogleMap({
       sw.lng(),
       ne.lng(),
     ];
+    listingDispatch({
+      type: 'SET_FILTER',
+      payload: {
+        latLngBounds: {
+          maxLat,
+          maxLng,
+          minLat,
+          minLng,
+        },
+      },
+    });
     const dests = await debouncedDestFetch({
       minLat,
       maxLat,
