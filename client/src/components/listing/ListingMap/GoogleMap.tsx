@@ -8,6 +8,8 @@ import DestinationMarker from './Markers/DestinationMarker';
 import type { Hotel } from '../../../../../types/Hotel';
 import type { Price } from '../../../../../types/Price';
 import HotelMarker from './Markers/HotelMarker';
+import type { OccupancyState } from '../SearchBar/GuestInput/GuestInput';
+import type { StayDatesState } from '../SearchBar/DateInput/DateInput';
 
 const API_KEY = 'AIzaSyBta33S3S8OPr_m0uL-TNn3UTW8MSVF-L8';
 const MAP_ID = 'a8079e059f31bc15534a6a3a';
@@ -22,10 +24,14 @@ export type MapBound = {
 // Reference: https://www.youtube.com/watch?v=PfZ4oLftItk&ab_channel=GoogleMapsPlatform
 export default function GoogleMap({
   hotels,
+  occupancy,
+  stayDates,
   destinations,
   setDestinations,
 }: {
   hotels: (Hotel & Price)[];
+  occupancy: OccupancyState;
+  stayDates: StayDatesState;
   destinations: Destination[];
   setDestinations: React.Dispatch<SetStateAction<Destination[]>>;
 }) {
@@ -49,13 +55,13 @@ export default function GoogleMap({
     const mergedHotelIndices = mergeClosePoints(
       hotelLatLngs,
       mapRef.current,
-      30
+      70
     );
     const mergedHotels = hotels.filter((_, i) =>
       mergedHotelIndices.includes(i)
     );
     return mergedHotels;
-  }, [mapRef.current, hotels]);
+  }, [hotels]);
 
   const debouncedDestFetch = useDebounceAsync(
     async ({ minLat, maxLat, minLng, maxLng }: MapBound) => {
@@ -120,13 +126,17 @@ export default function GoogleMap({
           onIdle={(ev) => {
             handleOnIdle(ev);
             mapRef.current = ev.map;
-          }}
-        >
+          }}>
           {destinations.map((d) => (
             <DestinationMarker destination={d} key={`dest-marker-${d.id}`} />
           ))}
           {mergedHotels.map((h) => (
-            <HotelMarker hotel={h} key={`hotel-marker-${h.id}`} />
+            <HotelMarker
+              hotel={h}
+              key={`hotel-marker-${h.id}`}
+              occupancy={occupancy}
+              stayDates={stayDates}
+            />
           ))}
         </Map>
       </div>
