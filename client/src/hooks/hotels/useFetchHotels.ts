@@ -6,11 +6,16 @@ const SAFE_HOTEL_COUNT = 3; // to prevent getting blocked...
 
 export function useFetchHotels(
   destIds: string[],
-  options?: { cache?: boolean }
+  options?: { cache?: boolean; maxParallelFetchCount?: number }
 ) {
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const cache = options?.cache ?? false;
+  const maxParallelFetchCount = Math.min(
+    options?.maxParallelFetchCount ?? SAFE_HOTEL_COUNT,
+    SAFE_HOTEL_COUNT
+  );
 
   useEffect(() => {
     if (!destIds || destIds.length === 0) {
@@ -29,7 +34,7 @@ export function useFetchHotels(
         const allHotels: Hotel[] = [];
 
         await Promise.all(
-          destIds.slice(0, SAFE_HOTEL_COUNT).map(async (destId) => {
+          destIds.slice(0, maxParallelFetchCount).map(async (destId) => {
             if (options?.cache && hotelCache.has(destId)) {
               allHotels.push(...hotelCache.get(destId)!);
               return;
@@ -39,7 +44,10 @@ export function useFetchHotels(
               signal,
             });
 
-            if (!res.ok) throw new Error(`Failed to fetch for dest ${destId}`);
+            if (!res.ok) {
+              console.log(`Failed to fetch for dest ${destId}`);
+              return;
+            }
 
             const data: Hotel[] = await res.json();
             allHotels.push(...data);
@@ -49,6 +57,17 @@ export function useFetchHotels(
             }
           })
         );
+
+        if (cache) {
+          for (const destId of destIds.slice(
+            maxParallelFetchCount,
+            destIds.length
+          )) {
+            if (hotelCache.has(destId)) {
+              allHotels.push(...hotelCache.get(destId)!);
+            }
+          }
+        }
 
         // Remove duplicated hotels (probably bcz multiple dests have same hotels?)
         const uniqueHotelsMap = new Map<string, Hotel>();

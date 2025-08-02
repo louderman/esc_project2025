@@ -48,16 +48,17 @@ export default function ListingMap({
 
   const [destinations, setDestinations] = useState<Destination[]>([]);
 
-  const firstThreeDests = destinations.slice(0, 3).map((d) => d.dest_id);
-  const { hotels, loading: hotelLoading } = useFetchHotels(firstThreeDests, {
+  const destIds = destinations.map((d) => d.dest_id);
+  const { hotels, loading: hotelLoading } = useFetchHotels(destIds, {
     cache: true,
+    maxParallelFetchCount: 3,
   });
   const { prices, loading: priceLoading } = useFetchHotelPrices(
-    firstThreeDests,
+    destIds,
     stayDates,
     occupancy,
     3000,
-    { cache: true, fetchOnMountOnly: false }
+    { cache: true, fetchOnMountOnly: false, maxParallelFetchCount: 3 }
   );
   const pricedHotels = usePricedHotels(hotels, prices);
   const filteredHotels = useFilteredHotels(pricedHotels, listingState.filterBy);

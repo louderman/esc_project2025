@@ -15,10 +15,15 @@ export function useFetchHotelPrices(
   options?: {
     cache?: boolean;
     fetchOnMountOnly?: boolean;
+    maxParallelFetchCount?: number;
   }
 ) {
   const fetchOnMountOnly = options?.fetchOnMountOnly ?? true;
   const cache = options?.cache ?? false;
+  const maxParallelFetchCount = Math.min(
+    options?.maxParallelFetchCount ?? SAFE_PRICE_COUNT,
+    SAFE_PRICE_COUNT
+  );
 
   const [prices, setPrices] = useState<Price[]>([]);
   const [loading, setLoading] = useState(false);
@@ -55,7 +60,7 @@ export function useFetchHotelPrices(
       let allCompleted = true;
 
       await Promise.all(
-        destIds.slice(0, SAFE_PRICE_COUNT).map(async (destId) => {
+        destIds.slice(0, maxParallelFetchCount).map(async (destId) => {
           if (cache && priceCache.has(destId)) {
             allPrices.push(...priceCache.get(destId)!);
             return;
@@ -69,7 +74,10 @@ export function useFetchHotelPrices(
 
           const res = await fetch(url, { signal });
 
-          if (!res.ok) throw new Error(`Failed to fetch price for ${destId}`);
+          if (!res.ok) {
+            console.log(`Failed to fetch price for ${destId}`);
+            return;
+          }
 
           const data: PriceResponse = await res.json();
 
@@ -83,6 +91,18 @@ export function useFetchHotelPrices(
           }
         })
       );
+
+      // Return the prices if it is cached (as no fetching is needed)
+      if (cache) {
+        for (const destId of destIds.slice(
+          maxParallelFetchCount,
+          destIds.length
+        )) {
+          if (priceCache.has(destId)) {
+            allPrices.push(...priceCache.get(destId)!);
+          }
+        }
+      }
 
       // Remove duplicated prices (probably bcz multiple dests have same prices?)
       const uniquePricesMap = new Map<string, Price>();
