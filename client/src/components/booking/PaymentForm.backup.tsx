@@ -1,6 +1,7 @@
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { useState } from 'react';
 import type { CreateBookingRequest } from '../../../../types/Booking';
+import { API_ENDPOINTS } from '../../config/api';
 import styles from './PaymentForm.module.css';
 
 interface PaymentFormProps {
@@ -89,12 +90,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
     const cardElement = elements.getElement(CardElement);
 
     if (cardElement == null) {
-      setError('Card element not found');
-      setProcessing(false);
       return;
     }
 
-    // Validate card details using Stripe Elements (no API call)
     const { error: paymentMethodError, paymentMethod } = await stripe.createPaymentMethod({
       type: 'card',
       card: cardElement,
@@ -106,36 +104,59 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
       },
     });
 
+    // TODO: probably make this more robust, this really doesn't say much
     if (paymentMethodError) {
-      const errorMessage = paymentMethodError.message || "Please check your card details.";
+      const errorMessage = paymentMethodError.message || "An unknown payment error occurred.";
       setError(errorMessage);
       onPaymentError(errorMessage);
       setProcessing(false);
       return;
     }
 
-    // Validate billing information
-    if (!billingAddress.name || !billingAddress.email || !billingAddress.address.line1 || 
-        !billingAddress.address.city || !billingAddress.address.state || !billingAddress.address.postal_code) {
-      setError('Please fill in all required billing information.');
-      onPaymentError('Please fill in all required billing information.');
-      setProcessing(false);
-      return;
+    try {
+      const response = await fetch(API_ENDPOINTS.PAYMENT.CREATE_PAYMENT_INTENT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentMethodId: paymentMethod.id,
+          amount: amount, // Amount in cents
+          bookingData: bookingData, // Include booking data
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.error) {
+        setError(result.error);
+        onPaymentError(result.error);
+      } else if (result.requires_action) {
+        // Handle additional authentication if required
+        const { error: confirmError } = await stripe.confirmCardPayment(
+          result.payment_intent.client_secret
+        );
+        
+        if (confirmError) {
+          setError(confirmError.message || 'Authentication failed');
+          onPaymentError(confirmError.message || 'Authentication failed');
+        } else {
+          // Payment succeeded after authentication
+          onPaymentSuccess();
+        }
+      } else if (result.success) {
+        // Payment succeeded without additional authentication
+        console.log('Payment succeeded with ID:', result.payment_intent_id);
+        onPaymentSuccess();
+      } else {
+        setError('An unknown error occurred on the server.');
+        onPaymentError('An unknown error occurred on the server.');
+      }
+    } catch (err) {
+      const errorMessage = 'An unexpected error occurred while contacting the server.';
+      setError(errorMessage);
+      onPaymentError(errorMessage);
     }
 
-    // Simulate successful payment validation (no actual API call)
-    setTimeout(() => {
-      console.log('Payment details validated successfully:', {
-        paymentMethodId: paymentMethod.id,
-        amount: amount,
-        billingAddress: billingAddress,
-        bookingData: bookingData
-      });
-      
-      // Call success callback to proceed to confirmation
-      onPaymentSuccess();
-      setProcessing(false);
-    }, 1500); // Simulate processing time
+    setProcessing(false);
   };
 
   const handleBillingAddressChange = (field: string, value: string) => {
