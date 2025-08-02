@@ -8,10 +8,8 @@ export default function MapListingCard({
   hotel,
   stayDates,
   occupancy,
-  loading,
 }: {
   hotel: Hotel & Price;
-  loading: boolean;
   stayDates: StayDatesState;
   occupancy: OccupancyState;
 }) {
@@ -60,8 +58,7 @@ export default function MapListingCard({
             className={`${styles.userRatingNumber} ${
               (userRating === undefined || userRating === null) &&
               styles.noRating
-            }`}
-          >
+            }`}>
             {userRating ? (userRating / 10).toFixed(1) : '-'}
           </div>
         </div>

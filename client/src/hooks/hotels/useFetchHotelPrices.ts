@@ -104,7 +104,7 @@ export function useFetchHotelPrices(
       setLoading(false);
       return true; // stop polling if error
     }
-  }, [JSON.stringify(destIds), stayDates, occupancy]);
+  }, [cache, JSON.stringify(destIds), stayDates, occupancy]);
 
   const startPolling = !!stayDates.checkinDate && !!stayDates.checkoutDate;
   console.log('here');
