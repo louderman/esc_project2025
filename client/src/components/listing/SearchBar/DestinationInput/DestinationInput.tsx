@@ -3,18 +3,23 @@ import inputStyles from '../inputbox.module.css';
 import styles from './destinationinput.module.css';
 import { type Destination } from '../../../../../../types/Destination';
 import { useDebounceAsync } from '../../../../hooks/useDebounceAsync';
+import { useSearchParams } from 'react-router-dom';
 
-// TODO: replace onMouseDown?
+export type DestinationState = {
+  id: string; 
+  name: string;
+};
 
 export default function DestinationInput({
-  userDest,
-  setUserDest,
+  destination,
+  setDestination,
 }: {
-  userDest: string;
-  setUserDest: React.Dispatch<React.SetStateAction<string>>;
+  destination: DestinationState;
+  setDestination: React.Dispatch<React.SetStateAction<DestinationState>>;
 }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestedDests, setSuggestedDests] = useState<Destination[]>([]);
+  const [searchParams] = useSearchParams();
 
   function handleOnFocus() {
     setShowSuggestions(true);
@@ -25,27 +30,51 @@ export default function DestinationInput({
   }
 
   useEffect(() => {
-    async function fetchRandomDest() {
-      const res = await fetch(`/api/destination/random?count=5`, {
+    async function fetchInitialDest() {
+      // TODO: don't hardcode url param
+      const urlDestName = searchParams.get('destName');
+      let url;
+      if (urlDestName && urlDestName.length > 0) {
+        url = `/api/destination/query/${urlDestName}?count=10`;
+      } else {
+        url = `/api/destination/random?count=5`;
+      }
+
+      const res = await fetch(url, {
         method: 'GET',
       });
       const dests: Destination[] = await res.json();
       setSuggestedDests(dests);
     }
-    fetchRandomDest();
+    fetchInitialDest();
   }, []);
 
   const debouncedFetch = useDebounceAsync(async (userInput: string) => {
-    const res = await fetch(`/api/destination/query/${userInput}?count=10`, {
-      method: 'GET',
-    });
-    const dests: Destination[] = await res.json();
-    return dests;
+    const controller = new AbortController();
+
+    try {
+      const res = await fetch(`/api/destination/query/${userInput}?count=10`, {
+        signal: controller.signal,
+      });
+      const dests: Destination[] = await res.json();
+      return dests;
+    } catch (e) {
+      if (e instanceof Error && e.name !== 'AbortError') {
+        console.error(e);
+      }
+      return [];
+    }
   }, 300);
   async function handleOnChange(e: ChangeEvent<HTMLInputElement>) {
-    setUserDest(e.target.value);
+    const inputValue = e.target.value;
+
+    setDestination((prev) => ({ ...prev, name: inputValue }));
     const dests = await debouncedFetch(e.target.value);
     setSuggestedDests(dests);
+    setDestination((prev) => ({
+      ...prev,
+      id: dests.length > 0 ? dests[0].dest_id : '',
+    }));
   }
 
   return (
@@ -57,7 +86,7 @@ export default function DestinationInput({
         className={inputStyles.inputBox}
         type='text'
         placeholder='Destination'
-        value={userDest}
+        value={destination.name ?? ''}
         onChange={handleOnChange}
       />
       {showSuggestions && (
@@ -65,8 +94,11 @@ export default function DestinationInput({
           {suggestedDests.map((dest, i) => (
             <li
               key={`dest-${i}`}
-              onMouseDown={() => setUserDest(dest.term)}
-              className={styles.suggestionItem}>
+              onMouseDown={() =>
+                setDestination({ id: dest.dest_id, name: dest.term })
+              }
+              className={styles.suggestionItem}
+            >
               <img src='/listing/destination_gray.svg' />
               <div className={styles.itemTextSection}>
                 <span className={styles.itemDestName}>{dest.term}</span>

@@ -43,13 +43,13 @@ export default function CalendarPage({
     }
 
     if (
-      stayDates.startDate === null ||
-      date.getTime() <= stayDates.startDate.getTime() ||
-      stayDates.endDate !== null
+      stayDates.checkinDate === null ||
+      date.getTime() <= stayDates.checkinDate.getTime() ||
+      stayDates.checkoutDate !== null
     ) {
-      setStayDates({ startDate: date, endDate: null });
+      setStayDates({ checkinDate: date, checkoutDate: null });
     } else {
-      setStayDates((prev) => ({ ...prev, endDate: date }));
+      setStayDates((prev) => ({ ...prev, checkoutDate: date }));
     }
   }
 
@@ -104,7 +104,7 @@ export default function CalendarPage({
                     3. isToday: is today
                     4. isStart: is checkin day
                     5. isEnd: is checkout day
-                    6. isBetween: is between checkin and checkout day or is between startDate and hoverDate
+                    6. isBetween: is between checkin and checkout day or is between checkinDate and hoverDate
                     */
                 const isToday = dayCal?.getTime() === getTodayDate().getTime();
                 const isDisabled =
@@ -112,15 +112,17 @@ export default function CalendarPage({
                   (dayCal.getTime() < getTodayDate().getTime() ||
                     dayCal.getTime() > maxDate.getTime());
                 const isStart =
-                  dayCal && stayDates.startDate?.getTime() === dayCal.getTime();
+                  dayCal &&
+                  stayDates.checkinDate?.getTime() === dayCal.getTime();
                 const isEnd =
-                  dayCal && stayDates.endDate?.getTime() === dayCal.getTime();
+                  dayCal &&
+                  stayDates.checkoutDate?.getTime() === dayCal.getTime();
                 const isBetween = (() => {
-                  if (!dayCal || !stayDates.startDate) return false;
+                  if (!dayCal || !stayDates.checkinDate) return false;
 
                   const dayTime = dayCal.getTime();
-                  const startTime = stayDates.startDate.getTime();
-                  const endTime = stayDates.endDate?.getTime();
+                  const startTime = stayDates.checkinDate.getTime();
+                  const endTime = stayDates.checkoutDate?.getTime();
                   const hoverTime = hoverDate?.getTime();
 
                   if (endTime) {
