@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { pool } from './db';
 import { type Destination } from '../../types/Destination';
-import { sync, tableName } from '../models/destinationModel';
+import { sync, tableName } from '../models/destination';
 
 const DESTINATION_JSON_PATH = './public/destinations.json';
 
@@ -22,7 +22,7 @@ async function seed() {
       `
         INSERT INTO ${tableName} (dest_id, term, lat, lng, type, state) VALUES (?, ?, ?, ?, ?, ?)
         `,
-      [o.dest_id, o.term, o.lat, o.lng, o.type, o.state]
+      [o.uid, o.term, o.lat, o.lng, o.type, o.state]
     );
   }
 

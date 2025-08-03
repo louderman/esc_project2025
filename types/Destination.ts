@@ -1,7 +1,7 @@
 type Destination = {
-  id: string;
-  dest_id: string;
+  id: number;
   term: string;
+  uid: string;
   lat: number;
   lng: number;
   type: string;

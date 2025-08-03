@@ -29,6 +29,10 @@ export function useFilteredHotels(
       );
       const hotelGuestRating = h.categories.overall?.score ?? 0;
       const meetGuestRating = hotelGuestRating >= guestRating * 10;
+      // amenities.length === 0 ||
+      // (Object.keys(h.amenities) as AmenityKey[]).every(
+      //   (a) => h.amenities[a] && amenities.includes(a)
+      // );
 
       return inPriceRange && hasStar && hasAmenity && meetGuestRating;
     });

@@ -1,4 +1,3 @@
-import { useId } from 'react';
 import {
   FILTER_OPTIONS,
   type ListingAction,
@@ -22,7 +21,6 @@ export default function GuestRating({
   listingDispatch: React.ActionDispatch<[action: ListingAction]>;
 }) {
   const guestRatings = [0, 9, 8, 7, 6] as (keyof typeof RATING_TO_OPTIONTEXT)[];
-  const groupId = useId();
 
   function handleSelectRating(rating: number) {
     listingDispatch({
@@ -37,12 +35,11 @@ export default function GuestRating({
         <div
           className={styles.row}
           key={`guest-rating-row-${i}`}
-          onClick={() => handleSelectRating(ratingOption)}
-        >
+          onClick={() => handleSelectRating(ratingOption)}>
           <label className={styles.inputContainer}>
             <input
               type='radio'
-              name={`guestRating-${groupId}`}
+              name='guestRating'
               checked={
                 listingState.filterBy[FILTER_OPTIONS.guestRating] ===
                 ratingOption

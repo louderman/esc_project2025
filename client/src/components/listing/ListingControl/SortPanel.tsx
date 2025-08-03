@@ -60,12 +60,11 @@ export default function SortPanel({
       <div
         className={styles.selectBox}
         ref={selectBoxRef}
-        onClick={handleOnClick}
-      >
+        onClick={handleOnClick}>
         <img src='/listing/sort.svg' alt='sort' />
         <div className={styles.sortByTextBox}>
           <span>Sort by: </span>
-          <span className={styles.curSortOptText} data-testid='sort-select'>
+          <span className={styles.curSortOptText}>
             {SORT_OPTION_LABELS[listingState.sortBy]}
           </span>
         </div>
@@ -75,13 +74,11 @@ export default function SortPanel({
         <div className={styles.itemsBox} ref={itemsBoxRef}>
           {Object.values(SORT_OPTIONS).map((sortOption, i) => (
             <div
-              data-testid={`sort-option-${i}`}
               className={`${styles.item} ${
                 sortOption === listingState.sortBy ? styles.selectedItem : ''
               }`}
               key={`sortByOption-${i}`}
-              onClick={() => handleOnSelectOption(sortOption)}
-            >
+              onClick={() => handleOnSelectOption(sortOption)}>
               {SORT_OPTION_LABELS[sortOption]}
               {sortOption === listingState.sortBy && (
                 <div className={styles.checkmark} />

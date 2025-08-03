@@ -22,7 +22,7 @@ export function useSortedHotels(
   const sortedHotels = useMemo(() => {
     const hotelsCopy = [...pricedHotels];
     if (useSearchRank) {
-      hotelsCopy.sort((a, b) => a.searchRank - b.searchRank);
+      hotelsCopy.sort((a, b) => b.searchRank - a.searchRank);
     }
 
     switch (sortOptions) {

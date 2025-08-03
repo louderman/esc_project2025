@@ -4,8 +4,8 @@ import styles from './dateinput.module.css';
 import Calendar from './Calendar/Calendar';
 
 export type StayDatesState = {
-  checkinDate: Date | null;
-  checkoutDate: Date | null;
+  startDate: Date | null;
+  endDate: Date | null;
 };
 
 function formatDate(date: Date | null) {
@@ -21,13 +21,13 @@ function formatDate(date: Date | null) {
 }
 
 // Duplicated function (same as Calendar.tsx), TODO
-function calcNights(checkinDate: Date | null, checkoutDate: Date | null) {
-  if (!checkinDate || !checkoutDate) {
+function calcNights(startDate: Date | null, endDate: Date | null) {
+  if (!startDate || !endDate) {
     return 0;
   }
 
   return Math.round(
-    (checkoutDate.getTime() - checkinDate.getTime()) / (1000 * 60 * 60 * 24)
+    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
   );
 }
 
@@ -40,7 +40,7 @@ export default function DateInput({
 }) {
   const [showCal, setShowCal] = useState(false);
 
-  const nightCount = calcNights(stayDates.checkinDate, stayDates.checkoutDate);
+  const nightCount = calcNights(stayDates.startDate, stayDates.endDate);
 
   const calWrapperRef = useRef<HTMLDivElement>(null);
   const inputButtonRef = useRef<HTMLButtonElement>(null);
@@ -66,17 +66,16 @@ export default function DateInput({
         ref={inputButtonRef}
         onClick={() => setShowCal((prev) => !prev)}
         className={`${inputStyles.inputBox} ${styles.button} ${
-          stayDates.checkinDate ? styles.hasDate : ''
-        }`}
-      >
-        {!stayDates.checkinDate && (
+          stayDates.startDate ? styles.hasDate : ''
+        }`}>
+        {!stayDates.startDate && (
           <>select check in &nbsp;&nbsp;&mdash;&nbsp;&nbsp; check out date</>
         )}
-        {stayDates.checkinDate && (
+        {stayDates.startDate && (
           <>
-            {formatDate(stayDates.checkinDate)}
+            {formatDate(stayDates.startDate)}
             &nbsp;&nbsp;&mdash;&nbsp;&nbsp;
-            {formatDate(stayDates.checkoutDate)}
+            {formatDate(stayDates.endDate)}
             &nbsp;&nbsp;({nightCount} night{nightCount > 1 ? 's' : ''})
           </>
         )}
