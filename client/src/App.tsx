@@ -9,10 +9,12 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import PastBookingPage from './pages/PastBookingPage';
 import HotelDetailPageTest from './pages/hoteldetailmockedfrontend';
+import { AuthProvider} from './components/common/authcontext';
 
 function App() {
   return (
-    <Router>
+    <AuthProvider>
+      <Router>
       <NavBar />
       <Routes>
         <Route path='/' element={<HomePage />} />
@@ -28,6 +30,7 @@ function App() {
         <Route path='/past_booking' element={<PastBookingPage />} />
       </Routes>
     </Router>
+    </AuthProvider>
   );
 }
 
