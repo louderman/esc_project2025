@@ -53,8 +53,8 @@ export default function Slider({
     const valueToX = (val: number) =>
       ((val - rangeMin) / (rangeMax - rangeMin)) * sliderWidth;
 
-    const leftX = valueToX(leftVal);
-    const rightX = valueToX(rightVal);
+    const leftX = valueToX(Math.max(leftVal, rangeMin));
+    const rightX = valueToX(Math.min(rightVal, rangeMax));
 
     const distToLeft = Math.abs(hoverX - leftX);
     const distToRight = Math.abs(hoverX - rightX);
@@ -191,7 +191,8 @@ export default function Slider({
         ref={sliderRef}
         onMouseUp={onBlur}
         onMouseMove={handleMouseMove}
-        onMouseLeave={() => setHoverCloserTo(null)}>
+        onMouseLeave={() => setHoverCloserTo(null)}
+      >
         <div className={styles.sliderTracker} />
         <div
           className={styles.activeSliderTrack}
