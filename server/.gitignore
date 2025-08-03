@@ -1,11 +1,9 @@
 .DS_Store
 .vscode/*
 !.vscode/extensions.json
+node_modules/
 dist/
 *.local
 *.log
 node_modules
-coverage
-
-# Secret Keys
-.env
+package-lock.json

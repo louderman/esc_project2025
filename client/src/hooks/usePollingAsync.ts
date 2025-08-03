@@ -4,26 +4,26 @@ const SAFE_INTERVAL = 2000; // ms
 
 /**
  * usePollingAsync
- * @param callback - Async function that returns a boolean or Promise<boolean>.
- *                   Return `true` to stop polling, `false` to continue.
+ * A React hook that repeatedly invokes an asynchronous function (`callback`) at a specified interval,
+ * and stops when the callback returns `true`.
+ * @param callback - An asynchronous function that returns a boolean.
+ *                   Returning `true` signals that polling should stop.
  * @param interval - Desired polling interval in milliseconds.
- *                   The actual delay is the max of `interval` and a safe minimum (`SAFE_INTERVAL`).
- * @param start - Flag to start or stop polling. Polling starts only if `start` is true.
- * @param onceOnly - If true, polling will only run once even if `start` toggles.
+ *                   Actual delay will be `Math.max(SAFE_INTERVAL, interval)` to ensure a minimum delay of `SAFE_INTERVAL` seconds.
+ * @example
+ * usePollingAsync(async () => {
+ *   const response = await fetch('/api/status');
+ *   const data = await response.json();
+ *   return data.done; // Stop polling if task is completed
+ * }, 5000);
  */
 export function usePollingAsync(
   callback: () => Promise<boolean>,
-  interval: number,
-  start: boolean,
-  onceOnly: boolean
+  interval: number
 ) {
-  const stop = useRef(false); // stop polling?
-  const completed = useRef(false); // completed request once? (to prevent repoll when `start` changes)
+  const stop = useRef(false);
 
   useEffect(() => {
-    if (!start) return;
-    if (onceOnly && completed.current) return;
-
     stop.current = false;
 
     async function loop() {
@@ -31,7 +31,6 @@ export function usePollingAsync(
         const done = await callback();
         if (done) {
           stop.current = true;
-          completed.current = true;
           break;
         }
         console.log(
@@ -40,7 +39,6 @@ export function usePollingAsync(
             interval
           )}ms sec before sending another req`
         );
-
         await new Promise((res) =>
           setTimeout(res, Math.max(SAFE_INTERVAL, interval))
         );
@@ -51,5 +49,5 @@ export function usePollingAsync(
     return () => {
       stop.current = true;
     };
-  }, [callback, start]);
+  }, [callback, interval]);
 }

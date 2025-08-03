@@ -33,6 +33,8 @@ export default function PriceRange({
   /**
    * Syncs the price range state with the URL and available data boundaries.
    *
+   * This effect runs when either the `listingState.filterBy.priceRange` or the computed `rangeBoundary` changes.
+   *
    * Logic:
    * 1. If the selected price range is within the valid data range, update local state (`priceRange`) accordingly.
    * 2. If it's outside the bounds, clamp it to the nearest valid range:
