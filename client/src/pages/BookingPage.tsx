@@ -151,28 +151,30 @@ export default function BookingPage() {
     market_rates: [{ supplier: 'supplier-a', rate: 320 }],
   };
 
+  // Initialize states with passed booking details if available
   const [stayDates, setStayDates] = useState<StayDatesState>({
-    checkinDate: null,
-    checkoutDate: null,
+    checkinDate: stateData?.bookingDetails?.checkinDate ? new Date(stateData.bookingDetails.checkinDate) : null,
+    checkoutDate: stateData?.bookingDetails?.checkoutDate ? new Date(stateData.bookingDetails.checkoutDate) : null,
   });
   const [occupancy, setOccupancy] = useState<OccupancyState>({
-    adults: 2,
-    children: 0,
-    rooms: 1,
+    adults: stateData?.bookingDetails?.numberOfGuests?.adults ?? 2,
+    children: stateData?.bookingDetails?.numberOfGuests?.children ?? 0,
+    rooms: stateData?.bookingDetails?.numberOfRooms ?? 1,
   });
   const [destination, setDestination] = useState<DestinationState>({
     id: '',
     name: '',
   });
 
-
-  const numberOfNights =
+  // Use passed booking details for calculations
+  const numberOfNights = stateData?.bookingDetails?.numberOfNights ?? (
     stayDates.checkinDate && stayDates.checkoutDate
       ? Math.ceil(
           (stayDates.checkoutDate.getTime() - stayDates.checkinDate.getTime()) /
             (1000 * 3600 * 24)
         )
-      : 1;
+      : 1
+  );
 
   const bookingDetails = {
     hotelName: hotel.name,
@@ -191,8 +193,8 @@ export default function BookingPage() {
     guests: `${occupancy.rooms} room${occupancy.rooms > 1 ? 's' : ''}, ${
       occupancy.adults + occupancy.children
     } guest${occupancy.adults + occupancy.children > 1 ? 's' : ''}`,
-    pricePerNight: hotel.price ?? 0,
-    whatsIncluded: Object.entries(hotel.amenities)
+    pricePerNight: stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0,
+    whatsIncluded: stateData?.bookingDetails?.selectedRoom?.amenities ?? Object.entries(hotel.amenities)
       .filter(([_, value]) => value)
       .map(([key]) => key.replace(/([A-Z])/g, ' $1').trim()),
     imageUrl:
@@ -207,7 +209,7 @@ export default function BookingPage() {
       state: {
         bookingDetails,
         hotel,
-        totalAmount: (hotel.price ?? 0) * numberOfNights,
+        totalAmount: stateData?.bookingDetails?.totalAmount ?? ((stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0) * numberOfNights),
       },
     });
   };
@@ -222,7 +224,7 @@ export default function BookingPage() {
     guaranteePolicy: 'Credit Card is required at the time of booking.',
     cancelPolicy:
       'Reservation must be cancelled by 3pm local time 1 day before arrival to avoid penalty of 1 night room and tax.',
-    costPerNight: hotel.price ?? 0,
+    costPerNight: stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0,
     numberOfNights,
     bookingData: {
       hotelId: hotel.id,
@@ -230,9 +232,9 @@ export default function BookingPage() {
       checkInDate: bookingDetails.checkInDate,
       checkOutDate: bookingDetails.checkOutDate,
       guests: bookingDetails.guests,
-      pricePerNight: hotel.price ?? 0,
+      pricePerNight: stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0,
       numberOfNights,
-      totalAmount: (hotel.price ?? 0) * numberOfNights,
+      totalAmount: stateData?.bookingDetails?.totalAmount ?? ((stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0) * numberOfNights),
       whatsIncluded: bookingDetails.whatsIncluded,
       imageUrl: bookingDetails.imageUrl,
     },
