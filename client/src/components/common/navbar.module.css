@@ -16,6 +16,10 @@
   height: 40px;
 }
 
+.box a {
+  text-decoration: none;
+}
+
 .appNameText {
   font-size: 1.2rem;
   white-space: nowrap;
@@ -103,3 +107,6 @@
 .logoutOption:hover {
   background-color: #fff0ee;
 }
+
+/* .loginButton {
+}  */

@@ -1,0 +1,88 @@
+
+
+.container {
+  align-content: center;
+}
+
+
+.searchbarSection {
+  display: grid;
+  justify-content: center;
+  align-items: center;
+  padding: 30px 20px;
+  height: 400px;
+  /*background-image: url('/common/mbs_blur.jpg');*/
+  background-color: #ffca0b;
+  background-size: cover;
+}
+
+.headerQuestion {
+  color: white;
+  font-weight: bold;
+  font-size: 50px;
+}
+
+.destinationSuggestion {
+  padding-top: 80px;
+  padding-bottom: 100px;
+  background: #ffffff;
+  background: linear-gradient(0,#ffffff 0%, #fff5d0 100%);
+}
+
+.destinationSuggestionHeader {
+  display: flex;
+  font-size: 40px;
+  justify-content: center;
+  color: #000000;
+}
+
+.destinationSuggestionSubHeader {
+  display: flex;
+  font-size: 20px;
+  justify-content: center;
+  color: #000000;
+}
+
+.destinationSuggestionsBox {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  gap: 10px;
+  justify-content: center;
+}
+
+.destinationSuggestionsItem {
+  width: 22vw;
+  align-content: center;
+}
+
+
+
+.footer {
+  justify-content: center;
+  align-content: center;
+  padding-top: 40px;
+  background-color: #e7c862;
+}
+
+.qualitiesBox {
+  display: flex;
+  justify-content: space-between;
+  margin-right: 50px;
+  margin-left: 50px;
+  margin-top: 40px;
+  margin-bottom: 60px;
+}
+
+.qualityItem {
+  display: flex;
+}
+
+.qualitiesHeader {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  font-size: 30px;
+}
+
+
