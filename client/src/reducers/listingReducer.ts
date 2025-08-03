@@ -16,13 +16,21 @@ export const FILTER_OPTIONS = {
   stars: 'stars',
   guestRating: 'guestRating',
   amenities: 'amenities',
+  latLngBounds: 'latLngBounds',
 } as const;
 
+type LatLngBound = {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+};
 export type FilterByOptions = {
   [FILTER_OPTIONS.priceRange]: [number, number];
   [FILTER_OPTIONS.stars]: number[];
   [FILTER_OPTIONS.guestRating]: number;
   [FILTER_OPTIONS.amenities]: AmenityKey[];
+  [FILTER_OPTIONS.latLngBounds]: LatLngBound;
 };
 
 export type ListingState = {
@@ -40,6 +48,12 @@ const initialFilterBy: FilterByOptions = {
   stars: [],
   guestRating: 0,
   amenities: [],
+  latLngBounds: {
+    minLat: -90,
+    maxLat: 90,
+    minLng: -180,
+    maxLng: 180,
+  },
 };
 
 const initialSortBy: SortByOptions = 'default';

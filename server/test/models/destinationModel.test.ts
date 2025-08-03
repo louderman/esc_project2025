@@ -1,7 +1,7 @@
 import {
   editDistance,
   getRandomDestinations,
-  searchDestinations,
+  searchDestinationsByName,
   searchDestinationsInBounds,
 } from '../../models/destinationModel';
 import generateRobustWorstBoundaryTCs from '../utils/generateRobustWorst';
@@ -132,42 +132,42 @@ describe('Test searchDestinations', () => {
 
   it('Test match multiple destination with substring matching', async () => {
     const dest = 'Malaysia';
-    const res = await searchDestinations(dest, 0, 10);
+    const res = await searchDestinationsByName(dest, 0, 10);
     expect(res).toHaveLength(2);
     expect(res.every((r) => r.term.includes(dest))).toBe(true);
   });
 
   it('Test one missing character', async () => {
     const dest = 'Kuala Lumpur, Malaysa';
-    const res = await searchDestinations(dest, 1, 1);
+    const res = await searchDestinationsByName(dest, 1, 1);
     expect(res).toHaveLength(1);
     expect(res[0].term).toBe('Kuala Lumpur, Malaysia');
   });
 
   it('Test one wrong character', async () => {
     const dest = 'Kuala Lumpua, Malaysia';
-    const res = await searchDestinations(dest, 1, 1);
+    const res = await searchDestinationsByName(dest, 1, 1);
     expect(res).toHaveLength(1);
     expect(res[0].term).toBe('Kuala Lumpur, Malaysia');
   });
 
   it('Test one extra character', async () => {
     const dest = 'Kuala Lumpur, Malaysiia';
-    const res = await searchDestinations(dest, 1, 1);
+    const res = await searchDestinationsByName(dest, 1, 1);
     expect(res).toHaveLength(1);
     expect(res[0].term).toBe('Kuala Lumpur, Malaysia');
   });
 
   it('Test one missing character on multiple words', async () => {
     const dest = 'Kual Lumpur, Malayia';
-    const res = await searchDestinations(dest, 1, 1);
+    const res = await searchDestinationsByName(dest, 1, 1);
     expect(res).toHaveLength(1);
     expect(res[0].term).toBe('Kuala Lumpur, Malaysia');
   });
 
   it('Test match multiple destination with edit distance of 2', async () => {
     const dest = 'Malsia';
-    const res = await searchDestinations(dest, 2, 10);
+    const res = await searchDestinationsByName(dest, 2, 10);
     expect(res).toHaveLength(2);
     expect(res.every((r) => r.term.includes('Malaysia'))).toBe(true);
   });

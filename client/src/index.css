@@ -34,3 +34,12 @@ button {
 button {
   cursor: pointer;
 }
+
+/* To disable google map info window close button */
+.gm-style-iw button[aria-label='Close'] {
+  display: none !important;
+}
+
+.gw-style-iw-chr {
+  padding-top: 0px !important;
+}

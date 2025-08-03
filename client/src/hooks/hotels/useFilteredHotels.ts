@@ -18,7 +18,7 @@ export function useFilteredHotels(
   hotelsWithPrice: (Price & Hotel)[],
   filters: FilterByOptions
 ) {
-  const { amenities, priceRange, stars, guestRating } = filters;
+  const { amenities, priceRange, stars, guestRating, latLngBounds } = filters;
   const filteredHotels = useMemo(() => {
     const filteredHotels = hotelsWithPrice.filter((h) => {
       const inPriceRange = h.price >= priceRange[0] && h.price <= priceRange[1];
@@ -30,11 +30,31 @@ export function useFilteredHotels(
       const hotelGuestRating = h.categories.overall?.score ?? 0;
       const meetGuestRating = hotelGuestRating >= guestRating * 10;
 
-      return inPriceRange && hasStar && hasAmenity && meetGuestRating;
+      const inLatBound =
+        latLngBounds.minLat <= h.latitude && h.latitude <= latLngBounds.maxLat;
+      const inLngBound =
+        latLngBounds.minLng <= h.longitude &&
+        h.longitude <= latLngBounds.maxLng;
+      const inLatLngBound = inLatBound && inLngBound;
+
+      return (
+        inPriceRange &&
+        hasStar &&
+        hasAmenity &&
+        meetGuestRating &&
+        inLatLngBound
+      );
     });
 
     return filteredHotels;
-  }, [hotelsWithPrice, amenities, priceRange, stars, guestRating]);
+  }, [
+    hotelsWithPrice,
+    amenities,
+    priceRange,
+    stars,
+    guestRating,
+    latLngBounds,
+  ]);
 
   return filteredHotels;
 }
