@@ -1,5 +1,3 @@
-import type { Destination } from '../../../../../types/Destination';
-
 function distanceInPx(
   coord1: [number, number],
   coord2: [number, number],
@@ -68,41 +66,4 @@ function mergeClosePoints(
   return representativeIndices;
 }
 
-function mergeCloseDestinations(
-  dests: Destination[],
-  map: google.maps.Map,
-  pixelThreshold: number
-) {
-  const visited = new Set<number>();
-  const merged: Destination[] = [];
-  const zoom = map.getZoom();
-  if (!zoom) return [];
-
-  for (let i = 0; i < dests.length; i++) {
-    if (visited.has(i)) continue;
-
-    visited.add(i);
-    const clusterGroup = [dests[i]];
-
-    for (let j = i + 1; j < dests.length; j++) {
-      if (visited.has(j)) continue;
-
-      const dist = distanceInPx(
-        [dests[i].lat, dests[i].lng],
-        [dests[j].lat, dests[j].lng],
-        map
-      );
-
-      if (dist < pixelThreshold) {
-        clusterGroup.push(dests[j]);
-        visited.add(j);
-      }
-    }
-
-    merged.push(clusterGroup[0]);
-  }
-
-  return merged;
-}
-
-export { mergeCloseDestinations, mergeClosePoints };
+export { mergeClosePoints };
