@@ -148,6 +148,7 @@ export default function CalendarPage({
 
                 return (
                   <td
+                    data-testid='cell'
                     onMouseEnter={() => setHoverDate(dayCal)}
                     onMouseLeave={() => {
                       if (hoverDate?.getTime() === dayCal?.getTime())
