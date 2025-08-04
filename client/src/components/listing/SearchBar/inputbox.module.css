@@ -2,7 +2,8 @@
   height: 45px;
   position: relative;
   display: flex;
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .inputWrapper > img {
@@ -20,7 +21,7 @@
   border: none;
   padding: 13px;
   padding-left: 45px;
-  flex: 1;
+  flex: 1 1 0;
   border-radius: 10px;
   font-weight: 600;
 }
