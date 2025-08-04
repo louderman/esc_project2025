@@ -1,3 +1,4 @@
+process.env.STRIPE_SECRET_KEY = 'test_secret_key';
 import request from 'supertest';
 import { CreateBookingRequest } from '../../../types/Booking';
 import { createBooking, getBookingById, sync as syncBooking } from '../../models/bookingModel';
