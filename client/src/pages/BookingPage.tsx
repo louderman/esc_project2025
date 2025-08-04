@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import type { Hotel } from '../../../types/Hotel';
 import type { Price } from '../../../types/Price';
 import BookingForm from '../components/booking/BookingForm';
