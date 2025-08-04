@@ -5,6 +5,7 @@ import DestinationInput, { type DestinationState } from './DestinationInput';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom/vitest';
 import { useState } from 'react';
+import type { SearchbarErrorState } from '../SearchBar';
 
 beforeEach(() => {
   global.fetch = vi.fn().mockImplementation((url) => {
@@ -43,14 +44,25 @@ afterEach(() => {
   cleanup();
 });
 
-function DestinationInputWrapper() {
+function DestinationInputWrapper({
+  defaultErrorMsg = '',
+}: {
+  defaultErrorMsg?: string;
+}) {
   const [destination, setDestination] = useState<DestinationState>({
     id: '',
     name: '',
   });
+  const [errorMsg, setErrorMsg] = useState<SearchbarErrorState>({
+    destination: defaultErrorMsg,
+    stayDate: '',
+  });
+
   return (
     <MemoryRouter>
       <DestinationInput
+        errorMsg={errorMsg}
+        setErrorMsg={setErrorMsg}
         destination={destination}
         setDestination={setDestination}
       />
@@ -104,5 +116,19 @@ describe('DestinationInput', () => {
     await waitFor(() => {
       expect(screen.getAllByRole('listitem')).toHaveLength(5);
     });
+  });
+
+  it('Test destination input error message is rendered', async () => {
+    render(<DestinationInputWrapper defaultErrorMsg='destination error msg' />);
+
+    let errorMsg = screen.queryByText(/destination error msg/);
+    expect(errorMsg).toBeInTheDocument();
+
+    // When user clicks on destination input, error msg should be dismissed
+    const input = screen.getByPlaceholderText(/Destination/);
+    await userEvent.click(input);
+
+    errorMsg = screen.queryByText(/destination error msg/);
+    expect(errorMsg).not.toBeInTheDocument();
   });
 });

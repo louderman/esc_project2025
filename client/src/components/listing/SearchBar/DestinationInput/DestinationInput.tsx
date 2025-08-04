@@ -4,6 +4,8 @@ import styles from './destinationinput.module.css';
 import { type Destination } from '../../../../../../types/Destination';
 import { useDebounceAsync } from '../../../../hooks/useDebounceAsync';
 import { useSearchParams } from 'react-router-dom';
+import type { SearchbarErrorState } from '../SearchBar';
+import ErrorMsgBox from '../ErrorMsgBox';
 
 export type DestinationState = {
   id: string;
@@ -11,9 +13,13 @@ export type DestinationState = {
 };
 
 export default function DestinationInput({
+  errorMsg,
+  setErrorMsg,
   destination,
   setDestination,
 }: {
+  errorMsg: SearchbarErrorState;
+  setErrorMsg: React.Dispatch<React.SetStateAction<SearchbarErrorState>>;
   destination: DestinationState;
   setDestination: React.Dispatch<React.SetStateAction<DestinationState>>;
 }) {
@@ -22,6 +28,7 @@ export default function DestinationInput({
   const [searchParams] = useSearchParams();
 
   function handleOnFocus() {
+    setErrorMsg((prev) => ({ ...prev, destination: '' }));
     setShowSuggestions(true);
   }
 
@@ -84,6 +91,7 @@ export default function DestinationInput({
 
   return (
     <div className={inputStyles.inputWrapper}>
+      {errorMsg.destination && <ErrorMsgBox errorMsg={errorMsg.destination} />}
       <img src='/listing/destination_red.svg' />
       <input
         onFocus={handleOnFocus}

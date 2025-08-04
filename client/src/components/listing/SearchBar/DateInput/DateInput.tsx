@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import inputStyles from '../inputbox.module.css';
 import styles from './dateinput.module.css';
 import Calendar from './Calendar/Calendar';
+import type { SearchbarErrorState } from '../SearchBar';
+import ErrorMsgBox from '../ErrorMsgBox';
 
 export type StayDatesState = {
   checkinDate: Date | null;
@@ -32,9 +34,13 @@ function calcNights(checkinDate: Date | null, checkoutDate: Date | null) {
 }
 
 export default function DateInput({
+  errorMsg,
+  setErrorMsg,
   stayDates,
   setStayDates,
 }: {
+  errorMsg: SearchbarErrorState;
+  setErrorMsg: React.Dispatch<React.SetStateAction<SearchbarErrorState>>;
   stayDates: StayDatesState;
   setStayDates: React.Dispatch<React.SetStateAction<StayDatesState>>;
 }) {
@@ -61,10 +67,14 @@ export default function DateInput({
 
   return (
     <div className={inputStyles.inputWrapper}>
+      {errorMsg.stayDate && <ErrorMsgBox errorMsg={errorMsg.stayDate} />}
       <img src='/listing/calendar.svg' />
       <button
         ref={inputButtonRef}
-        onClick={() => setShowCal((prev) => !prev)}
+        onClick={() => {
+          setErrorMsg((prev) => ({ ...prev, stayDate: '' }));
+          setShowCal((prev) => !prev);
+        }}
         className={`${inputStyles.inputBox} ${styles.button} ${
           stayDates.checkinDate ? styles.hasDate : ''
         }`}

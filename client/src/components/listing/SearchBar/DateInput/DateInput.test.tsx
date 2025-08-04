@@ -5,6 +5,7 @@ import '@testing-library/jest-dom/vitest';
 import userEvent from '@testing-library/user-event';
 import type { StayDatesState } from './DateInput';
 import DateInput from './DateInput';
+import type { SearchbarErrorState } from '../SearchBar';
 
 afterEach(() => {
   cleanup();
@@ -20,13 +21,28 @@ const formatDate = (date: Date) => {
 const today = new Date();
 today.setHours(0, 0, 0, 0);
 
-function DateInputWrapper() {
+function DateInputWrapper({
+  defaultErrorMsg = '',
+}: {
+  defaultErrorMsg?: string;
+}) {
   const [stayDates, setStayDates] = useState<StayDatesState>({
     checkinDate: null,
     checkoutDate: null,
   });
+  const [errorMsg, setErrorMsg] = useState<SearchbarErrorState>({
+    destination: '',
+    stayDate: defaultErrorMsg,
+  });
 
-  return <DateInput stayDates={stayDates} setStayDates={setStayDates} />;
+  return (
+    <DateInput
+      errorMsg={errorMsg}
+      setErrorMsg={setErrorMsg}
+      stayDates={stayDates}
+      setStayDates={setStayDates}
+    />
+  );
 }
 
 describe('DateInput', () => {
@@ -97,5 +113,19 @@ describe('DateInput', () => {
     await waitFor(() => {
       expect(screen.queryAllByTestId('calendar-page')).toHaveLength(0);
     });
+  });
+
+  it('Test stay date input error message is rendered', async () => {
+    render(<DateInputWrapper defaultErrorMsg='stay date error msg' />);
+
+    let errorMsg = screen.queryByText(/stay date error msg/);
+    expect(errorMsg).toBeInTheDocument();
+
+    // When user clicks on stay date input, error msg should be dismissed
+    const button = screen.getByRole('button');
+    await userEvent.click(button);
+
+    errorMsg = screen.queryByText(/stay date error msg/);
+    expect(errorMsg).not.toBeInTheDocument();
   });
 });
