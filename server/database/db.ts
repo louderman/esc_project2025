@@ -1,5 +1,6 @@
 import { createPool } from 'mysql2';
 
+// Create a connection pool to the database
 const pool = createPool({
   host: 'back.r3po.org',
   port: 53042,
@@ -8,20 +9,19 @@ const pool = createPool({
   database: process.env.NODE_ENV === 'test' ? 'hotel_test' : 'hotel',
 }).promise();
 
-// const pool = createPool({
-//   host: 'localhost',
-//   port: 3306,
-//   user: 'ItsMeOX',
-//   password: 'password',
-//   database: process.env.NODE_ENV === 'test' ? 'hotel_test' : 'ESC',
-// }).promise();
-
 async function cleanup() {
-  await pool.end();
+  try {
+    // Check if pool is already closed before trying to end it
+    if (pool && typeof pool.end === 'function') {
+      await pool.end();
+      console.log('Database pool closed.');
+    }
+  } catch (err) {
+    // Only log if it's not a "pool already closed" error
+    if (err && typeof err === 'object' && 'code' in err && err.code !== 'POOL_CLOSED') {
+      console.error('Error closing pool:', err);
+    }
+  }
 }
 
 export { pool, cleanup };
-
-// CREATE USER 'your_username'@'your_host' IDENTIFIED BY 'your_password';
-// GRANT ALL PRIVILEGES ON db_name.* TO 'your_username'@'localhost';
-// FLUSH PRIVILEGES;

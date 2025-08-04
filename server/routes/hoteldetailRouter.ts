@@ -1,5 +1,7 @@
 import express, { Request, Response } from 'express';
 import { PriceResponse } from '../../types/Price';
+import fs from 'fs';
+import path from 'path';
 
 const router = express.Router();
 
@@ -139,37 +141,15 @@ router.get('/combined/:hotelId', async (req, res) => {
   }
 
   try {
-    // Fetch hotel details and prices in parallel
-    const [hotelResponse, pricesResponse] = await Promise.all([
-      fetch(`https://hotelapi.loyalty.dev/api/hotels/${hotelId}`, {
-        headers: { Accept: 'application/json' }
-      }),
-      fetch(`https://hotelapi.loyalty.dev/api/hotels/${hotelId}/prices?${new URLSearchParams({
-        destination_id: destination_id as string,
-        checkin: checkin as string,
-        checkout: checkout as string,
-        lang: lang as string,
-        currency: currency as string,
-        country_code: country_code as string,
-        guests: guests as string,
-        partner_id: partner_id as string,
-      })}`, {
-        headers: { Accept: 'application/json' }
-      })
-    ]);
+    // Fetch hotel details (like hotel router)
+    const hotelUrl = `https://hotelapi.loyalty.dev/api/hotels/${hotelId}`;
+    const hotelResponse = await fetch(hotelUrl);
+    const hotelData = await hotelResponse.json();
 
-    if (!hotelResponse.ok) {
-      throw new Error(`Hotel details API error: ${hotelResponse.status}`);
-    }
-
-    if (!pricesResponse.ok) {
-      throw new Error(`Hotel prices API error: ${pricesResponse.status}`);
-    }
-
-    const [hotelData, pricesData] = await Promise.all([
-      hotelResponse.json(),
-      pricesResponse.json()
-    ]);
+    // Fetch prices (like hotel price router)
+    const priceUrl = `https://hotelapi.loyalty.dev/api/hotels/prices?destination_id=${destination_id}&checkin=${checkin}&checkout=${checkout}&lang=${lang}&currency=${currency}&country_code=${country_code}&guests=${guests}&partner_id=1089&landing_page=wl-acme-earn&product_type=earn`;
+    const priceResponse = await fetch(priceUrl);
+    const pricesData = await priceResponse.json();
 
     return res.json({
       hotel: hotelData,

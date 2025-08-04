@@ -1,42 +1,61 @@
+import { useState } from "react";
 import { Button } from "@/components/hotel/ui/button";
-import { Input } from "@/components/hotel/ui/input";
-import { Search, MapPin, Phone, Globe } from "lucide-react";
+import { Camera } from "lucide-react";
 
-const HotelHeader = () => {
+interface HotelImageGalleryProps {
+  images?: string[];
+  hotelName: string;
+}
+
+const HotelImageGallery = ({ images, hotelName }: HotelImageGalleryProps) => {
+  const [currentImage, setCurrentImage] = useState(0);
+  
+  const defaultImages = [
+    "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&h=600&fit=crop"
+  ];
+  
+  const galleryImages = images || defaultImages;
+
   return (
-    <header className="bg-primary py-4 px-4 md:px-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-xl font-bold text-primary-foreground">Hotels.com</h1>
-          </div>
-          <div className="flex items-center space-x-4 text-primary-foreground text-sm">
-            <div className="flex items-center space-x-1">
-              <Phone size={16} />
-              <span>Help</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Globe size={16} />
-              <span>English</span>
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          <div className="flex-1 relative max-w-2xl">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
-            <Input 
-              placeholder="Search destinations, properties..." 
-              className="pl-10 bg-background border-0 shadow-sm"
-            />
-          </div>
-          <Button variant="secondary" size="sm">
-            Search
-          </Button>
-        </div>
+    <div className="relative">
+      <div className="aspect-[4/3] overflow-hidden rounded-lg">
+        <img 
+          src={galleryImages[currentImage]} 
+          alt={`${hotelName} - Image ${currentImage + 1}`}
+          className="w-full h-full object-cover"
+        />
       </div>
-    </header>
+      
+      <div className="absolute bottom-4 right-4">
+        <Button variant="secondary" size="sm" className="bg-black/50 text-white hover:bg-black/70">
+          <Camera size={16} className="mr-2" />
+          {galleryImages.length} Photos
+        </Button>
+      </div>
+      
+      {galleryImages.length > 1 && (
+        <div className="flex space-x-2 mt-4">
+          {galleryImages.slice(0, 4).map((image, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentImage(index)}
+              className={`relative flex-1 aspect-video rounded-md overflow-hidden border-2 transition-all ${
+                currentImage === index ? 'border-primary' : 'border-transparent'
+              }`}
+            >
+              <img 
+                src={image} 
+                alt={`${hotelName} thumbnail ${index + 1}`}
+                className="w-full h-full object-cover"
+              />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 
-export default HotelHeader;
+export default HotelImageGallery;

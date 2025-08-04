@@ -24,10 +24,13 @@ function App() {
           element={<BookingConfirmationPage />}
         />
         <Route path='/booking' element={<BookingPage />} />
+        <Route path="/hotel/:hotelId" element={<HotelDetail />} />
         <Route path='/hotel_detail' element={<HotelDetailPageTest />} />
         <Route path='/login' element={<LoginPage />} />
         <Route path='/register' element={<RegisterPage />} />
         <Route path='/past_booking' element={<PastBookingPage />} />
+        <Route path="*" element={<NotFound />} />
+
       </Routes>
     </Router>
     </AuthProvider>

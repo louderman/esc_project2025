@@ -1,10 +1,24 @@
 import { Button } from "@/components/hotel/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/hotel/ui/card";
-import { Input } from "@/components/hotel/ui/input";
 import { Label } from "@/components/hotel/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/hotel/ui/select";
-import { Calendar, Users, Star } from "lucide-react";
+import { Users, Star } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import Calendar from "@/components/listing/SearchBar/DateInput/Calendar/Calendar";
+import type { StayDatesState } from "@/components/listing/SearchBar/DateInput/DateInput";
+
+interface AvailabilityInfo {
+  requestedRooms: number;
+  availableRooms: number;
+  validRoomCount: number;
+  requestedAdults: number;
+  requestedChildren: number;
+  totalRequestedGuests: number;
+  maxGuestCapacity: number;
+  validGuestCapacity: number;
+  validAdults: number;
+  validChildren: number;
+}
 
 interface BookingCardProps {
   price: number;
@@ -12,136 +26,283 @@ interface BookingCardProps {
   reviewCount: number;
   hotelName: string;
   hotelId?: string;
-  hasRooms?: boolean; // Add this prop
+  hasRooms?: boolean;
+  availability?: AvailabilityInfo;
 }
 
-const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms = false }: BookingCardProps) => {
+const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms = false, availability }: BookingCardProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [showCheckinCal, setShowCheckinCal] = useState(false);
+  const [showCheckoutCal, setShowCheckoutCal] = useState(false);
+  
+  // Parse dates from URL parameters
+  const checkinDate = searchParams.get('checkin')?.replace(/"/g, '') || '2025-10-01';
+  const checkoutDate = searchParams.get('checkout')?.replace(/"/g, '') || '2025-10-07';
+  
+  // Create stayDates state that persists across renders
+  const [stayDates, setStayDatesState] = useState<StayDatesState>({
+    checkinDate: new Date(checkinDate),
+    checkoutDate: new Date(checkoutDate)
+  });
+  
+  // Update stayDates when URL parameters change
+  useEffect(() => {
+    const newCheckinDate = searchParams.get('checkin')?.replace(/"/g, '') || '2025-10-01';
+    const newCheckoutDate = searchParams.get('checkout')?.replace(/"/g, '') || '2025-10-07';
+    
+    setStayDatesState({
+      checkinDate: new Date(newCheckinDate),
+      checkoutDate: new Date(newCheckoutDate)
+    });
+  }, [searchParams]);
+  
+  const setStayDates = (newDates: StayDatesState | ((prev: StayDatesState) => StayDatesState)) => {
+    const dates = typeof newDates === 'function' ? newDates(stayDates) : newDates;
+    
+    if (dates.checkinDate && dates.checkoutDate) {
+      // Update the local state first
+      setStayDatesState(dates);
+      
+      // Then update the URL and refresh the page
+      const currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.set('checkin', dates.checkinDate.toISOString().split('T')[0]);
+      currentUrl.searchParams.set('checkout', dates.checkoutDate.toISOString().split('T')[0]);
+      window.location.href = currentUrl.toString();
+    }
+  };
+  
+  const calWrapperRef = useRef<HTMLDivElement>(null);
+  const checkinButtonRef = useRef<HTMLButtonElement>(null);
+  const checkoutButtonRef = useRef<HTMLButtonElement>(null);
+  
+  useEffect(() => {
+    function handleClickOutside(ev: MouseEvent) {
+      if (
+        !calWrapperRef.current?.contains(ev.target as Node) &&
+        !checkinButtonRef.current?.contains(ev.target as Node) &&
+        !checkoutButtonRef.current?.contains(ev.target as Node)
+      ) {
+        setShowCheckinCal(false);
+        setShowCheckoutCal(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleReserveNow = () => {
     // Only allow booking if rooms are available
     if (!hasRooms) return;
 
-    // Build URL parameters for hotel detail page
-    const params = new URLSearchParams();
-    
-    if (searchParams.get('checkin')) {
-      params.set('checkin', searchParams.get('checkin')!);
-    }
-    if (searchParams.get('checkout')) {
-      params.set('checkout', searchParams.get('checkout')!);
-    }
-    params.set('adults', searchParams.get('adults') || '2');
-    params.set('children', searchParams.get('children') || '0');
-    params.set('rooms', searchParams.get('rooms') || '1');
-    params.set('destination_id', searchParams.get('destination_id') || '');
-    params.set('price', price.toString());
-    params.set('hotelName', hotelName);
-    params.set('hotelId', hotelId || '');
-    
-    navigate(`/booking?${params.toString()}`);
+    // Calculate number of nights
+    const checkin = searchParams.get('checkin')?.replace(/"/g, '') || searchParams.get('checkin');
+    const checkout = searchParams.get('checkout')?.replace(/"/g, '') || searchParams.get('checkout');
+    const numberOfNights = checkin && checkout ? 
+      Math.round((new Date(checkout).getTime() - new Date(checkin).getTime()) / (1000 * 60 * 60 * 24)) : 1;
+
+    // Get guest information
+    const adults = parseInt(searchParams.get('adults') || searchParams.get('adult') || '2');
+    const children = parseInt(searchParams.get('children') || searchParams.get('child') || '0');
+    const rooms = parseInt(searchParams.get('rooms') || searchParams.get('room') || '1');
+
+    // Calculate total amount
+    const totalAmount = price * numberOfNights * rooms;
+
+    // Prepare booking details
+    const bookingDetails = {
+      selectedRoom: {
+        id: hotelId || 'default',
+        room_type: 'Standard Room',
+        price: price,
+        free_cancellation: true,
+        occupancy: adults + children,
+        bed_type: 'King bed',
+        size: '35',
+        description: 'Standard room with modern amenities',
+        amenities: ['WiFi', 'TV', 'Air Conditioning']
+      },
+      numberOfGuests: {
+        adults: adults,
+        children: children,
+        total: adults + children
+      },
+      numberOfNights: numberOfNights,
+      numberOfRooms: rooms,
+      checkinDate: checkin,
+      checkoutDate: checkout,
+      totalAmount: totalAmount,
+      pricePerNight: price
+    };
+
+    // Navigate to booking page with state
+    navigate('/booking', {
+      state: {
+        bookingDetails,
+        hotel: {
+          id: hotelId,
+          name: hotelName,
+          rating: rating,
+          reviewCount: reviewCount,
+          price: price
+        },
+        totalAmount: totalAmount,
+      },
+    });
   };
 
   return (
-    <Card className="sticky top-6 shadow-lg">
-      <CardHeader className="pb-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <h3 className="font-semibold text-lg">{hotelName}</h3>
-            <div className="flex items-center space-x-2 mt-1">
-              <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <Star 
-                    key={i} 
-                    size={16} 
-                    className={i < Math.floor(rating) ? "fill-hotel-gold text-hotel-gold" : "text-muted-foreground"} 
-                  />
-                ))}
+    <Card className="w-full shadow-xl border-0 bg-gradient-to-r from-white to-gray-50">
+      <CardHeader className="pb-6 border-b border-gray-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-6">
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">{hotelName}</h3>
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star 
+                      key={i} 
+                      size={18} 
+                      className={i < Math.floor(rating) ? "fill-hotel-gold text-hotel-gold" : "text-muted-foreground"} 
+                    />
+                  ))}
+                  <span className="ml-2 text-lg font-semibold">{rating}</span>
+                </div>
+                <span className="text-lg text-hotel-text-secondary">({reviewCount} reviews)</span>
               </div>
-              <span className="text-sm text-hotel-text-secondary">({reviewCount} reviews)</span>
             </div>
           </div>
           <div className="text-right">
             {hasRooms && price > 0 ? (
               <>
-                <div className="text-2xl font-bold">${price}</div>
-                <div className="text-sm text-hotel-text-secondary">per night</div>
+                <div className="text-3xl font-bold text-primary">${price}</div>
+                <div className="text-base text-hotel-text-secondary">per night</div>
               </>
             ) : (
-              <div className="text-sm text-hotel-text-secondary">No availability</div>
+              <div className="text-lg text-hotel-text-secondary">No availability</div>
             )}
           </div>
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
+      <CardContent className="space-y-6 p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <Label htmlFor="checkin" className="text-sm font-medium">Check-in</Label>
             <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
-              <Input 
-                id="checkin"
-                type="date" 
-                className="pl-9"
-                value={searchParams.get('checkin') || '2025-10-01'}
-                readOnly
+              <img 
+                src='/listing/calendar.svg' 
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10 cursor-pointer"
+                onClick={() => setShowCheckinCal(!showCheckinCal)}
               />
+              <button
+                ref={checkinButtonRef}
+                onClick={() => setShowCheckinCal(!showCheckinCal)}
+                className="w-full text-left px-9 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {checkinDate}
+              </button>
+              {showCheckinCal && (
+                <div className="absolute top-full left-0 z-20 mt-1" ref={calWrapperRef}>
+                  <Calendar stayDates={stayDates} setStayDates={setStayDates} />
+                </div>
+              )}
             </div>
           </div>
           <div>
             <Label htmlFor="checkout" className="text-sm font-medium">Check-out</Label>
             <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
-              <Input 
-                id="checkout"
-                type="date" 
-                className="pl-9"
-                value={searchParams.get('checkout') || '2025-10-07'}
-                readOnly
+              <img 
+                src='/listing/calendar.svg' 
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10 cursor-pointer"
+                onClick={() => setShowCheckoutCal(!showCheckoutCal)}
               />
+              <button
+                ref={checkoutButtonRef}
+                onClick={() => setShowCheckoutCal(!showCheckoutCal)}
+                className="w-full text-left px-9 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {checkoutDate}
+              </button>
+              {showCheckoutCal && (
+                <div className="absolute top-full left-0 z-20 mt-1" ref={calWrapperRef}>
+                  <Calendar stayDates={stayDates} setStayDates={setStayDates} />
+                </div>
+              )}
             </div>
           </div>
         </div>
         
         <div>
-          <Label htmlFor="guests" className="text-sm font-medium">Guests</Label>
-          <Select value={`${searchParams.get('adults') || '2'}`} disabled>
-            <SelectTrigger>
-              <div className="flex items-center">
-                <Users size={16} className="mr-2 text-muted-foreground" />
-                <SelectValue />
+          <Label htmlFor="guests" className="text-sm font-medium">Guests & Rooms</Label>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span>Adults: {searchParams.get('adults') || searchParams.get('adult') || '2'}</span>
+              <span>Children: {searchParams.get('children') || searchParams.get('child') || '0'}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span>Total Guests: {parseInt(searchParams.get('adults') || searchParams.get('adult') || '2') + parseInt(searchParams.get('children') || searchParams.get('child') || '0')}</span>
+              <span>Rooms: {searchParams.get('rooms') || searchParams.get('room') || '1'}</span>
+            </div>
+            
+            {/* Show availability warnings */}
+            {availability && (
+              <div className="space-y-1">
+                {availability.requestedRooms > availability.availableRooms && (
+                  <div className="text-xs text-orange-600 bg-orange-50 p-2 rounded">
+                    ⚠️ Only {availability.availableRooms} room{availability.availableRooms !== 1 ? 's' : ''} available (requested {availability.requestedRooms})
+                  </div>
+                )}
+                {availability.totalRequestedGuests > availability.maxGuestCapacity && (
+                  <div className="text-xs text-orange-600 bg-orange-50 p-2 rounded">
+                    ⚠️ Maximum {availability.maxGuestCapacity} guest{availability.maxGuestCapacity !== 1 ? 's' : ''} allowed (requested {availability.totalRequestedGuests})
+                  </div>
+                )}
+                {(availability.requestedAdults !== availability.validAdults || availability.requestedChildren !== availability.validChildren) && (
+                  <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
+                    ℹ️ Guest count adjusted to fit room capacity
+                  </div>
+                )}
               </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1">1 Guest</SelectItem>
-              <SelectItem value="2">2 Guests</SelectItem>
-              <SelectItem value="3">3 Guests</SelectItem>
-              <SelectItem value="4">4 Guests</SelectItem>
-            </SelectContent>
-          </Select>
+            )}
+          </div>
         </div>
         
         {hasRooms && price > 0 ? (
           <>
             <div className="border-t pt-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm">3 nights</span>
-                <span className="text-sm">${price * 3}</span>
-              </div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm">Taxes & fees</span>
-                <span className="text-sm">$45</span>
-              </div>
-              <div className="flex justify-between items-center font-semibold text-lg border-t pt-2">
-                <span>Total</span>
-                <span>${(price * 3) + 45}</span>
-              </div>
+              {(() => {
+                const checkin = searchParams.get('checkin');
+                const checkout = searchParams.get('checkout');
+                const nights = checkin && checkout ? 
+                  Math.round((new Date(checkout).getTime() - new Date(checkin).getTime()) / (1000 * 60 * 60 * 24)) : 3;
+                const rooms = parseInt(searchParams.get('rooms') || searchParams.get('room') || '1');
+                const totalPrice = price * nights * rooms;
+                const taxes = Math.round(totalPrice * 0.1); // 10% taxes
+                
+                return (
+                  <>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm">{nights} night{nights !== 1 ? 's' : ''} × {rooms} room{rooms !== 1 ? 's' : ''}</span>
+                      <span className="text-sm">${totalPrice}</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm">Taxes & fees</span>
+                      <span className="text-sm">${taxes}</span>
+                    </div>
+                    <div className="flex justify-between items-center font-semibold text-lg border-t pt-2">
+                      <span>Total</span>
+                      <span>${totalPrice + taxes}</span>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
             
             <Button 
-              className="w-full bg-primary hover:bg-primary/90" 
+              className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-4 text-lg" 
               size="lg"
               onClick={handleReserveNow}
             >

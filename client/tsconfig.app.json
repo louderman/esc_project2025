@@ -29,5 +29,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "..types"]
+  "include": ["src", "..types", "tailwind.config.ts"]
 }
