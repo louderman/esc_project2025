@@ -1,9 +1,6 @@
-
-
 .container {
   align-content: center;
 }
-
 
 .searchbarSection {
   display: grid;
@@ -14,6 +11,7 @@
   /*background-image: url('/common/mbs_blur.jpg');*/
   background-color: #ffca0b;
   background-size: cover;
+  position: relative;
 }
 
 .headerQuestion {
@@ -22,11 +20,17 @@
   font-size: 50px;
 }
 
+/* need to have fixed width so that searchbar wont change size */
+/* pls the width to any value you want */
+.searchbarWrapper {
+  width: 1000px;
+}
+
 .destinationSuggestion {
   padding-top: 80px;
   padding-bottom: 100px;
   background: #ffffff;
-  background: linear-gradient(0,#ffffff 0%, #fff5d0 100%);
+  background: linear-gradient(0, #ffffff 0%, #fff5d0 100%);
 }
 
 .destinationSuggestionHeader {
@@ -56,8 +60,6 @@
   align-content: center;
 }
 
-
-
 .footer {
   justify-content: center;
   align-content: center;
@@ -84,5 +86,3 @@
   text-align: center;
   font-size: 30px;
 }
-
-
