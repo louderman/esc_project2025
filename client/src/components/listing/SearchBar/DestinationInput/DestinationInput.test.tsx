@@ -1,15 +1,16 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { describe } from 'vitest';
-import DestinationInput from './DestinationInput';
+import { afterEach, beforeEach, expect, it, vi, describe } from 'vitest';
+import DestinationInput, { type DestinationState } from './DestinationInput';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom/vitest';
+import { useState } from 'react';
 
 beforeEach(() => {
   global.fetch = vi.fn().mockImplementation((url) => {
     console.log(url);
     if (url.includes('/api/destination/random')) {
+      console.log('called');
       return Promise.resolve({
         ok: true,
         json: async () => [
@@ -22,8 +23,7 @@ beforeEach(() => {
       });
     }
 
-    if (url.includes('/api/destination/query')) {
-      console.log('called');
+    if (url.includes('/api/destination/query/name/Par')) {
       return Promise.resolve({
         ok: true,
         json: async () => [
@@ -37,22 +37,31 @@ beforeEach(() => {
       json: async () => [],
     });
   });
-
-  const setState = vi.fn();
-  const state = { id: '', name: '' };
-  render(
-    <MemoryRouter>
-      <DestinationInput destination={state} setDestination={setState} />
-    </MemoryRouter>
-  );
 });
 
 afterEach(() => {
   cleanup();
 });
 
+function DestinationInputWrapper() {
+  const [destination, setDestination] = useState<DestinationState>({
+    id: '',
+    name: '',
+  });
+  return (
+    <MemoryRouter>
+      <DestinationInput
+        destination={destination}
+        setDestination={setDestination}
+      />
+    </MemoryRouter>
+  );
+}
+
 describe('DestinationInput', () => {
   it('Test random suggestions when input is focused for the first time', async () => {
+    render(<DestinationInputWrapper />);
+
     const input = screen.getByPlaceholderText(/Destination/);
 
     await userEvent.click(input);
@@ -62,31 +71,38 @@ describe('DestinationInput', () => {
     });
   });
 
-  // it('Test shows suggestions for partial input "Par"', async () => {
-  //     vi.useFakeTimers();
-  // const input = screen.getByPlaceholderText(/Destination/);
+  it('Test shows suggestions for partial input "Par"', async () => {
+    // I tried to use vi fake timer, but it get stucked at userEvent.click(input)
+    render(<DestinationInputWrapper />);
+    const input = screen.getByPlaceholderText(/Destination/);
 
-  // await userEvent.click(input);
-  // await waitFor(async () => await userEvent.type(input, 'Par'));
+    await userEvent.click(input);
+    await userEvent.type(input, 'Par');
 
-  // vi.advanceTimersByTime(500);
-  // await Promise.resolve();
-  // console.log(screen.getByRole('input'));
-  // await Promise.resolve();
+    // Still waiting for debounce, should show random destinations
+    expect(screen.queryAllByRole('listitem')).toHaveLength(5);
 
-  // expect(screen.queryAllByRole('listitem')).toHaveLength(5);
+    // After debounce, should show the fuzzy matched destination
+    await waitFor(() => {
+      const items = screen.getAllByRole('listitem');
+      expect(items).toHaveLength(1);
+      expect(items[0]).toHaveTextContent(/Paris/);
+    });
 
-  // vi.advanceTimersByTime(500);
+    // Check if destination input is updated with selected suggested destination value
+    const items = screen.getAllByRole('listitem');
+    userEvent.click(items[0]);
+    await waitFor(() => {
+      expect(input).toHaveValue('Paris');
+    });
 
-  // await Promise.resolve();
-  // await Promise.resolve();
+    // Destination dropdown should be closed
+    expect(screen.queryAllByRole('listitem')).toHaveLength(0);
 
-  // await waitFor(() => {
-  //   const items = screen.getAllByRole('listitem');
-  //   expect(items).toHaveLength(1);
-  //   expect(items[0]).toHaveTextContent(/Paris/);
-  // });
-
-  // vi.useRealTimers();
-  // });
+    // After clearing input, 5 random destinations are displayed again
+    await userEvent.clear(input);
+    await waitFor(() => {
+      expect(screen.getAllByRole('listitem')).toHaveLength(5);
+    });
+  });
 });

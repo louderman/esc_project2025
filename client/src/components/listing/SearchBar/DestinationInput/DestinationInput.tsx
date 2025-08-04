@@ -40,9 +40,7 @@ export default function DestinationInput({
         url = `/api/destination/random?count=5`;
       }
 
-      const res = await fetch(url, {
-        method: 'GET',
-      });
+      const res = await fetch(url);
       const dests: Destination[] = await res.json();
       setSuggestedDests(dests);
     }
@@ -104,7 +102,8 @@ export default function DestinationInput({
               onMouseDown={() =>
                 setDestination({ id: dest.dest_id, name: dest.term })
               }
-              className={styles.suggestionItem}>
+              className={styles.suggestionItem}
+            >
               <img src='/listing/destination_gray.svg' />
               <div className={styles.itemTextSection}>
                 <span className={styles.itemDestName}>{dest.term}</span>
