@@ -77,7 +77,7 @@ export default function CalendarPage({
   }, [date]);
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} data-testid='calendar-page'>
       <div className={styles.dateHeader}>
         {date.toLocaleString('en-US', { month: 'long' })} {date.getFullYear()}
       </div>

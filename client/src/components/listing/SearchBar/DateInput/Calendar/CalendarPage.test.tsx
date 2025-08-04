@@ -66,7 +66,15 @@ describe('Calendar Page', () => {
     );
   });
 
-  it('Test correct css for checkin, between, and checkout dates', async () => {
+  it("Test correct css selector for today's date", async () => {
+    render(<CalendarTestWrapper date={today} maxDate={maxDate} />);
+    const dateCells = screen
+      .getAllByTestId('cell')
+      .filter((cell) => cell.textContent?.match(/^\d+$/));
+    expect(dateCells[today.getDate() - 1].className).toMatch(/isToday/);
+  });
+
+  it('Test correct css selectors for checkin, between, and checkout dates', async () => {
     const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     const maxDate = new Date(
       nextMonth.getFullYear(),
