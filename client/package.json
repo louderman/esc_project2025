@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:tailwind": "node scripts/build-tailwind.js",
+    "build:hotel": "npm run build:tailwind && npm run build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "test": "cross-env NODE_ENV=test vitest"

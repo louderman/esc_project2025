@@ -183,7 +183,7 @@ async function searchDestinationsInBounds({
 // Aliases for backward compatibility
 const all = getAllDestinations;
 const random = getRandomDestinations;
-const query = searchDestinations;
+const query = searchDestinationsByName;
 
 export {
   tableName,

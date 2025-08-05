@@ -7,6 +7,11 @@ import HotelInfo from '../components/hotel/HotelInfo';
 import RoomOptions from '../components/hotel/RoomOptions';
 import LocationMap from '../components/hotel/LocationMap';
 import { Star } from 'lucide-react';
+import { useFetchHotelPrices } from '../hooks/hotels/useFetchHotelPrices';
+import { useFetchHotels } from '../hooks/hotels/useFetchHotels';
+import { usePricedHotels } from '../hooks/hotels/usePricedHotels';
+import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
+import type { OccupancyState } from '../components/listing/SearchBar/GuestInput/GuestInput';
 
 // Data types
 type Hotel = {
@@ -70,7 +75,74 @@ const HotelDetail = () => {
   console.log('Query hotelId:', searchParams.get('hotelId'));
   console.log('Final hotelId:', hotelId);
 
+  // Get URL parameters from listing page (remove quotes from values)
+  const destinationId = searchParams.get('destination_id')?.replace(/"/g, '') || searchParams.get('destId')?.replace(/"/g, '') || 'WD0M';
+  const checkin = searchParams.get('checkin')?.replace(/"/g, '') || '2025-10-01';
+  const checkout = searchParams.get('checkout')?.replace(/"/g, '') || '2025-10-07';
+  
+  console.log('Debug - URL Parameters:', {
+    destinationId,
+    checkin,
+    checkout,
+    adults: searchParams.get('adults') || searchParams.get('adult'),
+    children: searchParams.get('children') || searchParams.get('child'),
+    rooms: searchParams.get('rooms') || searchParams.get('room')
+  });
+  
+  // Parse adults and children from URL (note: 'adult' and 'child' not 'adults' and 'children')
+  const adults = searchParams.get('adults') || searchParams.get('adult') || '2';
+  const children = searchParams.get('children') || searchParams.get('child') || '0';
+  const roomCount = searchParams.get('rooms') || searchParams.get('room') || '1';
+  const lang = searchParams.get('lang') || 'en_US';
+  const currency = searchParams.get('currency') || 'SGD';
+  const countryCode = searchParams.get('country_code') || 'SG';
+  
+  // Calculate total guests (adults + children)
+  const totalGuests = parseInt(adults) + parseInt(children);
+
+  // Convert URL parameters to the format expected by the hooks
+  const stayDates: StayDatesState = {
+    checkinDate: new Date(checkin),
+    checkoutDate: new Date(checkout)
+  };
+
+  const occupancy: OccupancyState = {
+    adults: parseInt(adults),
+    children: parseInt(children),
+    rooms: parseInt(roomCount)
+  };
+
+  // Use the same hooks as the listing page
+  const { hotels, loading: hotelLoading } = useFetchHotels([destinationId]);
+  const { prices, loading: priceLoading } = useFetchHotelPrices(
+    [destinationId],
+    stayDates,
+    occupancy,
+    2000
+  );
+  const pricedHotels = usePricedHotels(hotels, prices);
+
+  // Find the specific hotel we're looking for
+  const specificHotel = pricedHotels.find(hotel => hotel.id === hotelId);
+  
+  console.log('Debug - Hooks Status:', {
+    hotelLoading,
+    priceLoading,
+    hotelsCount: hotels.length,
+    pricesCount: prices.length,
+    pricedHotelsCount: pricedHotels.length,
+    specificHotelFound: !!specificHotel,
+    hotelId,
+    destinationId
+  });
+
   useEffect(() => {
+    // Set loading to true when hooks are loading
+    if (hotelLoading || priceLoading) {
+      setLoading(true);
+      return;
+    }
+
     const fetchHotelData = async () => {
       if (!hotelId) {
         setError('No hotel ID provided');
@@ -82,189 +154,47 @@ const HotelDetail = () => {
         setLoading(true);
         setError(null);
 
-        // Get URL parameters from listing page (remove quotes from values)
-        const destinationId = searchParams.get('destination_id')?.replace(/"/g, '') || searchParams.get('destId')?.replace(/"/g, '') || 'WD0M';
-        const checkin = searchParams.get('checkin')?.replace(/"/g, '') || '2025-10-01';
-        const checkout = searchParams.get('checkout')?.replace(/"/g, '') || '2025-10-07';
-        
-        // Parse adults and children from URL (note: 'adult' and 'child' not 'adults' and 'children')
-        const adults = searchParams.get('adults') || searchParams.get('adult') || '2';
-        const children = searchParams.get('children') || searchParams.get('child') || '0';
-        const roomCount = searchParams.get('rooms') || searchParams.get('room') || '1';
-        const lang = searchParams.get('lang') || 'en_US';
-        const currency = searchParams.get('currency') || 'SGD';
-        const countryCode = searchParams.get('country_code') || 'SG';
-        
-        // Calculate total guests (adults + children)
-        const totalGuests = parseInt(adults) + parseInt(children);
-
-        // Use simple guest count like ListingPage does
-        const guests = totalGuests.toString();
-        
-        console.log('Parsed parameters:', {
-          destinationId,
-          checkin,
-          checkout,
-          adults,
-          children,
-          totalGuests,
-          guests,
-          roomCount
-        });
-        
-        console.log('URL Parameters received:', {
-          adultParam: searchParams.get('adult'),
-          childParam: searchParams.get('child'),
-          roomParam: searchParams.get('room'),
-          destIdParam: searchParams.get('destId'),
-          parsedAdults: adults,
-          parsedChildren: children,
-          parsedRooms: roomCount,
-          totalGuests,
-          guestsString: guests
-        });
-
-                // Fetch hotel details (like listing page does)
-        const hotelUrl = `/api/hotel/query?dest_id=${destinationId}`;
-        console.log('Hotel API URL:', hotelUrl);
-        const hotelResponse = await fetch(hotelUrl);
-
-        if (!hotelResponse.ok) {
-          throw new Error(`Error fetching hotel data: ${hotelResponse.status}`);
-        }
-
-        const allHotels = await hotelResponse.json();
-        console.log('Hotel API Response:', allHotels);
-        
-        // Find the specific hotel
-        const specificHotel = allHotels.find((h: any) => h.id === hotelId);
+        // Use the hooks data instead of manual fetching
         if (!specificHotel) {
-          throw new Error(`Hotel ${hotelId} not found in destination ${destinationId}`);
+          throw new Error(`Hotel with ID ${hotelId} not found`);
         }
-        
-        // Fetch prices with polling (like listing page does)
-        let prices = [];
-        let attempts = 0;
-        const maxAttempts = 10; // Poll for up to 20 seconds
-        
-        while (attempts < maxAttempts) {
-          const priceUrl = `/api/hotel-price/query?dest_id=${destinationId}&checkin=${checkin}&checkout=${checkout}&guests=${guests}`;
-          console.log(`Price API URL (attempt ${attempts + 1}):`, priceUrl);
-          
-          const priceResponse = await fetch(priceUrl);
-          
-          if (priceResponse.ok) {
-            const data = await priceResponse.json();
-            console.log(`Price API Response (attempt ${attempts + 1}):`, data);
-            
-            if (data.completed) {
-              prices = data.hotels;
-              console.log('Price API completed, stopping polling');
-              break;
-            } else {
-              console.log('Price API not completed yet, waiting 2 seconds...');
-              await new Promise(resolve => setTimeout(resolve, 2000));
-            }
-          } else {
-            console.log('Price API error, stopping polling');
-            break;
-          }
-          
-          attempts++;
-        }
-        
-        if (attempts >= maxAttempts) {
-          console.log('Price API polling timed out');
-        }
-        
-        // Combine hotel and price data (like listing page does)
-        const result = {
-          hotel: specificHotel,
-          prices: { hotels: prices }
-        };
-        
-        console.log('Combined API Response:', result); // Debug logging
+
+        console.log('Found specific hotel with pricing:', specificHotel);
 
         // Transform hotel data
         const hotel: Hotel = {
-          id: result.hotel.id,
-          name: result.hotel.name,
-          rating: result.hotel.rating,
+          id: specificHotel.id,
+          name: specificHotel.name,
+          rating: specificHotel.rating,
           reviewCount: 2847, // Default value since API doesn't provide this
-          address1: result.hotel.address,
-          description: result.hotel.description || 'No description provided.',
-          amenities: result.hotel.amenities || {},
-          images: result.hotel.image_details ? 
-            Array.from({ length: Math.min(result.hotel.image_details.count, 5) }, (_, i) => 
-              `${result.hotel.image_details.prefix}${i}${result.hotel.image_details.suffix}`
+          address1: specificHotel.address,
+          description: specificHotel.description || 'No description provided.',
+          amenities: specificHotel.amenities || {},
+          images: specificHotel.image_details ? 
+            Array.from({ length: Math.min(specificHotel.image_details.count, 5) }, (_, i) => 
+              `${specificHotel.image_details.prefix}${i}${specificHotel.image_details.suffix}`
             ) : [
               'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=800&h=600&fit=crop',
               'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=800&h=600&fit=crop',
               'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&h=600&fit=crop'
             ],
-          latitude: result.hotel.latitude,
-          longitude: result.hotel.longitude
+          latitude: specificHotel.latitude,
+          longitude: specificHotel.longitude
         };
 
-        // Transform room data - find the specific hotel in the price API response (like listing page does)
-        const hotels = result.prices?.hotels || [];
-        console.log('All hotels from price API:', hotels); // Debug logging
-        
-        // Find the specific hotel by ID (like usePricedHotels does)
-        console.log('Looking for hotelId:', hotelId);
-        console.log('Hotel ID from detail API:', result.hotel.id);
-        console.log('Available hotel IDs in price API:', hotels.map((hotel: any) => ({ id: hotel.id, name: hotel.name })));
-        console.log('Full price API response:', result.prices);
-        console.log('All hotels from price API (detailed):', hotels);
-        
-        // Find the specific hotel by ID - try multiple matching strategies
-        let foundHotel = hotels.find((hotel: any) => 
-          hotel.id === hotelId || hotel.id === result.hotel.id || 
-          hotel.id?.toString() === hotelId || hotel.id?.toString() === result.hotel.id
-        ) as any;
-        
-                  // If not found by ID, try to find by name (case insensitive)
-          if (!foundHotel) {
-            console.log('Hotel not found by ID, trying to find by name...');
-            console.log('Looking for hotel name:', result.hotel.name);
-            console.log('Available hotel names in price API:', hotels.map((hotel: any) => ({ id: hotel.id, name: hotel.name })));
-            
-            foundHotel = hotels.find((hotel: any) => {
-              if (!hotel.name || !result.hotel.name) return false;
-              const hotelName = hotel.name.toLowerCase();
-              const targetName = result.hotel.name.toLowerCase();
-              return hotelName.includes(targetName) || targetName.includes(hotelName);
-            }) as any;
-          }
-        
-        console.log('Specific hotel found:', foundHotel); // Debug logging
-        
+        // Transform room data from the priced hotel
         let roomData: Room[] = [];
         
-        if (foundHotel) {
-          // Extract price from the specific hotel (like listing page does)
-          let price = 0;
-          let roomType = 'Standard Room';
-          let freeCancellation = false;
+        if (specificHotel.price || specificHotel.lowest_price) {
+          const price = Math.round((specificHotel.price || specificHotel.lowest_price) as number);
+          const roomType = specificHotel.price_type || 'Standard Room';
+          const freeCancellation = specificHotel.free_cancellation || false;
           
-          console.log('Found hotel data:', foundHotel); // Debug logging
-          console.log('Found hotel price:', foundHotel.price); // Debug logging
-          console.log('Found hotel lowest_price:', foundHotel.lowest_price); // Debug logging
-          
-          if (foundHotel.price) {
-            price = Math.round(foundHotel.price as number);
-          } else if (foundHotel.lowest_price) {
-            price = Math.round(foundHotel.lowest_price as number);
-          }
-          
-          roomType = foundHotel.price_type || 'Standard Room';
-          freeCancellation = foundHotel.free_cancellation || false;
-          
-          console.log('Extracted price for hotel:', price); // Debug logging
-          console.log('Room type:', roomType); // Debug logging
+          console.log('Extracted price for hotel:', price);
+          console.log('Room type:', roomType);
           
           roomData = [{
-            id: foundHotel.id || hotelId,
+            id: specificHotel.id,
             room_type: roomType,
             price: price,
             free_cancellation: freeCancellation,
@@ -275,63 +205,25 @@ const HotelDetail = () => {
             description: 'Standard room with modern amenities',
             long_description: 'Comfortable room with all necessary amenities for a pleasant stay',
             amenities: ['WiFi', 'TV', 'Air Conditioning'],
-            key: foundHotel.id
+            key: specificHotel.id
           }];
-        }
-
-        // If no rooms are available, try to find any hotel with pricing data
-        if (roomData.length === 0) {
-          console.log('No pricing data found for this hotel, checking if any hotels have pricing...');
-          
-          // Log some sample hotels to see what's available
-          console.log('Sample hotels from price API:', hotels.slice(0, 5).map((hotel: any) => ({
-            id: hotel.id,
-            name: hotel.name,
-            price: hotel.price,
-            lowest_price: hotel.lowest_price
-          })));
-          
-          // Find the first hotel with pricing data as a fallback
-          const firstHotelWithPrice = hotels.find((hotel: any) => 
-            hotel.price || hotel.lowest_price
-          ) as any;
-          
-          if (firstHotelWithPrice) {
-            console.log('Using fallback hotel with pricing:', firstHotelWithPrice);
-            const fallbackPrice = Math.round((firstHotelWithPrice.price || firstHotelWithPrice.lowest_price) as number);
-            
-            roomData.push({
-              id: firstHotelWithPrice.id,
-              room_type: firstHotelWithPrice.price_type || 'Standard Room',
-              price: fallbackPrice,
-              free_cancellation: firstHotelWithPrice.free_cancellation || false,
-              image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=600&h=400&fit=crop',
-              occupancy: parseInt(adults) + parseInt(children),
-              bed_type: 'King bed',
-              size: '35',
-              description: `Standard room with modern amenities (pricing from ${firstHotelWithPrice.name})`,
-              long_description: 'Comfortable room with all necessary amenities for a pleasant stay',
-              amenities: ['WiFi', 'TV', 'Air Conditioning'],
-              key: firstHotelWithPrice.id
-            });
-          } else {
-            // If no hotels have pricing data, show that pricing is not available
-            console.log('No hotels with pricing data found, showing pricing not available');
-            roomData.push({
-              id: hotelId,
-              room_type: 'Standard Room',
-              price: 0, // Indicate no pricing available
-              free_cancellation: false,
-              image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=600&h=400&fit=crop',
-              occupancy: parseInt(adults) + parseInt(children),
-              bed_type: 'King bed',
-              size: '35',
-              description: 'Standard room with modern amenities',
-              long_description: 'Comfortable room with all necessary amenities for a pleasant stay. Pricing information is not currently available for this hotel.',
-              amenities: ['WiFi', 'TV', 'Air Conditioning'],
-              key: hotelId
-            });
-          }
+        } else {
+          console.log('No pricing data found for this hotel');
+          // If no pricing data, show that pricing is not available
+          roomData.push({
+            id: hotelId,
+            room_type: 'Standard Room',
+            price: 0, // Indicate no pricing available
+            free_cancellation: false,
+            image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=600&h=400&fit=crop',
+            occupancy: parseInt(adults) + parseInt(children),
+            bed_type: 'King bed',
+            size: '35',
+            description: 'Standard room with modern amenities',
+            long_description: 'Comfortable room with all necessary amenities for a pleasant stay. Pricing information is not currently available for this hotel.',
+            amenities: ['WiFi', 'TV', 'Air Conditioning'],
+            key: hotelId
+          });
         }
 
         // Validate room availability and guest capacity
@@ -413,12 +305,18 @@ const HotelDetail = () => {
       }
     };
 
-    fetchHotelData();
-  }, [hotelId, searchParams]);
+    // Only fetch when hooks have loaded and we have a specific hotel
+    if (!hotelLoading && !priceLoading && specificHotel) {
+      fetchHotelData();
+    } else if (!hotelLoading && !priceLoading && !specificHotel && hotelId) {
+      setError(`Hotel with ID ${hotelId} not found`);
+      setLoading(false);
+    }
+  }, [hotelId, specificHotel, hotelLoading, priceLoading, destinationId, checkin, checkout, adults, children, roomCount, totalGuests, searchParams]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="hotel-detail-page min-h-screen bg-background">
         <HotelHeader />
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
@@ -432,7 +330,7 @@ const HotelDetail = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="hotel-detail-page min-h-screen bg-background">
         <HotelHeader />
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
@@ -451,7 +349,7 @@ const HotelDetail = () => {
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="hotel-detail-page min-h-screen bg-background">
         <HotelHeader />
         <div className="flex items-center justify-center h-96">
           <p className="text-hotel-text-secondary">No hotel data available</p>
@@ -463,10 +361,10 @@ const HotelDetail = () => {
   console.log('Rendering HotelDetail with price:', data.rooms.length > 0 ? data.rooms[0].price : 0, 'and rooms:', data.rooms);
   
   return (
-    <div className="min-h-screen bg-background">
+    <div className="hotel-detail-page">
       <HotelHeader />
       
-      <main className="max-w-7xl mx-auto px-4 md:px-6 py-8">
+      <main className="min-h-screen bg-background max-w-7xl mx-auto px-4 md:px-6 py-8">
         {/* Hotel Title & Rating */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">{data.hotel.name}</h1>
