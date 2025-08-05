@@ -1,20 +1,13 @@
 .registerContainer {
   max-width: 400px;
-  margin: 2rem auto;
+  margin: 1rem auto;
   padding: 2rem;
-  font-family: 'Inter', sans-serif;
+  font-family: Arial, sans-serif;
   background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
 }
 
-.registerContainer h2 {
+h2 {
   text-align: center;
-  color: #1f2937;
-  margin-bottom: 0.5rem;
-  font-size: 1.5rem;
-  font-weight: 700;
 }
 
 .loginLink {
@@ -42,37 +35,22 @@
 
 .registerForm input[type="text"],
 .registerForm input[type="email"],
-.registerForm input[type="password"] {
+.registerForm input[type="password"],
+.registerForm input[type="text"]:not(.togglePassword) {
   padding: 0.8rem;
   border-radius: 6px;
   border: 1px solid #ccc;
   margin-top: 0.4rem;
-  width: 100%;
-  box-sizing: border-box;
-  font-size: 1rem;
-}
-
-.registerForm input:focus {
-  outline: none;
-  border-color: #ff7a00;
-  box-shadow: 0 0 0 2px rgba(255, 122, 0, 0.1);
-}
-
-.registerForm input.invalid {
-  border-color: #ff4444;
-  box-shadow: 0 0 0 2px rgba(255, 68, 68, 0.1);
 }
 
 .passwordWrapper {
   position: relative;
   display: flex;
   align-items: center;
-  margin-top: 0.4rem;
 }
 
 .passwordWrapper input {
   width: 100%;
-  padding-right: 60px; /* Make room for the toggle button */
 }
 
 .togglePassword {
@@ -114,23 +92,16 @@
 }
 
 .registerButton {
-  background-color: #ff7a00;
+  background-color: #ff9800;
   color: white;
   border: none;
   padding: 0.9rem;
   font-size: 1rem;
-  border-radius: 8px;
+  border-radius: 30px;
   cursor: pointer;
   margin-top: 1rem;
-  font-weight: 600;
-  transition: background-color 0.2s ease;
-  width: 100%;
 }
 
 .registerButton:hover {
-  background-color: #e66a00;
-}
-
-.registerButton:active {
-  transform: translateY(1px);
+  background-color: #f57c00;
 }
