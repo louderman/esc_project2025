@@ -1,9 +1,27 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { useAuth } from '../components/common/authcontext';
+import type { JSX } from 'react';
 import styles from './LoginPage.module.css';
+
+export function Protectedroute({ children }: { children: JSX.Element }) {
+  const { user } = useAuth();
+  const location = useLocation();
+
+  if (!user) {
+    const redirect = encodeURIComponent(location.pathname);
+    return <Navigate to={`/login?redirect=${redirect}`} replace />;
+  }
+
+  return children;
+}
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { setUser } = useAuth();
+
+  const fromPath = location.state?.from || '/';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -62,8 +80,18 @@ export default function LoginPage() {
 
       if (response.ok) {
         const data = await response.json();
+
+        // Store user and update context
+        const user = {
+          id: data.userId,
+          name: data.name,
+          email: email.trim(),
+        };
+        localStorage.setItem('user', JSON.stringify(user));
+        setUser(user);
+
         alert('Login successful!');
-        navigate('/booking');
+        navigate(fromPath);
       } else {
         const error = await response.json();
         alert(error.message || 'Login failed.');
@@ -135,7 +163,7 @@ export default function LoginPage() {
 
         <button
           className={styles.createButton}
-          onClick={() => navigate('/register')}
+          onClick={() => navigate('/register', { state: { from: location.pathname } })}
         >
           Create an account
         </button>

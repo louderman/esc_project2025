@@ -1,3 +1,74 @@
+/* Working CSS - Restore original styles */
+:root {
+  /* font-family: system-ui, Avenir, Helvetica, Arial, sans-serif; */
+  line-height: 1.5;
+  font-weight: 400;
+
+  color: #1a1a1a;
+  /* background-color: #242424; */
+  background-color: #f5f7fa;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Only apply font-family to elements that don't have existing styles */
+input:not([class*="register"]):not([class*="login"]),
+textarea:not([class*="register"]):not([class*="login"]),
+button:not([class*="register"]):not([class*="login"]) {
+  font-family: inherit;
+}
+
+/* Only apply cursor pointer to buttons that don't have existing styles */
+button:not([class*="register"]):not([class*="login"]) {
+  cursor: pointer;
+}
+
+/* To disable google map info window close button */
+.gm-style-iw button[aria-label='Close'] {
+  display: none !important;
+}
+
+.gw-style-iw-chr {
+  padding-top: 0px !important;
+}
+
+/* Protect login and register page styles from global overrides */
+[class*="login"], [class*="register"] {
+  font-family: inherit !important;
+}
+
+[class*="login"] h2, [class*="register"] h2 {
+  font-weight: inherit !important;
+  font-size: inherit !important;
+}
+
+/* Protect navbar styles from global overrides */
+[class*="navbar"] {
+  font-family: inherit !important;
+}
+
+[class*="navbar"] * {
+  font-family: inherit !important;
+  font-weight: inherit !important;
+  font-size: inherit !important;
+}
+
+/* Tailwind CSS - Only for hotel detail pages */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -104,25 +175,17 @@ All colors MUST be HSL.
   }
 }
 
+/* Tailwind styles only apply to hotel detail pages */
 @layer base {
-  /* Remove global border application to prevent conflicts */
-  /* Individual components should handle their own borders */
-
-html,
-body {
-  height: 100%;
-  font-family: 'Inter', sans-serif;
+  .hotel-detail-page {
+    /* Tailwind base styles only for hotel detail pages */
+  }
 }
 
-/* Only apply font-family to elements that don't have existing styles */
-input:not([class*="register"]):not([class*="login"]),
-textarea:not([class*="register"]):not([class*="login"]),
-button:not([class*="register"]):not([class*="login"]) {
-  font-family: inherit;
-}
-
-/* Only apply cursor pointer to buttons that don't have existing styles */
-button:not([class*="register"]):not([class*="login"]) {
-  cursor: pointer;
-}
+/* Prevent Tailwind from affecting other pages */
+@layer utilities {
+  /* Ensure hotel detail page components maintain their intended sizes */
+  .hotel-detail-page .search-bar * {
+    font-size: 14px !important;
+  }
 }
