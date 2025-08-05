@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { describe } from 'vitest';
@@ -22,7 +22,7 @@ beforeEach(() => {
       });
     }
 
-    if (url.includes('/api/destination/query/Par')) {
+    if (url.includes('/api/destination/query')) {
       console.log('called');
       return Promise.resolve({
         ok: true,
@@ -62,13 +62,16 @@ describe('DestinationInput', () => {
     });
   });
 
-  //   it('Test shows suggestions for partial input "Par"', async () => {
+  // it('Test shows suggestions for partial input "Par"', async () => {
   //     vi.useFakeTimers();
-  //     const input = screen.getByPlaceholderText(/Destination/);
+  // const input = screen.getByPlaceholderText(/Destination/);
 
-  // await userEvent.type(input, 'Par');
+  // await userEvent.click(input);
+  // await waitFor(async () => await userEvent.type(input, 'Par'));
+
   // vi.advanceTimersByTime(500);
   // await Promise.resolve();
+  // console.log(screen.getByRole('input'));
   // await Promise.resolve();
 
   // expect(screen.queryAllByRole('listitem')).toHaveLength(5);
@@ -85,5 +88,5 @@ describe('DestinationInput', () => {
   // });
 
   // vi.useRealTimers();
-  //   });
+  // });
 });

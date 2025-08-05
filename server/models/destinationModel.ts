@@ -3,7 +3,7 @@ import { type Destination } from '../../types/Destination';
 import { FieldPacket } from 'mysql2';
 
 const tableName = 'destination';
-// CREATE TABLE Destination (id INT AUTO_INCREMENT PRIMARY KEY, dest_id VARCHAR(4), term VARCHAR(255), lat FLOAT, lng FLOAT, type VARCHAR(100));
+// CREATE TABLE Destination (id INT AUTO_INCREMENT PRIMARY KEY, dest_id VARCHAR(10), term VARCHAR(255), lat FLOAT, lng FLOAT, type VARCHAR(100), state VARCHAR(100));
 /**
  *  +----+---------+-------------+---------+---------+------+-------+
  *  | id | dest_id | term        | lat     | lng     | type | state |
@@ -85,7 +85,7 @@ async function getRandomDestinations(count: number) {
   }
 }
 
-async function searchDestinations(
+async function searchDestinationsByName(
   text: string,
   distanceThresh: number = 2,
   returnCount: number = 10
@@ -140,6 +140,19 @@ async function searchDestinations(
   }
 }
 
+async function searchDestinationsByDestId(destId: string) {
+  const [rows] = (await pool.query(
+    `
+        SELECT * FROM destination
+        WHERE dest_id=?
+    `,
+    [destId]
+  )) as [Destination[], FieldPacket[]];
+  console.log(rows);
+
+  return rows;
+}
+
 async function searchDestinationsInBounds({
   minLat,
   maxLat,
@@ -178,7 +191,8 @@ export {
   sync,
   getAllDestinations,
   getRandomDestinations,
-  searchDestinations,
+  searchDestinationsByName,
+  searchDestinationsByDestId,
   searchDestinationsInBounds,
   // Aliases for backward compatibility
   all,

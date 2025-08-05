@@ -1,3 +1,4 @@
+import type { SetStateAction } from 'react';
 import type { Hotel } from '../../../../../types/Hotel';
 import type { Price } from '../../../../../types/Price';
 import type { StayDatesState } from '../SearchBar/DateInput/DateInput';
@@ -8,12 +9,12 @@ export default function MapListingCard({
   hotel,
   stayDates,
   occupancy,
-  loading,
+  setHoveredHotelId,
 }: {
   hotel: Hotel & Price;
-  loading: boolean;
   stayDates: StayDatesState;
   occupancy: OccupancyState;
+  setHoveredHotelId: React.Dispatch<SetStateAction<string | null>>;
 }) {
   const userRating = hotel.categories.overall?.score;
   const checkin = stayDates.checkinDate;
@@ -26,7 +27,10 @@ export default function MapListingCard({
       : 0;
 
   return (
-    <div className={styles.container}>
+    <div
+      className={styles.container}
+      onMouseEnter={() => setHoveredHotelId(hotel.id)}
+      onMouseLeave={() => setHoveredHotelId(null)}>
       {hotel.imageCount > 0 ? (
         <img
           className={styles.image}
@@ -60,8 +64,7 @@ export default function MapListingCard({
             className={`${styles.userRatingNumber} ${
               (userRating === undefined || userRating === null) &&
               styles.noRating
-            }`}
-          >
+            }`}>
             {userRating ? (userRating / 10).toFixed(1) : '-'}
           </div>
         </div>

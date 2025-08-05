@@ -1,67 +1,147 @@
 import GoogleMap from './GoogleMap';
 import styles from './listingmap.module.css';
 import FilterPanel from '../ListingControl/FilterPanel';
-import type { Price } from '../../../../../types/Price';
-import type { Hotel } from '../../../../../types/Hotel';
-import type {
-  ListingAction,
-  ListingState,
+import {
+  initialListingState,
+  listingReducer,
 } from '../../../reducers/listingReducer';
 import MapListingCard from './MapListingCard';
 import type { OccupancyState } from '../SearchBar/GuestInput/GuestInput';
 import type { StayDatesState } from '../SearchBar/DateInput/DateInput';
 import MapListingCardSkeleton from './MapListingCardSkeleton';
+import {
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+  type SetStateAction,
+} from 'react';
+import type { Destination } from '../../../../../types/Destination';
+import { useFetchHotels } from '@/hooks/hotels/useFetchHotels';
+import { useFetchHotelPrices } from '@/hooks/hotels/useFetchHotelPrices';
+import { usePricedHotels } from '@/hooks/hotels/usePricedHotels';
+import { useFilteredHotels } from '@/hooks/hotels/useFilteredHotels';
+
+const ITEMS_PER_PAGE = 10;
+type LatLng = {
+  lat: number;
+  lng: number;
+};
 
 export default function ListingMap({
-  hotels,
-  sortedHotels, // TODO: remove this?
   stayDates,
   occupancy,
-  loading,
-  listingState,
-  listingDispatch,
+  latLng,
+  setShowMap,
 }: {
-  hotels: (Hotel & Price)[];
-  sortedHotels: (Hotel & Price)[];
   stayDates: StayDatesState;
   occupancy: OccupancyState;
-  loading: boolean;
-  listingState: ListingState;
-  listingDispatch: React.ActionDispatch<[action: ListingAction]>;
+  latLng: LatLng;
+  setShowMap: React.Dispatch<SetStateAction<boolean>>;
 }) {
   // TODO: disable bg scrolling if possible
+
+  const [listingState, listingDispatch] = useReducer(
+    listingReducer,
+    initialListingState
+  );
+
+  const [destinations, setDestinations] = useState<Destination[]>([]);
+
+  const destIds = destinations.map((d) => d.dest_id);
+  const { hotels, loading: hotelLoading } = useFetchHotels(destIds, {
+    cache: true,
+    maxParallelFetchCount: 3,
+  });
+  const { prices, loading: priceLoading } = useFetchHotelPrices(
+    destIds,
+    stayDates,
+    occupancy,
+    3000,
+    { cache: true, fetchOnMountOnly: false, maxParallelFetchCount: 3 }
+  );
+  const pricedHotels = usePricedHotels(hotels, prices);
+  const filteredHotels = useFilteredHotels(pricedHotels, listingState.filterBy);
+  const [hoveredHotelId, setHoveredHotelId] = useState<string | null>(null); // hovered hotel in hotel listings
+
+  const isLoading = hotelLoading || priceLoading;
+  // console.log('dests', destinations);
+  // console.log(
+  //   'hotels',
+  //   hotels.sort((a, b) => a.id.localeCompare(b.id))
+  // );
+  //   console.log('prices', prices);
+  // console.log('filteredHotels', filteredHotels);
+  console.log('loading', 'hotel', hotelLoading, 'price', priceLoading);
+
+  const [page, setPage] = useState(1);
+  const listingSectionRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = listingSectionRef.current;
+    if (!el) return;
+
+    function handleScroll() {
+      if (isLoading || page * ITEMS_PER_PAGE > hotels.length || !el) {
+        return;
+      }
+
+      const scrollBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+      if (scrollBottom < 300) {
+        setPage((prev) => prev + 1);
+      }
+    }
+    el.addEventListener('scroll', handleScroll);
+    return () => el.removeEventListener('scroll', handleScroll);
+  }, [page, hotels, isLoading, setPage]);
+
+  useEffect(() => {
+    const el = listingSectionRef.current;
+    if (!el) return;
+    el.scrollTo({ top: 0, behavior: 'smooth' });
+    setPage(1);
+  }, [listingState.filterBy, listingState.sortBy]);
 
   return (
     <div className={styles.container}>
       <div className={styles.sidebarSection}>
         <div className={styles.filterSection}>
           <FilterPanel
-            hotels={hotels}
+            hotels={pricedHotels}
             listingDispatch={listingDispatch}
             listingState={listingState}
           />
         </div>
-        <div className={styles.listingSection}>
-          {loading &&
+        <div ref={listingSectionRef} className={styles.listingSection}>
+          {isLoading &&
             Array.from({ length: 3 }).map((_, i) => (
               <MapListingCardSkeleton key={`skeleton-${i}`} />
             ))}
-          {!loading &&
-            sortedHotels
-              .slice(0, 10)
+          {!isLoading &&
+            filteredHotels
+              .slice(0, ITEMS_PER_PAGE * page)
               .map((hotel) => (
                 <MapListingCard
                   hotel={hotel}
                   occupancy={occupancy}
                   stayDates={stayDates}
-                  loading={loading}
+                  setHoveredHotelId={setHoveredHotelId}
                   key={`map-listing-card-${hotel.id}`}
                 />
               ))}
         </div>
       </div>
       <div className={styles.mapSection}>
-        <GoogleMap />
+        <GoogleMap
+          latLng={latLng}
+          hotels={filteredHotels}
+          hoveredHotelId={hoveredHotelId}
+          stayDates={stayDates}
+          occupancy={occupancy}
+          destinations={destinations}
+          setDestinations={setDestinations}
+          setShowMap={setShowMap}
+          listingDispatch={listingDispatch}
+        />
       </div>
     </div>
   );

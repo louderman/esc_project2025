@@ -67,7 +67,7 @@ describe('GET /api/destination/all', () => {
 });
 
 // Test /api/destination/query fuzzy matching route
-describe('GET /api/destination/query/:text?count={}?distance={}', () => {
+describe('GET /api/destination/query/name/:text?count={}?distance={}', () => {
   const testDestinations = [
     {
       id: `test_1`,
@@ -120,7 +120,7 @@ describe('GET /api/destination/query/:text?count={}?distance={}', () => {
   it('Test match multiple destination with substring matching', async () => {
     const dest = 'Malaysia';
     const res = await request(app).get(
-      `/api/destination/query/${dest}?distance=${0}`
+      `/api/destination/query/name/${dest}?distance=${0}`
     );
     expect(res.body).toHaveLength(2);
     expect(res.body.every((r: Destination) => r.term.includes(dest))).toBe(
@@ -130,7 +130,7 @@ describe('GET /api/destination/query/:text?count={}?distance={}', () => {
 
   it('Test one missing character', async () => {
     const dest = 'Kuala Lumpur, Malaysa';
-    const res = await request(app).get(`/api/destination/query/${dest}`);
+    const res = await request(app).get(`/api/destination/query/name/${dest}`);
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
     expect(res.body[0].term).toBe('Kuala Lumpur, Malaysia');
@@ -138,7 +138,7 @@ describe('GET /api/destination/query/:text?count={}?distance={}', () => {
 
   it('Test one extra character', async () => {
     const dest = 'Kuala Lumpur, Malaysiia';
-    const res = await request(app).get(`/api/destination/query/${dest}`);
+    const res = await request(app).get(`/api/destination/query/name/${dest}`);
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
     expect(res.body[0].term).toBe('Kuala Lumpur, Malaysia');
@@ -146,7 +146,7 @@ describe('GET /api/destination/query/:text?count={}?distance={}', () => {
 
   it('Test one wrong character', async () => {
     const dest = 'Kuala Lumpua, Malaysia';
-    const res = await request(app).get(`/api/destination/query/${dest}`);
+    const res = await request(app).get(`/api/destination/query/name/${dest}`);
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
     expect(res.body[0].term).toBe('Kuala Lumpur, Malaysia');
@@ -154,21 +154,21 @@ describe('GET /api/destination/query/:text?count={}?distance={}', () => {
 
   it('Test one missing character on multiple words', async () => {
     const dest = 'Kual Lumpur, Malayia';
-    const res = await request(app).get(`/api/destination/query/${dest}`);
+    const res = await request(app).get(`/api/destination/query/name/${dest}`);
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
     expect(res.body[0].term).toBe('Kuala Lumpur, Malaysia');
   });
 
   it('Test missing text query param returns 400', async () => {
-    const res = await request(app).get(`/api/destination/query/`);
+    const res = await request(app).get(`/api/destination/query/name/`);
     expect(res.status).toBe(400);
   });
 
   it('Test match multiple destination with edit distance of 2', async () => {
     const dest = 'Malsia';
     const res = await request(app).get(
-      `/api/destination/query/${dest}?distance=${2}`
+      `/api/destination/query/name/${dest}?distance=${2}`
     );
     expect(res.body).toHaveLength(2);
     expect(

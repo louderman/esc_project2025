@@ -11,11 +11,11 @@ import PastBookingPage from './pages/PastBookingPage';
 import HotelDetail from "./pages/HotelDetail";
 import NotFound from "./pages/NotFound";
 import HotelDetailPageTest from './pages/hoteldetailmockedfrontend';
-import ErrorBoundary from './components/ErrorBoundary';
+import { AuthProvider} from './components/common/authcontext';
 
 function App() {
   return (
-    <ErrorBoundary>
+    <AuthProvider>
       <Router>
         <NavBar />
         <Routes>
@@ -32,7 +32,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
-    </ErrorBoundary>
+    </AuthProvider>
   );
 }
 

@@ -9,6 +9,14 @@ const pool = createPool({
   database: process.env.NODE_ENV === 'test' ? 'hotel_test' : 'hotel',
 }).promise();
 
+// const pool = createPool({
+//   host: 'localhost',
+//   port: 3306,
+//   user: 'ItsMeOX',
+//   password: 'password',
+//   database: process.env.NODE_ENV === 'test' ? 'hotel_test' : 'ESC',
+// }).promise();
+
 async function cleanup() {
   try {
     // Check if pool is already closed before trying to end it

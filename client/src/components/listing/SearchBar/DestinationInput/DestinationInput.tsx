@@ -6,7 +6,7 @@ import { useDebounceAsync } from '../../../../hooks/useDebounceAsync';
 import { useSearchParams } from 'react-router-dom';
 
 export type DestinationState = {
-  id: string; 
+  id: string;
   name: string;
 };
 
@@ -36,7 +36,7 @@ export default function DestinationInput({
         const urlDestName = searchParams.get('destName');
         let url;
         if (urlDestName && urlDestName.length > 0) {
-          url = `/api/destination/query/${urlDestName}?count=10`;
+          url = `/api/destination/query/name/${urlDestName}?count=10`;
         } else {
           url = `/api/destination/random?count=5`;
         }
@@ -70,7 +70,14 @@ export default function DestinationInput({
     }
 
     try {
-      const res = await fetch(`/api/destination/query/${userInput}?count=10`, {
+      let url;
+      if (userInput.length > 0) {
+        url = `/api/destination/query/name/${userInput}?count=10`;
+      } else {
+        url = `/api/destination/random?count=5`;
+      }
+
+      const res = await fetch(url, {
         signal: controller.signal,
       });
       
@@ -131,8 +138,7 @@ export default function DestinationInput({
               onMouseDown={() =>
                 setDestination({ id: dest.dest_id, name: dest.term })
               }
-              className={styles.suggestionItem}
-            >
+              className={styles.suggestionItem}>
               <img src='/listing/destination_gray.svg' />
               <div className={styles.itemTextSection}>
                 <span className={styles.itemDestName}>{dest.term}</span>
