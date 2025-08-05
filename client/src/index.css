@@ -1,18 +1,4 @@
-:root {
-  /* font-family: system-ui, Avenir, Helvetica, Arial, sans-serif; */
-  line-height: 1.5;
-  font-weight: 400;
-
-  color: #1a1a1a;
-  /* background-color: #242424; */
-  background-color: #f5f7fa;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
+/* Basic CSS Reset and Global Styles */
 * {
   margin: 0;
   padding: 0;
@@ -23,6 +9,14 @@ html,
 body {
   height: 100%;
   font-family: 'Inter', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #1a1a1a;
+  background-color: #f5f7fa;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 input,
@@ -35,7 +29,7 @@ button {
   cursor: pointer;
 }
 
-/* To disable google map info window close button */
+/* Google Maps specific styles */
 .gm-style-iw button[aria-label='Close'] {
   display: none !important;
 }
@@ -43,131 +37,60 @@ button {
 .gw-style-iw-chr {
   padding-top: 0px !important;
 }
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* CSS Custom Properties for consistent theming */
+:root {
+  --background: #ffffff;
+  --foreground: #1e293b;
+  --card: #ffffff;
+  --card-foreground: #1e293b;
+  --popover: #ffffff;
+  --popover-foreground: #1e293b;
+  --primary: #f59e0b;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #1e293b;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #fef3c7;
+  --accent-foreground: #1e293b;
+  --destructive: #ef4444;
+  --destructive-foreground: #f8fafc;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #f59e0b;
+  --radius: 0.75rem;
+  --hotel-gold: #fbbf24;
+  --hotel-gold-light: #fef3c7;
+  --hotel-text-secondary: #64748b;
+  --hotel-border-light: #e2e8f0;
+}
 
-@layer base {
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 220 13% 18%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 220 13% 18%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 13% 18%;
-
-    --primary: 31 97% 55%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 220 13% 18%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 43 89% 95%;
-    --accent-foreground: 220 13% 18%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 31 97% 55%;
-
-    --radius: 0.75rem;
-    
-    --hotel-gold: 43 89% 61%;
-    --hotel-gold-light: 43 89% 95%;
-    --hotel-text-secondary: 215.4 16.3% 46.9%;
-    --hotel-border-light: 214.3 31.8% 91.4%;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --background: #1e293b;
+    --foreground: #f8fafc;
+    --card: #1e293b;
+    --card-foreground: #f8fafc;
+    --popover: #1e293b;
+    --popover-foreground: #f8fafc;
+    --primary: #f59e0b;
+    --primary-foreground: #1e293b;
+    --secondary: #334155;
+    --secondary-foreground: #f8fafc;
+    --muted: #334155;
+    --muted-foreground: #94a3b8;
+    --accent: #334155;
+    --accent-foreground: #f8fafc;
+    --destructive: #dc2626;
+    --destructive-foreground: #f8fafc;
+    --border: #334155;
+    --input: #334155;
+    --ring: #f59e0b;
+    --hotel-gold: #fbbf24;
+    --hotel-gold-light: #451a03;
+    --hotel-text-secondary: #94a3b8;
+    --hotel-border-light: #334155;
   }
-
-  .dark {
-    --background: 220 13% 18%;
-    --foreground: 210 40% 98%;
-
-    --card: 220 13% 18%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 220 13% 18%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 31 97% 55%;
-    --primary-foreground: 220 13% 18%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 31 97% 55%;
-    
-    --hotel-gold: 43 89% 61%;
-    --hotel-gold-light: 43 89% 15%;
-    --hotel-text-secondary: 215 20.2% 65.1%;
-    --hotel-border-light: 217.2 32.6% 17.5%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-}
-
-@layer base {
-  /* Remove global border application to prevent conflicts */
-  /* Individual components should handle their own borders */
-
-html,
-body {
-  height: 100%;
-  font-family: 'Inter', sans-serif;
-}
-
-/* Only apply font-family to elements that don't have existing styles */
-input:not([class*="register"]):not([class*="login"]),
-textarea:not([class*="register"]):not([class*="login"]),
-button:not([class*="register"]):not([class*="login"]) {
-  font-family: inherit;
-}
-
-/* Only apply cursor pointer to buttons that don't have existing styles */
-button:not([class*="register"]):not([class*="login"]) {
-  cursor: pointer;
-}
 }

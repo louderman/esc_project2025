@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import HotelHeader from '../components/hotel/HotelHeader';
+import NavBar from '../components/common/navbar';
 import HotelImageGallery from '../components/hotel/HotelImageGallery';
 import BookingCard from '../components/hotel/BookingCard';
 import HotelInfo from '../components/hotel/HotelInfo';
 import RoomOptions from '../components/hotel/RoomOptions';
 import LocationMap from '../components/hotel/LocationMap';
 import { Star } from 'lucide-react';
+import styles from './hoteldetailpage.module.css';
 
 // Data types
 type Hotel = {
@@ -442,13 +443,11 @@ const HotelDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <HotelHeader />
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-hotel-text-secondary">Loading hotel details...</p>
-          </div>
+      <div className={styles.container}>
+        <NavBar />
+        <div className={styles.loading}>
+          <div className={styles.spinner}></div>
+          <p>Loading hotel details...</p>
         </div>
       </div>
     );
@@ -456,18 +455,16 @@ const HotelDetail = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background">
-        <HotelHeader />
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <p className="text-destructive mb-4">Error: {error}</p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="text-primary hover:underline"
-            >
-              Try again
-            </button>
-          </div>
+      <div className={styles.container}>
+        <NavBar />
+        <div className={styles.error}>
+          <p>Error: {error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className={styles.retryButton}
+          >
+            Try again
+          </button>
         </div>
       </div>
     );
@@ -475,10 +472,10 @@ const HotelDetail = () => {
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-background">
-        <HotelHeader />
-        <div className="flex items-center justify-center h-96">
-          <p className="text-hotel-text-secondary">No hotel data available</p>
+      <div className={styles.container}>
+        <NavBar />
+        <div className={styles.error}>
+          <p>No hotel data available</p>
         </div>
       </div>
     );
@@ -487,51 +484,64 @@ const HotelDetail = () => {
   console.log('Rendering HotelDetail with price:', data.rooms.length > 0 ? data.rooms[0].price : 0, 'and rooms:', data.rooms);
   
   return (
-    <div className="min-h-screen bg-background">
-      <HotelHeader />
+    <div className={styles.container}>
+      <NavBar />
       
-      <main className="max-w-7xl mx-auto px-4 md:px-6 py-8">
+      <main className={styles.main}>
         {/* Hotel Title & Rating */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">{data.hotel.name}</h1>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-1">
+        <div className={styles.hotelHeader}>
+          <h1 className={styles.hotelName}>{data.hotel.name}</h1>
+          <div className={styles.rating}>
+            <div className={styles.stars}>
               {[...Array(5)].map((_, i) => (
                 <Star 
                   key={i} 
                   size={18} 
-                  className={i < Math.floor(data.hotel.rating) ? "fill-hotel-gold text-hotel-gold" : "text-muted-foreground"} 
+                  className={i < Math.floor(data.hotel.rating) ? styles.starFilled : styles.starEmpty} 
                 />
               ))}
-              <span className="ml-2 font-medium">{data.hotel.rating}</span>
+              <span className={styles.ratingScore}>{data.hotel.rating}</span>
             </div>
-            <span className="text-hotel-text-secondary">({data.hotel.reviewCount} reviews)</span>
+            <span className={styles.reviewCount}>({data.hotel.reviewCount} reviews)</span>
           </div>
         </div>
 
         {/* Main Content - Full Width Layout */}
-        <div className="space-y-8 mb-12">
+        <div className={styles.contentGrid}>
           {/* Hotel Images and Info */}
-          <div className="space-y-8">
+          <div className={styles.leftColumn}>
             <HotelImageGallery 
               images={data.hotel.images} 
               hotelName={data.hotel.name} 
             />
             <HotelInfo hotel={data.hotel} />
           </div>
+
+          {/* Booking Card */}
+          <div className={styles.rightColumn}>
+            <BookingCard 
+              price={data.rooms.length > 0 ? data.rooms[0].price : 0}
+              rating={data.hotel.rating}
+              reviewCount={data.hotel.reviewCount}
+              hotelName={data.hotel.name}
+              hotelId={hotelId}
+              hasRooms={data.rooms.length > 0}
+              availability={data.availability}
+            />
+          </div>
         </div>
 
         {/* Room Options */}
-        <div className="mb-12">
+        <div className={styles.roomOptions}>
           {data.rooms.length > 0 ? (
             <RoomOptions rooms={data.rooms} />
           ) : (
-            <div className="text-center py-8">
-              <h3 className="text-xl font-semibold mb-2">No rooms available</h3>
-              <p className="text-gray-600 mb-4">
+            <div className={styles.error}>
+              <h3>No rooms available</h3>
+              <p>
                 No rooms are currently available for the selected dates and parameters.
               </p>
-              <div className="space-y-2 text-sm text-gray-500">
+              <div>
                 <p>Try different dates or contact the hotel directly.</p>
                 <p>You can also check back later for availability updates.</p>
               </div>
@@ -539,21 +549,8 @@ const HotelDetail = () => {
           )}
         </div>
 
-        {/* Full Width Booking Card - Below Available Rooms */}
-        <div className="mb-12">
-          <BookingCard 
-            price={data.rooms.length > 0 ? data.rooms[0].price : 0}
-            rating={data.hotel.rating}
-            reviewCount={data.hotel.reviewCount}
-            hotelName={data.hotel.name}
-            hotelId={hotelId}
-            hasRooms={data.rooms.length > 0}
-            availability={data.availability}
-          />
-        </div>
-
         {/* Location */}
-        <div className="mb-12">
+        <div>
           <LocationMap address={data.hotel.address1} />
         </div>
       </main>
