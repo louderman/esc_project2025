@@ -176,6 +176,7 @@ export default function Slider({
           );
           return (
             <div
+              data-testid='slider-bar'
               key={`bar-${i}`}
               className={styles.bar}
               style={{
@@ -188,6 +189,7 @@ export default function Slider({
       </div>
       <div
         className={styles.sliderContainer}
+        data-testid='slider-container'
         ref={sliderRef}
         onMouseUp={onBlur}
         onMouseMove={handleMouseMove}
