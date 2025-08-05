@@ -1,5 +1,10 @@
+# If this file shows error, in vs code bottom right corner, 
+# select language to 'Plain Text'
+
+# ignore all files
 *
 
+# except these:
 !/client
 
 !/client/src
