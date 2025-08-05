@@ -1,7 +1,7 @@
- import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import type { CreateBookingRequest } from '../../../../types/Booking';
+import { API_ENDPOINTS } from '../../config/api';
 import styles from './PaymentForm.module.css';
 
 interface PaymentFormProps {
@@ -29,7 +29,6 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
   // State for handling errors and processing status
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
-  const navigate = useNavigate();
   
   // State for billing address
   const [billingAddress, setBillingAddress] = useState<BillingAddress>({
@@ -91,12 +90,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
     const cardElement = elements.getElement(CardElement);
 
     if (cardElement == null) {
-      setError('Card element not found');
-      setProcessing(false);
       return;
     }
 
-    // Validate card details using Stripe Elements (no API call)
     const { error: paymentMethodError, paymentMethod } = await stripe.createPaymentMethod({
       type: 'card',
       card: cardElement,
@@ -108,72 +104,57 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
       },
     });
 
+    // TODO: probably make this more robust, this really doesn't say much
     if (paymentMethodError) {
-      const errorMessage = paymentMethodError.message || "Please check your card details.";
+      const errorMessage = paymentMethodError.message || "An unknown payment error occurred.";
       setError(errorMessage);
       onPaymentError(errorMessage);
       setProcessing(false);
       return;
     }
 
-    // Validate billing information
-    if (!billingAddress.name || !billingAddress.email || !billingAddress.address.line1 || 
-        !billingAddress.address.city || !billingAddress.address.state || !billingAddress.address.postal_code) {
-      setError('Please fill in all required billing information.');
-      onPaymentError('Please fill in all required billing information.');
-      setProcessing(false);
-      return;
-    }
-
     try {
-        // 1. Create a booking
-        const bookingResponse = await fetch(`${import.meta.env.VITE_API_URL}/bookings`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(bookingData),
-        });
+      const response = await fetch(API_ENDPOINTS.PAYMENT.CREATE_PAYMENT_INTENT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentMethodId: paymentMethod.id,
+          amount: amount, // Amount in cents
+          bookingData: bookingData, // Include booking data
+        }),
+      });
 
-        const bookingResult = await bookingResponse.json();
+      const result = await response.json();
 
-        if (bookingResult.error) {
-            setError(bookingResult.error);
-            onPaymentError(bookingResult.error);
-            setProcessing(false);
-            return;
+      if (result.error) {
+        setError(result.error);
+        onPaymentError(result.error);
+      } else if (result.requires_action) {
+        // Handle additional authentication if required
+        const { error: confirmError } = await stripe.confirmCardPayment(
+          result.payment_intent.client_secret
+        );
+        
+        if (confirmError) {
+          setError(confirmError.message || 'Authentication failed');
+          onPaymentError(confirmError.message || 'Authentication failed');
+        } else {
+          // Payment succeeded after authentication
+          onPaymentSuccess();
         }
-
-        const { bookingId } = bookingResult;
-
-        // 2. Create a payment intent
-        const paymentResponse = await fetch(`${import.meta.env.VITE_API_URL}/payment/create-payment-intent`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                paymentMethodId: paymentMethod.id,
-                amount: Math.round(amount * 100), // Convert to cents
-                bookingId,
-            }),
-        });
-
-        const paymentResult = await paymentResponse.json();
-
-        if (paymentResult.error) {
-            setError(paymentResult.error);
-            onPaymentError(paymentResult.error);
-        } else if (paymentResult.success) {
-            onPaymentSuccess();
-            navigate(`/booking-confirmation?bookingId=${paymentResult.booking_id}`);
-        }
-    } catch (error) {
-        console.error("Payment processing error:", error);
-        setError("An error occurred while processing your payment.");
-        onPaymentError("An error occurred while processing your payment.");
+      } else if (result.success) {
+        // Payment succeeded without additional authentication
+        console.log('Payment succeeded with ID:', result.payment_intent_id);
+        onPaymentSuccess();
+      } else {
+        setError('An unknown error occurred on the server.');
+        onPaymentError('An unknown error occurred on the server.');
+      }
+    } catch (err) {
+      const errorMessage = 'An unexpected error occurred while contacting the server.';
+      setError(errorMessage);
+      onPaymentError(errorMessage);
     }
-
 
     setProcessing(false);
   };

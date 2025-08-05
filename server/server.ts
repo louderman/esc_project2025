@@ -1,65 +1,23 @@
-
 import dotenv from 'dotenv';
 dotenv.config();
 
-import process from 'process';
-import express from 'express';
 import cors from 'cors';
+import express from 'express';
+import process from 'process';
 
 import { cleanup } from './database/db';
 
-import { sync as syncUser } from './models/userModel';
+import { sync as syncBooking } from './models/bookingModel';
 import { sync as syncDest } from './models/destinationModel';
-
-import { router as destRouter } from './routes/destinationRouter';
-import { router as priceRouter } from './routes/hotelpriceRouter';
-import { router as hotelRouter } from './routes/hotelRouter';
-import { router as authRouter } from './routes/authRouter';
-
-const app = express();
-
-app.use(cors());
-app.use(express.json());
-
-app.use('/api/destination', destRouter);
-app.use('/api/hotel-price', priceRouter);
-app.use('/api/hotel', hotelRouter);
-app.use('/api/auth', authRouter);
-
-process.on('SIGINT', cleanup);
-process.on('SIGTERM', cleanup);
-
-syncUser();
-syncDest();
-
-// process.env.NODE_ENV === 'test' only when we run `npm run test`
-if (process.env.NODE_ENV !== 'test') {
-  app.listen(5000, () => {
-    console.log('Server listening on port 5000.');
-  });
-}
-
-export default app;
-
-//Merge these 2 blocks:
-import dotenv from 'dotenv';
-dotenv.config();
-
-import process from 'process';
-import express from 'express';
-import cors from 'cors';
-
-import { cleanup } from './database/db';
-
 import { sync as syncUser } from './models/userModel';
-import { sync as syncDest } from './models/destinationModel';
 
-import { router as destRouter } from './routes/destinationRouter';
-import { router as priceRouter } from './routes/hotelpriceRouter';
-import { router as hotelRouter } from './routes/hotelRouter';
 import { router as authRouter } from './routes/authRouter';
-import paymentRouter from './routes/payment';
+import bookingRouter from './routes/bookingRouter';
+import { router as destRouter } from './routes/destinationRouter';
 import { router as hotelDetailRouter } from './routes/hoteldetailRouter';
+import { router as priceRouter } from './routes/hotelpriceRouter';
+import { router as hotelRouter } from './routes/hotelRouter';
+import paymentRouter from './routes/payment';
 
 const app = express();
 
@@ -72,6 +30,7 @@ app.use('/api/hotel-price', priceRouter);
 app.use('/api/hotel', hotelRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/payment', paymentRouter);
+app.use('/api/bookings', bookingRouter);
 app.use('/api/hotel-detail', hotelDetailRouter);
 
 // Debug route to check if server is working
@@ -84,11 +43,11 @@ app.get('/api/debug', (req, res) => {
       '/api/hotel',
       '/api/auth',
       '/api/payment',
+      '/api/bookings',
       '/api/hotel-detail'
     ]
   });
 });
-
 
 // Test route for hotel-detail
 app.get('/api/hotel-detail/test', (req, res) => {
@@ -117,18 +76,18 @@ app.get('/api/hotel-detail/combined/:hotelId', async (req, res) => {
 
   try {
     const hotelUrl = `https://hotelapi.loyalty.dev/api/hotels/${hotelId}`;
-            const pricesUrl = `https://hotelapi.loyalty.dev/api/hotels/${hotelId}/prices?${new URLSearchParams({
-          destination_id: destination_id as string,
-          checkin: checkin as string,
-          checkout: checkout as string,
-          lang: lang as string,
-          currency: currency as string,
-          country_code: country_code as string,
-          guests: guests as string,
-          partner_id: '1089',
-          landing_page: 'wl-acme-earn',
-          product_type: 'earn'
-        })}`;
+    const pricesUrl = `https://hotelapi.loyalty.dev/api/hotels/${hotelId}/prices?${new URLSearchParams({
+      destination_id: destination_id as string,
+      checkin: checkin as string,
+      checkout: checkout as string,
+      lang: lang as string,
+      currency: currency as string,
+      country_code: country_code as string,
+      guests: guests as string,
+      partner_id: '1089',
+      landing_page: 'wl-acme-earn',
+      product_type: 'earn'
+    })}`;
 
     // Fetch hotel details and prices in parallel
     const [hotelResponse, pricesResponse] = await Promise.all([
@@ -166,11 +125,12 @@ process.on('SIGTERM', cleanup);
 
 syncUser();
 syncDest();
+syncBooking();
 
 // process.env.NODE_ENV === 'test' only when we run `npm run test`
 if (process.env.NODE_ENV !== 'test') {
   app.listen(5001, () => {
-  console.log('Server listening on port 5001.');
+    console.log('Server listening on port 5001.');
   });
 }
 
