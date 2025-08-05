@@ -11,9 +11,9 @@ const HotelImageGallery = ({ images, hotelName }: HotelImageGalleryProps) => {
   const [currentImage, setCurrentImage] = useState(0);
   
   const defaultImages = [
-    "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=800&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=800&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&h=600&fit=crop"
+    "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1200&h=900&fit=crop&q=85",
+    "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85",
+    "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1200&h=900&fit=crop&q=85"
   ];
   
   const galleryImages = images || defaultImages;
@@ -41,7 +41,7 @@ const HotelImageGallery = ({ images, hotelName }: HotelImageGalleryProps) => {
             <button
               key={index}
               onClick={() => setCurrentImage(index)}
-              className={`relative flex-1 aspect-video rounded-md overflow-hidden border-2 transition-all ${
+              className={`relative flex-1 h-20 rounded-md overflow-hidden border-2 transition-all ${
                 currentImage === index ? 'border-primary' : 'border-transparent'
               }`}
             >
@@ -49,6 +49,7 @@ const HotelImageGallery = ({ images, hotelName }: HotelImageGalleryProps) => {
                 src={image} 
                 alt={`${hotelName} thumbnail ${index + 1}`}
                 className="w-full h-full object-cover"
+                loading="lazy"
               />
             </button>
           ))}

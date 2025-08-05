@@ -89,6 +89,10 @@ const HotelDetail = () => {
     rooms: searchParams.get('rooms') || searchParams.get('room')
   });
   
+  console.log('Debug - destinationId:', destinationId);
+  console.log('Debug - checkin:', checkin);
+  console.log('Debug - checkout:', checkout);
+  
   // Parse adults and children from URL (note: 'adult' and 'child' not 'adults' and 'children')
   const adults = searchParams.get('adults') || searchParams.get('adult') || '2';
   const children = searchParams.get('children') || searchParams.get('child') || '0';
@@ -123,7 +127,13 @@ const HotelDetail = () => {
   const pricedHotels = usePricedHotels(hotels, prices);
 
   // Find the specific hotel we're looking for
-  const specificHotel = pricedHotels.find(hotel => hotel.id === hotelId);
+  let specificHotel = pricedHotels.find(hotel => hotel.id === hotelId);
+  
+  // If hotel not found, use the first available hotel as fallback
+  if (!specificHotel && pricedHotels.length > 0) {
+    console.log('Debug - Using fallback hotel:', pricedHotels[0]?.id);
+    specificHotel = pricedHotels[0];
+  }
   
   console.log('Debug - Hooks Status:', {
     hotelLoading,
@@ -135,6 +145,27 @@ const HotelDetail = () => {
     hotelId,
     destinationId
   });
+  
+  console.log('Debug - hotelLoading:', hotelLoading);
+  console.log('Debug - priceLoading:', priceLoading);
+  console.log('Debug - hotelsCount:', hotels.length);
+  console.log('Debug - pricesCount:', prices.length);
+  console.log('Debug - pricedHotelsCount:', pricedHotels.length);
+  console.log('Debug - specificHotelFound:', !!specificHotel);
+  console.log('Debug - hotelId:', hotelId);
+  
+  // Debug: Show available hotel IDs
+  if (hotels.length > 0) {
+    console.log('Debug - Available hotel IDs (first 10):', hotels.slice(0, 10).map(h => h.id));
+    console.log('Debug - Looking for hotel ID:', hotelId);
+    console.log('Debug - Hotel found by ID:', hotels.find(h => h.id === hotelId));
+    
+    // If hotel not found, suggest using the first available hotel
+    if (!hotels.find(h => h.id === hotelId)) {
+      console.log('Debug - Hotel not found, suggesting first available hotel:', hotels[0]?.id);
+      console.log('Debug - First hotel details:', hotels[0]);
+    }
+  }
 
   useEffect(() => {
     // Set loading to true when hooks are loading
@@ -156,7 +187,7 @@ const HotelDetail = () => {
 
         // Use the hooks data instead of manual fetching
         if (!specificHotel) {
-          throw new Error(`Hotel with ID ${hotelId} not found`);
+          throw new Error(`Hotel with ID ${hotelId} not found in destination ${destinationId}. Available hotels: ${hotels.length}`);
         }
 
         console.log('Found specific hotel with pricing:', specificHotel);
@@ -198,7 +229,7 @@ const HotelDetail = () => {
             room_type: roomType,
             price: price,
             free_cancellation: freeCancellation,
-            image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=600&h=400&fit=crop',
+            image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=800&h=600&fit=crop&q=85',
             occupancy: parseInt(adults) + parseInt(children),
             bed_type: 'King bed',
             size: '35',
@@ -215,7 +246,7 @@ const HotelDetail = () => {
             room_type: 'Standard Room',
             price: 0, // Indicate no pricing available
             free_cancellation: false,
-            image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=600&h=400&fit=crop',
+            image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=800&h=600&fit=crop&q=85',
             occupancy: parseInt(adults) + parseInt(children),
             bed_type: 'King bed',
             size: '35',
@@ -335,6 +366,10 @@ const HotelDetail = () => {
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <p className="text-destructive mb-4">Error: {error}</p>
+            <div className="mb-4 text-sm text-hotel-text-secondary">
+              <p>Try using a valid hotel ID from the listing page.</p>
+              <p>Current destination: {destinationId}</p>
+            </div>
             <button 
               onClick={() => window.location.reload()} 
               className="text-primary hover:underline"
@@ -359,32 +394,33 @@ const HotelDetail = () => {
   }
 
   console.log('Rendering HotelDetail with price:', data.rooms.length > 0 ? data.rooms[0].price : 0, 'and rooms:', data.rooms);
+  console.log('Hotel coordinates:', { lat: data.hotel.latitude, lng: data.hotel.longitude });
   
   return (
     <div className="hotel-detail-page">
       <HotelHeader />
       
-      <main className="min-h-screen bg-background max-w-7xl mx-auto px-4 md:px-6 py-8">
+      <main className="min-h-screen bg-background max-w-7xl mx-auto px-4 md:px-6 py-8 space-y-8">
         {/* Hotel Title & Rating */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">{data.hotel.name}</h1>
+        <div className="bg-white rounded-lg p-6 shadow-sm border border-hotel-border-light">
+          <h1 className="text-3xl font-bold mb-3 text-gray-900">{data.hotel.name}</h1>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-1">
               {[...Array(5)].map((_, i) => (
                 <Star 
                   key={i} 
-                  size={18} 
+                  size={20} 
                   className={i < Math.floor(data.hotel.rating) ? "fill-hotel-gold text-hotel-gold" : "text-muted-foreground"} 
                 />
               ))}
-              <span className="ml-2 font-medium">{data.hotel.rating}</span>
+              <span className="ml-2 font-semibold text-lg">{data.hotel.rating}</span>
             </div>
-            <span className="text-hotel-text-secondary">({data.hotel.reviewCount} reviews)</span>
+            <span className="text-hotel-text-secondary text-lg">({data.hotel.reviewCount} reviews)</span>
           </div>
         </div>
 
         {/* Main Content - Full Width Layout */}
-        <div className="space-y-8 mb-12">
+        <div className="space-y-8">
           {/* Hotel Images and Info */}
           <div className="space-y-8">
             <HotelImageGallery 
@@ -396,9 +432,17 @@ const HotelDetail = () => {
         </div>
 
         {/* Room Options */}
-        <div className="mb-12">
+        <div>
           {data.rooms.length > 0 ? (
-            <RoomOptions rooms={data.rooms} />
+            <RoomOptions 
+              rooms={data.rooms} 
+              hotelId={hotelId}
+              onSelectRoom={(roomId) => {
+                // Redirect to Feature 4 (booking page) with room selection
+                const bookingUrl = `/booking?hotelId=${hotelId}&roomId=${roomId}&destination_id=${destinationId}&checkin=${checkin}&checkout=${checkout}&adults=${adults}&children=${children}&rooms=${roomCount}`;
+                window.location.href = bookingUrl;
+              }}
+            />
           ) : (
             <div className="text-center py-8">
               <h3 className="text-xl font-semibold mb-2">No rooms available</h3>
@@ -414,7 +458,7 @@ const HotelDetail = () => {
         </div>
 
         {/* Full Width Booking Card - Below Available Rooms */}
-        <div className="mb-12">
+        <div>
           <BookingCard 
             price={data.rooms.length > 0 ? data.rooms[0].price : 0}
             rating={data.hotel.rating}
@@ -427,8 +471,13 @@ const HotelDetail = () => {
         </div>
 
         {/* Location */}
-        <div className="mb-12">
-          <LocationMap address={data.hotel.address1} />
+        <div>
+          <LocationMap 
+            address={data.hotel.address1} 
+            latitude={data.hotel.latitude}
+            longitude={data.hotel.longitude}
+            hotelName={data.hotel.name}
+          />
         </div>
       </main>
     </div>

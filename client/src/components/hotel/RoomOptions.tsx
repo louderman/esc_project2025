@@ -16,9 +16,11 @@ interface Room {
 
 interface RoomOptionsProps {
   rooms: Room[];
+  hotelId: string;
+  onSelectRoom?: (roomId: string) => void;
 }
 
-const RoomOptions = ({ rooms }: RoomOptionsProps) => {
+const RoomOptions = ({ rooms, hotelId, onSelectRoom }: RoomOptionsProps) => {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold">Available Rooms</h2>
@@ -64,8 +66,11 @@ const RoomOptions = ({ rooms }: RoomOptionsProps) => {
                     
                     <div className="text-right">
                       <div className="text-2xl font-bold mb-1">${room.price}</div>
-                      <div className="text-sm text-hotel-text-secondary mb-3">per night</div>
-                      <Button className="bg-primary hover:bg-primary/90">
+                      <div className="text-sm text-hotel-text-secondary mb-3">total</div>
+                      <Button 
+                        className="bg-primary hover:bg-primary/90"
+                        onClick={() => onSelectRoom?.(room.id)}
+                      >
                         Select Room
                       </Button>
                     </div>

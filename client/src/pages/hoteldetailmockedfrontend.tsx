@@ -642,7 +642,12 @@ const HotelDetail = () => {
 
         {/* Location */}
         <div className="mb-12">
-          <LocationMap address={data.hotel.address1} />
+          <LocationMap 
+          address={data.hotel.address1} 
+          latitude={data.hotel.latitude}
+          longitude={data.hotel.longitude}
+          hotelName={data.hotel.name}
+        />
         </div>
       </main>
     </div>

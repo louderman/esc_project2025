@@ -1,7 +1,7 @@
 import { Button } from "@/components/hotel/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/hotel/ui/card";
 import { Label } from "@/components/hotel/ui/label";
-import { Users, Star } from "lucide-react";
+import { Users, Star, Calendar as CalendarIcon } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import Calendar from "@/components/listing/SearchBar/DateInput/Calendar/Calendar";
@@ -107,15 +107,16 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
     const children = parseInt(searchParams.get('children') || searchParams.get('child') || '0');
     const rooms = parseInt(searchParams.get('rooms') || searchParams.get('room') || '1');
 
-    // Calculate total amount
-    const totalAmount = price * numberOfNights * rooms;
+    // Calculate total amount (price is already the total)
+    const totalAmount = price;
 
     // Prepare booking details
     const bookingDetails = {
       selectedRoom: {
         id: hotelId || 'default',
         room_type: 'Standard Room',
-        price: price,
+        price: price / numberOfNights, // Price per night
+        totalPrice: price, // Total price for the stay
         free_cancellation: true,
         occupancy: adults + children,
         bed_type: 'King bed',
@@ -132,8 +133,8 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
       numberOfRooms: rooms,
       checkinDate: checkin,
       checkoutDate: checkout,
-      totalAmount: totalAmount,
-      pricePerNight: price
+              totalAmount: totalAmount,
+        pricePerNight: price / numberOfNights
     };
 
     // Navigate to booking page with state
@@ -153,8 +154,8 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
   };
 
   return (
-    <Card className="w-full shadow-xl border-0 bg-gradient-to-r from-white to-gray-50">
-      <CardHeader className="pb-6 border-b border-gray-100">
+    <Card className="w-full shadow-xl border-0 bg-white">
+      <CardHeader className="pb-6 border-b border-orange-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-6">
             <div>
@@ -177,8 +178,8 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
           <div className="text-right">
             {hasRooms && price > 0 ? (
               <>
-                <div className="text-3xl font-bold text-primary">${price}</div>
-                <div className="text-base text-hotel-text-secondary">per night</div>
+                <div className="text-3xl font-bold text-orange-500">${price}</div>
+                <div className="text-base text-hotel-text-secondary">total</div>
               </>
             ) : (
               <div className="text-lg text-hotel-text-secondary">No availability</div>
@@ -192,15 +193,15 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
           <div>
             <Label htmlFor="checkin" className="text-sm font-medium">Check-in</Label>
             <div className="relative">
-              <img 
-                src='/listing/calendar.svg' 
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10 cursor-pointer"
+              <CalendarIcon 
+                size={16}
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10 text-gray-400 cursor-pointer"
                 onClick={() => setShowCheckinCal(!showCheckinCal)}
               />
               <button
                 ref={checkinButtonRef}
                 onClick={() => setShowCheckinCal(!showCheckinCal)}
-                className="w-full text-left px-9 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full text-left pl-10 pr-3 py-3 border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
                 {checkinDate}
               </button>
@@ -214,15 +215,15 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
           <div>
             <Label htmlFor="checkout" className="text-sm font-medium">Check-out</Label>
             <div className="relative">
-              <img 
-                src='/listing/calendar.svg' 
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10 cursor-pointer"
+              <CalendarIcon 
+                size={16}
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10 text-gray-400 cursor-pointer"
                 onClick={() => setShowCheckoutCal(!showCheckoutCal)}
               />
               <button
                 ref={checkoutButtonRef}
                 onClick={() => setShowCheckoutCal(!showCheckoutCal)}
-                className="w-full text-left px-9 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full text-left pl-10 pr-3 py-3 border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
                 {checkoutDate}
               </button>
@@ -279,13 +280,14 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
                 const nights = checkin && checkout ? 
                   Math.round((new Date(checkout).getTime() - new Date(checkin).getTime()) / (1000 * 60 * 60 * 24)) : 3;
                 const rooms = parseInt(searchParams.get('rooms') || searchParams.get('room') || '1');
-                const totalPrice = price * nights * rooms;
+                const pricePerNight = price / nights; // Calculate per-night rate from total
+                const totalPrice = price; // Price is already the total
                 const taxes = Math.round(totalPrice * 0.1); // 10% taxes
                 
                 return (
                   <>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm">{nights} night{nights !== 1 ? 's' : ''} × {rooms} room{rooms !== 1 ? 's' : ''}</span>
+                      <span className="text-sm">{nights} night{nights !== 1 ? 's' : ''} × {rooms} room{rooms !== 1 ? 's' : ''} × ${pricePerNight.toFixed(0)}/night</span>
                       <span className="text-sm">${totalPrice}</span>
                     </div>
                     <div className="flex justify-between items-center mb-2">
@@ -302,7 +304,7 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
             </div>
             
             <Button 
-              className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-4 text-lg" 
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-4 text-lg" 
               size="lg"
               onClick={handleReserveNow}
             >

@@ -262,3 +262,29 @@ All colors MUST be HSL.
     border-color: hsl(var(--hotel-border-light));
   }
 }
+
+/* Ensure register page h2 is bold */
+[class*="register"] h2 {
+  font-weight: bold !important;
+}
+
+/* Hotel detail page specific styles */
+.hotel-detail-page {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.hotel-detail-page main {
+  background: transparent;
+}
+
+/* Map container improvements */
+.hotel-detail-page .aspect-\[16\/9\] {
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Booking card styling */
+.hotel-detail-page .shadow-xl {
+  border: 2px solid #fed7aa;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
