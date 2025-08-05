@@ -1,7 +1,8 @@
- import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { CreateBookingRequest } from '../../../../types/Booking';
+import { API_BASE_URL } from '../../config/api';
 import styles from './PaymentForm.module.css';
 
 interface PaymentFormProps {
@@ -97,7 +98,7 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
     }
 
     // Validate card details using Stripe Elements (no API call)
-    const { error: paymentMethodError, paymentMethod } = await stripe.createPaymentMethod({
+    const { error: paymentMethodError } = await stripe.createPaymentMethod({
       type: 'card',
       card: cardElement,
       billing_details: {
@@ -126,14 +127,18 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
     }
 
     try {
-        // 1. Create a booking
-        const bookingResponse = await fetch(`${import.meta.env.VITE_API_URL}/bookings`, {
+        // 1. Create a booking first
+        const bookingResponse = await fetch(`${API_BASE_URL}/api/bookings`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(bookingData),
         });
+
+        if (!bookingResponse.ok) {
+            throw new Error(`Booking creation failed: ${bookingResponse.status}`);
+        }
 
         const bookingResult = await bookingResponse.json();
 
@@ -146,32 +151,65 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
 
         const { bookingId } = bookingResult;
 
-        // 2. Create a payment intent
-        const paymentResponse = await fetch(`${import.meta.env.VITE_API_URL}/payment/create-payment-intent`, {
+        // 2. Validate payment method client-side (no actual charge)
+        // This simulates payment processing for demo purposes
+        const mockPaymentIntentId = `pi_demo_${bookingId}_${Date.now()}`;
+        
+        // Simulate a small delay for payment processing
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // 3. Confirm payment on server (update booking status)
+        const confirmResponse = await fetch(`${API_BASE_URL}/api/payment/confirm-payment`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                paymentMethodId: paymentMethod.id,
-                amount: Math.round(amount * 100), // Convert to cents
                 bookingId,
+                paymentIntentId: mockPaymentIntentId,
             }),
         });
 
-        const paymentResult = await paymentResponse.json();
+        if (!confirmResponse.ok) {
+            throw new Error(`Payment confirmation failed: ${confirmResponse.status}`);
+        }
 
-        if (paymentResult.error) {
-            setError(paymentResult.error);
-            onPaymentError(paymentResult.error);
-        } else if (paymentResult.success) {
+        const confirmResult = await confirmResponse.json();
+
+        if (confirmResult.error) {
+            setError(confirmResult.error);
+            onPaymentError(confirmResult.error);
+        } else if (confirmResult.success) {
             onPaymentSuccess();
-            navigate(`/booking-confirmation?bookingId=${paymentResult.booking_id}`);
+            // Navigate to the correct route with proper state data
+            navigate(`/booking/confirmation`, {
+                state: {
+                    bookingId: confirmResult.booking_id,
+                    hotel: bookingData ? {
+                        id: bookingData.hotelId,
+                        name: bookingData.hotelName,
+                        price: bookingData.pricePerNight,
+                        address: 'Hotel Address', // BookingConfirmationPage uses hotel.address
+                        imageCount: 5,
+                        image_details: {
+                            prefix: '/listing/hotel_img_placeholder.png?id=',
+                            suffix: '',
+                        }
+                    } : null,
+                    stayDates: bookingData ? {
+                        checkinDate: bookingData.checkInDate && bookingData.checkInDate !== 'N/A' ? new Date(bookingData.checkInDate) : null,
+                        checkoutDate: bookingData.checkOutDate && bookingData.checkOutDate !== 'N/A' ? new Date(bookingData.checkOutDate) : null,
+                    } : null,
+                    totalAmount: amount / 100,
+                    bookingDetails: bookingData
+                }
+            });
         }
     } catch (error) {
         console.error("Payment processing error:", error);
-        setError("An error occurred while processing your payment.");
-        onPaymentError("An error occurred while processing your payment.");
+        const errorMessage = error instanceof Error ? error.message : "An error occurred while processing your payment.";
+        setError(errorMessage);
+        onPaymentError(errorMessage);
     }
 
 
