@@ -72,6 +72,12 @@ export default function BookingForm({
         onPaymentSuccess={handlePaymentSuccess}
         onPaymentError={handlePaymentError}
       />
+
+      {paymentError && (
+        <div className={styles.errorMessage}>
+          <p>Payment Error: {paymentError}</p>
+        </div>
+      )}
     </div>
   );
 }

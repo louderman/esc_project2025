@@ -18,6 +18,24 @@ jest.mock('stripe', () => {
     });
 });
 
+// Helper function to create booking data with required fields
+const createBookingData = (overrides: Partial<CreateBookingRequest> = {}): CreateBookingRequest => ({
+    userId: 'user-api-123',
+    email: 'api-test@example.com',
+    hotelId: 'hotel_api_test_123',
+    hotelName: 'API Test Hotel',
+    checkInDate: '2024-12-01',
+    checkOutDate: '2024-12-05',
+    guests: '2 adults, 1 child',
+    pricePerNight: 200,
+    numberOfNights: 4,
+    totalAmount: 800,
+    whatsIncluded: ['Breakfast', 'WiFi', 'Pool'],
+    imageUrl: 'http://example.com/api-test-hotel.jpg',
+    bookingAddress: '123 API Test St, API City, AC 12345, US',
+    ...overrides,
+});
+
 describe('API Endpoints Integration Tests', () => {
     beforeAll(async () => {
         await syncBooking();
@@ -25,18 +43,7 @@ describe('API Endpoints Integration Tests', () => {
 
     describe('Complete API Flow', () => {
         it('should handle complete booking lifecycle through API endpoints', async () => {
-            const bookingData: CreateBookingRequest = {
-                hotelId: 'hotel_api_test_123',
-                hotelName: 'API Test Hotel',
-                checkInDate: '2024-12-01',
-                checkOutDate: '2024-12-05',
-                guests: '2 adults, 1 child',
-                pricePerNight: 200,
-                numberOfNights: 4,
-                totalAmount: 800,
-                whatsIncluded: ['Breakfast', 'WiFi', 'Pool'],
-                imageUrl: 'http://example.com/api-test-hotel.jpg',
-            };
+            const bookingData = createBookingData();
 
             // Step 1: Create booking
             const createResponse = await request(app)
@@ -56,10 +63,13 @@ describe('API Endpoints Integration Tests', () => {
 
             expect(getResponse.body).toMatchObject({
                 id: bookingId,
+                userId: 'user-api-123',
+                email: 'api-test@example.com',
                 hotelId: 'hotel_api_test_123',
                 hotelName: 'API Test Hotel',
                 status: 'pending',
                 totalAmount: 800,
+                bookingAddress: '123 API Test St, API City, AC 12345, US',
                 paymentIntentId: null,
             });
 
@@ -93,23 +103,17 @@ describe('API Endpoints Integration Tests', () => {
 
     describe('Error Handling Across Endpoints', () => {
         it('should handle invalid booking data consistently', async () => {
-            const invalidBookingData = {
+            const invalidBookingData = createBookingData({
                 hotelId: '', // Invalid
-                hotelName: 'Test Hotel',
-                checkInDate: '2024-12-01',
-                checkOutDate: '2024-12-05',
-                guests: '2',
                 pricePerNight: -100, // Invalid
                 numberOfNights: 0, // Invalid
                 totalAmount: 0, // Invalid
-                whatsIncluded: [],
-                imageUrl: 'http://example.com/test.jpg',
-            };
+            });
 
             const response = await request(app)
                 .post('/api/bookings')
                 .send(invalidBookingData)
-                .expect(500);
+                .expect(400);
 
             expect(response.body.error).toBeDefined();
         });
@@ -139,19 +143,34 @@ describe('API Endpoints Integration Tests', () => {
         it('should validate booking data fields consistently', async () => {
             const testCases = [
                 {
+                    name: 'missing userId',
+                    data: createBookingData({ userId: '' }),
+                    expectedError: /userId/,
+                },
+                {
+                    name: 'missing email',
+                    data: createBookingData({ email: '' }),
+                    expectedError: /email/,
+                },
+                {
                     name: 'missing hotelId',
-                    data: { hotelName: 'Test', checkInDate: '2024-12-01', checkOutDate: '2024-12-05', guests: '2', pricePerNight: 100, numberOfNights: 4, totalAmount: 400, whatsIncluded: [], imageUrl: 'test.jpg' },
+                    data: createBookingData({ hotelId: '' }),
                     expectedError: /hotelId/,
                 },
                 {
                     name: 'missing hotelName',
-                    data: { hotelId: 'hotel123', checkInDate: '2024-12-01', checkOutDate: '2024-12-05', guests: '2', pricePerNight: 100, numberOfNights: 4, totalAmount: 400, whatsIncluded: [], imageUrl: 'test.jpg' },
+                    data: createBookingData({ hotelName: '' }),
                     expectedError: /hotelName/,
                 },
                 {
                     name: 'invalid pricePerNight',
-                    data: { hotelId: 'hotel123', hotelName: 'Test', checkInDate: '2024-12-01', checkOutDate: '2024-12-05', guests: '2', pricePerNight: -50, numberOfNights: 4, totalAmount: 400, whatsIncluded: [], imageUrl: 'test.jpg' },
+                    data: createBookingData({ pricePerNight: -50 }),
                     expectedError: /positive values/,
+                },
+                {
+                    name: 'missing bookingAddress',
+                    data: createBookingData({ bookingAddress: '' }),
+                    expectedError: /bookingAddress/,
                 },
             ];
 
@@ -159,7 +178,7 @@ describe('API Endpoints Integration Tests', () => {
                 const response = await request(app)
                     .post('/api/bookings')
                     .send(testCase.data)
-                    .expect(500);
+                    .expect(400);
 
                 expect(response.body.error).toMatch(testCase.expectedError);
             }
@@ -207,18 +226,18 @@ describe('API Endpoints Integration Tests', () => {
     describe('Concurrent Operations', () => {
         it('should handle multiple simultaneous booking operations', async () => {
             const bookingPromises = Array.from({ length: 10 }, (_, i) => {
-                const bookingData: CreateBookingRequest = {
+                const bookingData = createBookingData({
+                    userId: `user-concurrent-api-${i}`,
+                    email: `concurrent${i}@example.com`,
                     hotelId: `hotel_concurrent_api_${i}`,
                     hotelName: `Concurrent API Test Hotel ${i}`,
-                    checkInDate: '2024-12-01',
-                    checkOutDate: '2024-12-05',
                     guests: `${i + 1} guests`,
                     pricePerNight: 100 + i * 10,
-                    numberOfNights: 4,
                     totalAmount: (100 + i * 10) * 4,
                     whatsIncluded: [`Feature ${i}`],
                     imageUrl: `http://example.com/hotel${i}.jpg`,
-                };
+                    bookingAddress: `${100 + i} Concurrent St, Concurrent City, CC ${12345 + i}, US`,
+                });
 
                 return request(app)
                     .post('/api/bookings')
@@ -248,24 +267,21 @@ describe('API Endpoints Integration Tests', () => {
                 expect(result.status).toBe(200);
                 expect(result.body.id).toBe(bookingIds[i]);
                 expect(result.body.hotelName).toBe(`Concurrent API Test Hotel ${i}`);
+                expect(result.body.userId).toBe(`user-concurrent-api-${i}`);
+                expect(result.body.email).toBe(`concurrent${i}@example.com`);
             });
         });
 
         it('should handle concurrent payment confirmations', async () => {
             // First create multiple bookings
             const bookingPromises = Array.from({ length: 5 }, (_, i) => {
-                const bookingData: CreateBookingRequest = {
+                const bookingData = createBookingData({
+                    userId: `user-payment-concurrent-${i}`,
+                    email: `payment${i}@example.com`,
                     hotelId: `hotel_payment_concurrent_${i}`,
                     hotelName: `Payment Concurrent Test Hotel ${i}`,
-                    checkInDate: '2024-12-01',
-                    checkOutDate: '2024-12-05',
-                    guests: '2',
-                    pricePerNight: 150,
-                    numberOfNights: 4,
-                    totalAmount: 600,
-                    whatsIncluded: ['Test'],
-                    imageUrl: `http://example.com/payment${i}.jpg`,
-                };
+                    bookingAddress: `${200 + i} Payment St, Payment City, PC ${54321 + i}, US`,
+                });
 
                 return request(app)
                     .post('/api/bookings')
@@ -304,13 +320,17 @@ describe('API Endpoints Integration Tests', () => {
                 expect(result.status).toBe(200);
                 expect(result.body.status).toBe('confirmed');
                 expect(result.body.paymentIntentId).toBe(`pi_concurrent_test_${i}`);
+                expect(result.body.userId).toBe(`user-payment-concurrent-${i}`);
+                expect(result.body.email).toBe(`payment${i}@example.com`);
             });
         });
     });
 
     describe('Edge Cases', () => {
         it('should handle very large booking amounts', async () => {
-            const bookingData: CreateBookingRequest = {
+            const bookingData = createBookingData({
+                userId: 'user-large-amount',
+                email: 'large@example.com',
                 hotelId: 'hotel_large_amount',
                 hotelName: 'Large Amount Test Hotel',
                 checkInDate: '2024-12-01',
@@ -318,10 +338,11 @@ describe('API Endpoints Integration Tests', () => {
                 guests: '10 guests',
                 pricePerNight: 5000,
                 numberOfNights: 30,
-                totalAmount: 150000, // $1,500 per night for 30 nights
+                totalAmount: 150000, // $5,000 per night for 30 nights
                 whatsIncluded: ['Presidential Suite', 'All Services'],
                 imageUrl: 'http://example.com/luxury-hotel.jpg',
-            };
+                bookingAddress: '1 Luxury Ave, Luxury City, LC 99999, US',
+            });
 
             const response = await request(app)
                 .post('/api/bookings')
@@ -336,21 +357,21 @@ describe('API Endpoints Integration Tests', () => {
                 .expect(200);
 
             expect(getResponse.body.totalAmount).toBe(150000);
+            expect(getResponse.body.userId).toBe('user-large-amount');
+            expect(getResponse.body.email).toBe('large@example.com');
         });
 
         it('should handle special characters in booking data', async () => {
-            const bookingData: CreateBookingRequest = {
+            const bookingData = createBookingData({
+                userId: 'user-special-chars',
+                email: 'special@exämple.com',
                 hotelId: 'hotel_special_chars',
                 hotelName: 'Hôtel Spéciál & Resort™',
-                checkInDate: '2024-12-01',
-                checkOutDate: '2024-12-05',
                 guests: '2 adults & 1 child',
-                pricePerNight: 200,
-                numberOfNights: 4,
-                totalAmount: 800,
                 whatsIncluded: ['Café & Restaurant', 'Spa & Wellness'],
                 imageUrl: 'http://example.com/special-hotel.jpg',
-            };
+                bookingAddress: '123 Spéciál St, Ünique City, UC 12345, US',
+            });
 
             const response = await request(app)
                 .post('/api/bookings')
@@ -363,6 +384,9 @@ describe('API Endpoints Integration Tests', () => {
 
             expect(getResponse.body.hotelName).toBe('Hôtel Spéciál & Resort™');
             expect(getResponse.body.guests).toBe('2 adults & 1 child');
+            expect(getResponse.body.userId).toBe('user-special-chars');
+            expect(getResponse.body.email).toBe('special@exämple.com');
+            expect(getResponse.body.bookingAddress).toBe('123 Spéciál St, Ünique City, UC 12345, US');
         });
     });
 });

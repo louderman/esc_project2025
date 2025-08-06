@@ -7,6 +7,8 @@ async function sync() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS ${tableName} (
       id VARCHAR(255) PRIMARY KEY,
+      userId VARCHAR(255) NOT NULL,
+      email VARCHAR(255) NOT NULL,
       hotelId VARCHAR(255) NOT NULL,
       hotelName VARCHAR(255) NOT NULL,
       checkInDate VARCHAR(255) NOT NULL,
@@ -17,6 +19,7 @@ async function sync() {
       totalAmount FLOAT NOT NULL,
       whatsIncluded JSON NOT NULL,
       imageUrl TEXT NOT NULL,
+      bookingAddress TEXT NOT NULL,
       paymentIntentId VARCHAR(255),
       status VARCHAR(50) NOT NULL,
       createdAt DATETIME NOT NULL
@@ -26,12 +29,20 @@ async function sync() {
 
 async function createBooking(bookingData: CreateBookingRequest): Promise<string> {
     // Validate required fields
+    if (!bookingData.userId || !bookingData.email) {
+        throw new Error('Missing required user fields: userId or email');
+    }
+
     if (!bookingData.hotelId || !bookingData.hotelName || !bookingData.checkInDate || !bookingData.checkOutDate) {
         throw new Error('Missing required booking fields: hotelId, hotelName, checkInDate, or checkOutDate');
     }
 
     if (!bookingData.guests || bookingData.pricePerNight <= 0 || bookingData.numberOfNights <= 0 || bookingData.totalAmount <= 0) {
         throw new Error('Invalid booking data: guests, prices, or nights must be valid positive values');
+    }
+
+    if (!bookingData.bookingAddress) {
+        throw new Error('Missing required booking address');
     }
 
     const bookingId = 'BK' + Date.now() + Math.random().toString(36).substr(2, 9);
@@ -47,9 +58,11 @@ async function createBooking(bookingData: CreateBookingRequest): Promise<string>
 
     try {
         await pool.query(
-            `INSERT INTO ${tableName} (id, hotelId, hotelName, checkInDate, checkOutDate, guests, pricePerNight, numberOfNights, totalAmount, whatsIncluded, imageUrl, status, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO ${tableName} (id, userId, email, hotelId, hotelName, checkInDate, checkOutDate, guests, pricePerNight, numberOfNights, totalAmount, whatsIncluded, imageUrl, bookingAddress, status, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 newBooking.id,
+                newBooking.userId,
+                newBooking.email,
                 newBooking.hotelId,
                 newBooking.hotelName,
                 newBooking.checkInDate,
@@ -60,6 +73,7 @@ async function createBooking(bookingData: CreateBookingRequest): Promise<string>
                 newBooking.totalAmount,
                 JSON.stringify(newBooking.whatsIncluded),
                 newBooking.imageUrl,
+                newBooking.bookingAddress,
                 newBooking.status,
                 newBooking.createdAt,
             ]
@@ -110,17 +124,18 @@ async function updateBooking(bookingId: string, paymentIntentId: string, status:
     }
 
     try {
+        // First check if the booking exists
+        const [existingRows]: any = await pool.query(`SELECT id FROM ${tableName} WHERE id = ? LIMIT 1`, [bookingId]);
+        
+        if (existingRows.length === 0) {
+            throw new Error('Booking not found or no changes made');
+        }
+
+        // Now perform the update
         const result: any = await pool.query(
             `UPDATE ${tableName} SET paymentIntentId = ?, status = ? WHERE id = ?`,
             [paymentIntentId, status, bookingId]
         );
-
-        // Check if the booking exists first
-        const [rows]: any = await pool.query(`SELECT id FROM ${tableName} WHERE id = ? LIMIT 1`, [bookingId]);
-        
-        if (rows.length === 0) {
-            throw new Error('Booking not found or no changes made');
-        }
 
         // For MySQL2, result is an array where the first element contains the result info
         const updateResult = Array.isArray(result) ? result[0] : result;
