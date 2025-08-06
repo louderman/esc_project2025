@@ -115,13 +115,26 @@ async function updateBooking(bookingId: string, paymentIntentId: string, status:
             [paymentIntentId, status, bookingId]
         );
 
-        if (result.affectedRows === 0) {
+        // Check if the booking exists first
+        const [rows]: any = await pool.query(`SELECT id FROM ${tableName} WHERE id = ? LIMIT 1`, [bookingId]);
+        
+        if (rows.length === 0) {
+            throw new Error('Booking not found or no changes made');
+        }
+
+        // For MySQL2, result is an array where the first element contains the result info
+        const updateResult = Array.isArray(result) ? result[0] : result;
+        
+        if (updateResult.affectedRows === 0) {
             throw new Error('Booking not found or no changes made');
         }
 
         return result;
     } catch (error) {
         console.error('Database error updating booking:', error);
+        if (error instanceof Error && error.message.includes('Booking not found')) {
+            throw error; // Re-throw the specific error
+        }
         throw new Error('Failed to update booking in database');
     }
 }

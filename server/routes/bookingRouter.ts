@@ -11,7 +11,8 @@ router.post('/', async (req, res) => {
         res.status(201).json({ bookingId });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Failed to create booking' });
+        const errorMessage = error instanceof Error ? error.message : 'Failed to create booking';
+        res.status(500).json({ error: errorMessage });
     }
 });
 
