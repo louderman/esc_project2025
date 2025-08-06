@@ -1,5 +1,5 @@
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { CreateBookingRequest } from '../../../../types/Booking';
 import { API_BASE_URL } from '../../config/api';
@@ -34,7 +34,7 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
   const navigate = useNavigate();
   const { user } = useAuth();
   
-  // State for billing address
+  // State for billing address - initially empty, will be populated when user data is available
   const [billingAddress, setBillingAddress] = useState<BillingAddress>({
     name: '',
     email: '',
@@ -48,6 +48,17 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
       country: 'SG',
     },
   });
+
+  // Update billing address when user data becomes available
+  useEffect(() => {
+    if (user && (!billingAddress.name || !billingAddress.email)) {
+      setBillingAddress(prev => ({
+        ...prev,
+        name: user.name || prev.name,
+        email: user.email || prev.email,
+      }));
+    }
+  }, [user, billingAddress.name, billingAddress.email]);
 
   // Stripe hooks - these will return null if Elements provider is not available
   const stripe = useStripe();
@@ -242,14 +253,13 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
         onPaymentError(errorMessage);
     }
 
-
     setProcessing(false);
   };
 
   const handleBillingAddressChange = (field: string, value: string) => {
     if (field.startsWith('address.')) {
       const addressField = field.split('.')[1];
-      setBillingAddress(prev => ({
+      setBillingAddress((prev: BillingAddress) => ({
         ...prev,
         address: {
           ...prev.address,
@@ -257,7 +267,7 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
         },
       }));
     } else {
-      setBillingAddress(prev => ({
+      setBillingAddress((prev: BillingAddress) => ({
         ...prev,
         [field]: value,
       }));

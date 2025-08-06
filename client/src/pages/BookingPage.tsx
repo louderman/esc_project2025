@@ -16,23 +16,6 @@ export default function BookingPage() {
   const location = useLocation();
   const { user } = useAuth();
 
-  // Redirect to login if user is not authenticated
-  useEffect(() => {
-    if (!user) {
-      navigate('/login', { 
-        state: { 
-          from: location.pathname,
-          message: 'Please log in to make a booking.' 
-        } 
-      });
-    }
-  }, [user, navigate, location.pathname]);
-
-  // Don't render the booking page if user is not authenticated
-  if (!user) {
-    return null;
-  }
-  
   // Get data from navigation state
   const stateData = location.state as {
     bookingDetails?: {
@@ -238,6 +221,23 @@ export default function BookingPage() {
     // TODO: add a toast saying it failed, ya lazy bum
     console.error('Payment failed:', error);
   };
+
+  // Redirect to login if user is not authenticated
+  useEffect(() => {
+    if (!user) {
+      navigate('/login', { 
+        state: { 
+          from: location.pathname,
+          message: 'Please log in to make a booking.' 
+        } 
+      });
+    }
+  }, [user, navigate, location.pathname]);
+
+  // Don't render the booking page if user is not authenticated
+  if (!user) {
+    return null;
+  }
 
   const policyDetails = {
     guaranteePolicy: 'Credit Card is required at the time of booking.',
