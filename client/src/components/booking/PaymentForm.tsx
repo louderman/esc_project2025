@@ -118,10 +118,19 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
     }
 
     // Validate billing information
-    if (!billingAddress.name || !billingAddress.email || !billingAddress.address.line1 || 
-        !billingAddress.address.city || !billingAddress.address.state || !billingAddress.address.postal_code) {
-      setError('Please fill in all required billing information.');
-      onPaymentError('Please fill in all required billing information.');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (
+      !billingAddress.name ||
+      !billingAddress.email ||
+      !emailRegex.test(billingAddress.email) ||
+      !billingAddress.address.line1 ||
+      !billingAddress.address.city ||
+      !billingAddress.address.state ||
+      !billingAddress.address.postal_code
+    ) {
+      const errorMessage = 'Please fill in all required billing information.';
+      setError(errorMessage);
+      onPaymentError(errorMessage);
       setProcessing(false);
       return;
     }
@@ -244,8 +253,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
           <h4>Billing Information</h4>  
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Full Name *</label>
+              <label htmlFor="fullName">Full Name *</label>
               <input
+                id="fullName"
                 type="text"
                 value={billingAddress.name}
                 onChange={(e) => handleBillingAddressChange('name', e.target.value)}
@@ -254,8 +264,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Email *</label>
+              <label htmlFor="email">Email *</label>
               <input
+                id="email"
                 type="email"
                 value={billingAddress.email}
                 onChange={(e) => handleBillingAddressChange('email', e.target.value)}
@@ -266,8 +277,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
           </div>
 
           <div className={styles.formGroup}>
-            <label>Phone</label>
+            <label htmlFor="phone">Phone</label>
             <input
+              id="phone"
               type="tel"
               value={billingAddress.phone}
               onChange={(e) => handleBillingAddressChange('phone', e.target.value)}
@@ -276,8 +288,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
           </div>
 
           <div className={styles.formGroup}>
-            <label>Address Line 1 *</label>
+            <label htmlFor="address1">Address Line 1 *</label>
             <input
+              id="address1"
               type="text"
               value={billingAddress.address.line1}
               onChange={(e) => handleBillingAddressChange('address.line1', e.target.value)}
@@ -287,8 +300,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
           </div>
 
           <div className={styles.formGroup}>
-            <label>Address Line 2</label>
+            <label htmlFor="address2">Address Line 2</label>
             <input
+              id="address2"
               type="text"
               value={billingAddress.address.line2}
               onChange={(e) => handleBillingAddressChange('address.line2', e.target.value)}
@@ -298,8 +312,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>City *</label>
+              <label htmlFor="city">City *</label>
               <input
+                id="city"
                 type="text"
                 value={billingAddress.address.city}
                 onChange={(e) => handleBillingAddressChange('address.city', e.target.value)}
@@ -308,8 +323,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
               />
             </div>
             <div className={styles.formGroup}>
-              <label>State *</label>
+              <label htmlFor="state">State *</label>
               <input
+                id="state"
                 type="text"
                 value={billingAddress.address.state}
                 onChange={(e) => handleBillingAddressChange('address.state', e.target.value)}
@@ -318,8 +334,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
               />
             </div>
             <div className={styles.formGroup}>
-              <label>ZIP Code *</label>
+              <label htmlFor="zip">ZIP Code *</label>
               <input
+                id="zip"
                 type="text"
                 value={billingAddress.address.postal_code}
                 onChange={(e) => handleBillingAddressChange('address.postal_code', e.target.value)}
@@ -330,8 +347,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
           </div>
 
           <div className={styles.formGroup}>
-            <label>Country *</label>
+            <label htmlFor="country">Country *</label>
             <select
+              id="country"
               value={billingAddress.address.country}
               onChange={(e) => handleBillingAddressChange('address.country', e.target.value)}
               className={styles.input}

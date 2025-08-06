@@ -190,7 +190,7 @@ export default function BookingPage() {
           month: 'short',
         })
       : 'N/A',
-    guests: `${occupancy.rooms} room${occupancy.rooms > 1 ? 's' : ''}, ${
+    guests: `${occupancy.rooms} room${occupancy.rooms > 1 ? 's' : ''} · ${
       occupancy.adults + occupancy.children
     } guest${occupancy.adults + occupancy.children > 1 ? 's' : ''}`,
     pricePerNight: stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0,
