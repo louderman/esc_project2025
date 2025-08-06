@@ -10,6 +10,8 @@ describe('POST /api/payment/confirm-payment', () => {
 
     it('should confirm payment and update booking status', async () => {
         const bookingData: CreateBookingRequest = {
+            userId: 'user-123',
+            email: 'test@example.com',
             hotelId: 'hotel_123',
             hotelName: 'Test Hotel',
             checkInDate: '2024-01-01',
@@ -20,6 +22,7 @@ describe('POST /api/payment/confirm-payment', () => {
             totalAmount: 400,
             whatsIncluded: ['Breakfast'],
             imageUrl: 'http://example.com/image.jpg',
+            bookingAddress: '123 Test St, Test City, TC 12345, US',
         };
         const bookingId = await createBooking(bookingData);
 
@@ -38,6 +41,9 @@ describe('POST /api/payment/confirm-payment', () => {
         const booking = await getBookingById(bookingId);
         expect(booking?.status).toBe('confirmed');
         expect(booking?.paymentIntentId).toBe('pi_test_123');
+        expect(booking?.userId).toBe('user-123');
+        expect(booking?.email).toBe('test@example.com');
+        expect(booking?.bookingAddress).toBe('123 Test St, Test City, TC 12345, US');
     });
 
     it('should return 400 if bookingId is missing', async () => {

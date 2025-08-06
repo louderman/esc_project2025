@@ -1,4 +1,5 @@
 import { cleanup, pool } from './database/db';
+import { sync as syncBookings } from './models/bookingModel';
 
 async function truncateTables() {
   // TODO: probably should add prefix `test_` to tables?
@@ -14,7 +15,14 @@ async function truncateTables() {
   await pool.query(`SET FOREIGN_KEY_CHECKS = 1;`);
 }
 
+async function setupTables() {
+  // Drop and recreate bookings table to ensure it has the latest schema
+  await pool.query(`DROP TABLE IF EXISTS bookings;`);
+  await syncBookings();
+}
+
 beforeAll(async () => {
+  await setupTables();
   await truncateTables();
 });
 

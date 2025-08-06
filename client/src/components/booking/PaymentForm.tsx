@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { CreateBookingRequest } from '../../../../types/Booking';
 import { API_BASE_URL } from '../../config/api';
+import { useAuth } from '../common/authcontext';
 import styles from './PaymentForm.module.css';
 
 interface PaymentFormProps {
@@ -31,6 +32,7 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   // State for billing address
   const [billingAddress, setBillingAddress] = useState<BillingAddress>({
@@ -136,13 +138,32 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
     }
 
     try {
-        // 1. Create a booking first
+        // Check if user is authenticated
+        if (!user) {
+            const errorMessage = 'You must be logged in to make a booking.';
+            setError(errorMessage);
+            onPaymentError(errorMessage);
+            setProcessing(false);
+            return;
+        }
+
+        // Format booking address from billing information
+        const bookingAddress = `${billingAddress.address.line1}${billingAddress.address.line2 ? ', ' + billingAddress.address.line2 : ''}, ${billingAddress.address.city}, ${billingAddress.address.state} ${billingAddress.address.postal_code}, ${billingAddress.address.country}`;
+
+        // 1. Create a booking first with user data and booking address
+        const bookingRequestData: CreateBookingRequest = {
+            ...bookingData!,
+            userId: user.id.toString(),
+            email: user.email,
+            bookingAddress: bookingAddress,
+        };
+
         const bookingResponse = await fetch(`${API_BASE_URL}/api/bookings`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(bookingData),
+            body: JSON.stringify(bookingRequestData),
         });
 
         if (!bookingResponse.ok) {

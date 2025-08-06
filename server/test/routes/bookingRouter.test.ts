@@ -10,6 +10,8 @@ describe('Booking API', () => {
 
     it('should create a new booking', async () => {
         const bookingData: CreateBookingRequest = {
+            userId: 'user-123',
+            email: 'test@example.com',
             hotelId: 'hotel_123',
             hotelName: 'Test Hotel',
             checkInDate: '2024-01-01',
@@ -20,6 +22,7 @@ describe('Booking API', () => {
             totalAmount: 400,
             whatsIncluded: ['Breakfast'],
             imageUrl: 'http://example.com/image.jpg',
+            bookingAddress: '123 Test St, Test City, TC 12345, US',
         };
 
         const res = await request(app)
@@ -32,10 +35,15 @@ describe('Booking API', () => {
         const booking = await getBookingById(res.body.bookingId);
         expect(booking).toBeDefined();
         expect(booking?.hotelName).toBe('Test Hotel');
+        expect(booking?.userId).toBe('user-123');
+        expect(booking?.email).toBe('test@example.com');
+        expect(booking?.bookingAddress).toBe('123 Test St, Test City, TC 12345, US');
     });
 
     it('should get a booking by ID', async () => {
         const bookingData: CreateBookingRequest = {
+            userId: 'user-456',
+            email: 'test2@example.com',
             hotelId: 'hotel_456',
             hotelName: 'Another Test Hotel',
             checkInDate: '2024-02-01',
@@ -46,6 +54,7 @@ describe('Booking API', () => {
             totalAmount: 600,
             whatsIncluded: [],
             imageUrl: 'http://example.com/image2.jpg',
+            bookingAddress: '456 Another St, Another City, AC 67890, US',
         };
         const createRes = await request(app)
             .post('/api/bookings')
@@ -56,10 +65,14 @@ describe('Booking API', () => {
 
         expect(res.statusCode).toBe(200);
         expect(res.body.hotelName).toBe('Another Test Hotel');
+        expect(res.body.userId).toBe('user-456');
+        expect(res.body.email).toBe('test2@example.com');
     });
 
     it('should update a booking', async () => {
         const bookingData: CreateBookingRequest = {
+            userId: 'user-789',
+            email: 'test3@example.com',
             hotelId: 'hotel_789',
             hotelName: 'Update Test Hotel',
             checkInDate: '2024-03-01',
@@ -70,6 +83,7 @@ describe('Booking API', () => {
             totalAmount: 800,
             whatsIncluded: ['All-inclusive'],
             imageUrl: 'http://example.com/image3.jpg',
+            bookingAddress: '789 Update St, Update City, UC 11111, US',
         };
         const createRes = await request(app)
             .post('/api/bookings')
@@ -88,5 +102,7 @@ describe('Booking API', () => {
         const booking = await getBookingById(bookingId);
         expect(booking?.status).toBe('confirmed');
         expect(booking?.paymentIntentId).toBe('pi_456');
+        expect(booking?.userId).toBe('user-789');
+        expect(booking?.email).toBe('test3@example.com');
     });
 });

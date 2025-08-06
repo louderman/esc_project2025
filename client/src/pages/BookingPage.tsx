@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { Hotel } from '../../../types/Hotel';
 import type { Price } from '../../../types/Price';
 import BookingForm from '../components/booking/BookingForm';
 import BookingReview from '../components/booking/BookingReview';
+import { useAuth } from '../components/common/authcontext';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
 import type { DestinationState } from '../components/listing/SearchBar/DestinationInput/DestinationInput';
 import type { OccupancyState } from '../components/listing/SearchBar/GuestInput/GuestInput';
@@ -13,6 +14,24 @@ import styles from './bookingpage.module.css';
 export default function BookingPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
+
+  // Redirect to login if user is not authenticated
+  useEffect(() => {
+    if (!user) {
+      navigate('/login', { 
+        state: { 
+          from: location.pathname,
+          message: 'Please log in to make a booking.' 
+        } 
+      });
+    }
+  }, [user, navigate, location.pathname]);
+
+  // Don't render the booking page if user is not authenticated
+  if (!user) {
+    return null;
+  }
   
   // Get data from navigation state
   const stateData = location.state as {
@@ -227,6 +246,8 @@ export default function BookingPage() {
     costPerNight: stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0,
     numberOfNights,
     bookingData: {
+      userId: user.id.toString(),
+      email: user.email,
       hotelId: hotel.id,
       hotelName: hotel.name,
       checkInDate: bookingDetails.checkInDate,
@@ -237,6 +258,7 @@ export default function BookingPage() {
       totalAmount: stateData?.bookingDetails?.totalAmount ?? ((stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0) * numberOfNights),
       whatsIncluded: bookingDetails.whatsIncluded,
       imageUrl: bookingDetails.imageUrl,
+      bookingAddress: '', // This will be filled in by PaymentForm from billing address
     },
     onPaymentSuccess: handlePaymentSuccess,
     onPaymentError: handlePaymentError,

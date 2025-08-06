@@ -6,13 +6,31 @@ const router = express.Router();
 
 router.post('/', async (req, res) => {
     const bookingData: CreateBookingRequest = req.body;
+    
+    // Validate that userId and email are provided
+    if (!bookingData.userId || !bookingData.email) {
+        return res.status(400).json({ error: 'Missing required user fields: userId and email are required' });
+    }
+    
     try {
         const bookingId = await createBooking(bookingData);
         res.status(201).json({ bookingId });
     } catch (error) {
         console.error(error);
         const errorMessage = error instanceof Error ? error.message : 'Failed to create booking';
-        res.status(500).json({ error: errorMessage });
+        
+        // Return 400 for validation errors, 500 for other errors
+        if (error instanceof Error && (
+            error.message.includes('Missing required') ||
+            error.message.includes('Invalid booking data') ||
+            error.message.includes('userId') ||
+            error.message.includes('email') ||
+            error.message.includes('booking address')
+        )) {
+            res.status(400).json({ error: errorMessage });
+        } else {
+            res.status(500).json({ error: errorMessage });
+        }
     }
 });
 

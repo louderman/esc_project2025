@@ -1,19 +1,22 @@
 import { useEffect, useState } from 'react';
 
-import styles from './homepage.module.css';
+import { useNavigate } from 'react-router-dom';
+import type { Destination } from '../../../types/Destination';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
+import type { DestinationState } from '../components/listing/SearchBar/DestinationInput/DestinationInput';
 import type { OccupancyState } from '../components/listing/SearchBar/GuestInput/GuestInput';
 import SearchBar from '../components/listing/SearchBar/SearchBar';
-import type { DestinationState } from '../components/listing/SearchBar/DestinationInput/DestinationInput';
-import type { Destination } from '../../../types/Destination';
-import { useNavigate } from 'react-router-dom';
 import { useSearchBarUrlSync } from '../hooks/url/useSearchBarUrlSync';
+import styles from './homepage.module.css';
 
 import DestinationCard from '../components/homepage/DestinationCard';
+
+import { useAuth } from '../components/common/authcontext';
 
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [destination, setDestination] = useState<DestinationState>({
     id: '',
