@@ -75,7 +75,7 @@ describe('Calendar Page', () => {
   });
 
   it('Test correct css selectors for checkin, between, and checkout dates', async () => {
-    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
     const maxDate = new Date(
       nextMonth.getFullYear(),
       nextMonth.getMonth() + 1,
@@ -92,6 +92,7 @@ describe('Calendar Page', () => {
     await userEvent.click(dateCells[20]); // checkout
 
     // Check for correct css classNames
+    screen.debug();
     for (let i = 0; i < dateCells.length; i++) {
       if (i === 5) {
         // checkin
