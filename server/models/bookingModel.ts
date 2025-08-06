@@ -124,17 +124,18 @@ async function updateBooking(bookingId: string, paymentIntentId: string, status:
     }
 
     try {
+        // First check if the booking exists
+        const [existingRows]: any = await pool.query(`SELECT id FROM ${tableName} WHERE id = ? LIMIT 1`, [bookingId]);
+        
+        if (existingRows.length === 0) {
+            throw new Error('Booking not found or no changes made');
+        }
+
+        // Now perform the update
         const result: any = await pool.query(
             `UPDATE ${tableName} SET paymentIntentId = ?, status = ? WHERE id = ?`,
             [paymentIntentId, status, bookingId]
         );
-
-        // Check if the booking exists first
-        const [rows]: any = await pool.query(`SELECT id FROM ${tableName} WHERE id = ? LIMIT 1`, [bookingId]);
-        
-        if (rows.length === 0) {
-            throw new Error('Booking not found or no changes made');
-        }
 
         // For MySQL2, result is an array where the first element contains the result info
         const updateResult = Array.isArray(result) ? result[0] : result;
