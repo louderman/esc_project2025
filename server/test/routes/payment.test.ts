@@ -1,30 +1,17 @@
-process.env.STRIPE_SECRET_KEY = 'test_secret_key';
 import request from 'supertest';
 import { CreateBookingRequest } from '../../../types/Booking';
 import { createBooking, getBookingById, sync as syncBooking } from '../../models/bookingModel';
 import app from '../../server';
 
-jest.mock('stripe', () => {
-    return jest.fn().mockImplementation(() => {
-        return {
-            paymentIntents: {
-                create: jest.fn().mockResolvedValue({
-                    id: 'pi_123',
-                    status: 'succeeded',
-                    client_secret: 'pi_123_secret_456',
-                }),
-            },
-        };
-    });
-});
-
-describe('POST /api/payment/create-payment-intent', () => {
+describe('POST /api/payment/confirm-payment', () => {
     beforeAll(async () => {
         await syncBooking();
     });
 
-    it('should return a successful payment intent', async () => {
+    it('should confirm payment and update booking status', async () => {
         const bookingData: CreateBookingRequest = {
+            userId: 'user-123',
+            email: 'test@example.com',
             hotelId: 'hotel_123',
             hotelName: 'Test Hotel',
             checkInDate: '2024-01-01',
@@ -35,57 +22,62 @@ describe('POST /api/payment/create-payment-intent', () => {
             totalAmount: 400,
             whatsIncluded: ['Breakfast'],
             imageUrl: 'http://example.com/image.jpg',
+            bookingAddress: '123 Test St, Test City, TC 12345, US',
         };
         const bookingId = await createBooking(bookingData);
 
         const res = await request(app)
-            .post('/api/payment/create-payment-intent')
+            .post('/api/payment/confirm-payment')
             .send({
-                paymentMethodId: 'pm_card_visa',
-                amount: 40000,
                 bookingId,
+                paymentIntentId: 'pi_test_123',
             });
 
         expect(res.statusCode).toBe(200);
         expect(res.body.success).toBe(true);
-        expect(res.body.payment_intent_id).toBe('pi_123');
         expect(res.body.booking_id).toBe(bookingId);
+        expect(res.body.message).toBe('Payment confirmed and booking updated successfully');
 
         const booking = await getBookingById(bookingId);
         expect(booking?.status).toBe('confirmed');
-        expect(booking?.paymentIntentId).toBe('pi_123');
-    });
-
-    it('should return 400 if paymentMethodId is missing', async () => {
-        const res = await request(app)
-            .post('/api/payment/create-payment-intent')
-            .send({
-                amount: 40000,
-                bookingId: 'bk_123',
-            });
-
-        expect(res.statusCode).toBe(400);
-    });
-
-    it('should return 400 if amount is missing', async () => {
-        const res = await request(app)
-            .post('/api/payment/create-payment-intent')
-            .send({
-                paymentMethodId: 'pm_card_visa',
-                bookingId: 'bk_123',
-            });
-
-        expect(res.statusCode).toBe(400);
+        expect(booking?.paymentIntentId).toBe('pi_test_123');
+        expect(booking?.userId).toBe('user-123');
+        expect(booking?.email).toBe('test@example.com');
+        expect(booking?.bookingAddress).toBe('123 Test St, Test City, TC 12345, US');
     });
 
     it('should return 400 if bookingId is missing', async () => {
         const res = await request(app)
-            .post('/api/payment/create-payment-intent')
+            .post('/api/payment/confirm-payment')
             .send({
-                paymentMethodId: 'pm_card_visa',
-                amount: 40000,
+                paymentIntentId: 'pi_test_123',
             });
 
         expect(res.statusCode).toBe(400);
+        expect(res.body.error).toBe('Missing booking ID');
+    });
+
+    it('should return 400 if paymentIntentId is missing', async () => {
+        const res = await request(app)
+            .post('/api/payment/confirm-payment')
+            .send({
+                bookingId: 'BK_TEST_123',
+            });
+
+        expect(res.statusCode).toBe(400);
+        expect(res.body.error).toBe('Missing payment intent ID');
+    });
+
+    it('should return 500 for non-existent booking', async () => {
+        const res = await request(app)
+            .post('/api/payment/confirm-payment')
+            .send({
+                bookingId: 'BK_NONEXISTENT_123',
+                paymentIntentId: 'pi_test_123',
+            });
+
+        expect(res.statusCode).toBe(500);
+        expect(res.body.error).toBe('Failed to confirm payment and update booking');
+        expect(res.body.details).toBe('Booking not found or no changes made');
     });
 });

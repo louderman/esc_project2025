@@ -1,7 +1,9 @@
- import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
-import { useState } from 'react';
+import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { CreateBookingRequest } from '../../../../types/Booking';
+import { API_BASE_URL } from '../../config/api';
+import { useAuth } from '../common/authcontext';
 import styles from './PaymentForm.module.css';
 
 interface PaymentFormProps {
@@ -30,8 +32,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
   
-  // State for billing address
+  // State for billing address - initially empty, will be populated when user data is available
   const [billingAddress, setBillingAddress] = useState<BillingAddress>({
     name: '',
     email: '',
@@ -45,6 +48,17 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
       country: 'SG',
     },
   });
+
+  // Update billing address when user data becomes available
+  useEffect(() => {
+    if (user && (!billingAddress.name || !billingAddress.email)) {
+      setBillingAddress(prev => ({
+        ...prev,
+        name: user.name || prev.name,
+        email: user.email || prev.email,
+      }));
+    }
+  }, [user, billingAddress.name, billingAddress.email]);
 
   // Stripe hooks - these will return null if Elements provider is not available
   const stripe = useStripe();
@@ -97,7 +111,7 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
     }
 
     // Validate card details using Stripe Elements (no API call)
-    const { error: paymentMethodError, paymentMethod } = await stripe.createPaymentMethod({
+    const { error: paymentMethodError } = await stripe.createPaymentMethod({
       type: 'card',
       card: cardElement,
       billing_details: {
@@ -117,23 +131,55 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
     }
 
     // Validate billing information
-    if (!billingAddress.name || !billingAddress.email || !billingAddress.address.line1 || 
-        !billingAddress.address.city || !billingAddress.address.state || !billingAddress.address.postal_code) {
-      setError('Please fill in all required billing information.');
-      onPaymentError('Please fill in all required billing information.');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (
+      !billingAddress.name ||
+      !billingAddress.email ||
+      !emailRegex.test(billingAddress.email) ||
+      !billingAddress.address.line1 ||
+      !billingAddress.address.city ||
+      !billingAddress.address.state ||
+      !billingAddress.address.postal_code
+    ) {
+      const errorMessage = 'Please fill in all required billing information.';
+      setError(errorMessage);
+      onPaymentError(errorMessage);
       setProcessing(false);
       return;
     }
 
     try {
-        // 1. Create a booking
-        const bookingResponse = await fetch(`${import.meta.env.VITE_API_URL}/bookings`, {
+        // Check if user is authenticated
+        if (!user) {
+            const errorMessage = 'You must be logged in to make a booking.';
+            setError(errorMessage);
+            onPaymentError(errorMessage);
+            setProcessing(false);
+            return;
+        }
+
+        // Format booking address from billing information
+        const bookingAddress = `${billingAddress.address.line1}${billingAddress.address.line2 ? ', ' + billingAddress.address.line2 : ''}, ${billingAddress.address.city}, ${billingAddress.address.state} ${billingAddress.address.postal_code}, ${billingAddress.address.country}`;
+
+        // 1. Create a booking first with user data and booking address
+        const bookingRequestData: CreateBookingRequest = {
+            ...bookingData!,
+            userId: user.id.toString(),
+            email: user.email,
+            bookingAddress: bookingAddress,
+        };
+
+        const bookingResponse = await fetch(`${API_BASE_URL}/api/bookings`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(bookingData),
+            body: JSON.stringify(bookingRequestData),
         });
+
+        if (!bookingResponse.ok) {
+            throw new Error(`Booking creation failed: ${bookingResponse.status}`);
+        }
 
         const bookingResult = await bookingResponse.json();
 
@@ -146,34 +192,66 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
 
         const { bookingId } = bookingResult;
 
-        // 2. Create a payment intent
-        const paymentResponse = await fetch(`${import.meta.env.VITE_API_URL}/payment/create-payment-intent`, {
+        // 2. Validate payment method client-side (no actual charge)
+        // This simulates payment processing for demo purposes
+        const mockPaymentIntentId = `pi_demo_${bookingId}_${Date.now()}`;
+        
+        // Simulate a small delay for payment processing
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // 3. Confirm payment on server (update booking status)
+        const confirmResponse = await fetch(`${API_BASE_URL}/api/payment/confirm-payment`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                paymentMethodId: paymentMethod.id,
-                amount: Math.round(amount * 100), // Convert to cents
                 bookingId,
+                paymentIntentId: mockPaymentIntentId,
             }),
         });
 
-        const paymentResult = await paymentResponse.json();
+        if (!confirmResponse.ok) {
+            throw new Error(`Payment confirmation failed: ${confirmResponse.status}`);
+        }
 
-        if (paymentResult.error) {
-            setError(paymentResult.error);
-            onPaymentError(paymentResult.error);
-        } else if (paymentResult.success) {
+        const confirmResult = await confirmResponse.json();
+
+        if (confirmResult.error) {
+            setError(confirmResult.error);
+            onPaymentError(confirmResult.error);
+        } else if (confirmResult.success) {
             onPaymentSuccess();
-            navigate(`/booking-confirmation?bookingId=${paymentResult.booking_id}`);
+            // Navigate to the correct route with proper state data
+            navigate(`/booking/confirmation`, {
+                state: {
+                    bookingId: confirmResult.booking_id,
+                    hotel: bookingData ? {
+                        id: bookingData.hotelId,
+                        name: bookingData.hotelName,
+                        price: bookingData.pricePerNight,
+                        address: 'Hotel Address', // BookingConfirmationPage uses hotel.address
+                        imageCount: 5,
+                        image_details: {
+                            prefix: '/listing/hotel_img_placeholder.png?id=',
+                            suffix: '',
+                        }
+                    } : null,
+                    stayDates: bookingData ? {
+                        checkinDate: bookingData.checkInDate && bookingData.checkInDate !== 'N/A' ? new Date(bookingData.checkInDate) : null,
+                        checkoutDate: bookingData.checkOutDate && bookingData.checkOutDate !== 'N/A' ? new Date(bookingData.checkOutDate) : null,
+                    } : null,
+                    totalAmount: amount / 100,
+                    bookingDetails: bookingData
+                }
+            });
         }
     } catch (error) {
         console.error("Payment processing error:", error);
-        setError("An error occurred while processing your payment.");
-        onPaymentError("An error occurred while processing your payment.");
+        const errorMessage = error instanceof Error ? error.message : "An error occurred while processing your payment.";
+        setError(errorMessage);
+        onPaymentError(errorMessage);
     }
-
 
     setProcessing(false);
   };
@@ -181,7 +259,7 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
   const handleBillingAddressChange = (field: string, value: string) => {
     if (field.startsWith('address.')) {
       const addressField = field.split('.')[1];
-      setBillingAddress(prev => ({
+      setBillingAddress((prev: BillingAddress) => ({
         ...prev,
         address: {
           ...prev.address,
@@ -189,7 +267,7 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
         },
       }));
     } else {
-      setBillingAddress(prev => ({
+      setBillingAddress((prev: BillingAddress) => ({
         ...prev,
         [field]: value,
       }));
@@ -206,8 +284,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
           <h4>Billing Information</h4>  
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>Full Name *</label>
+              <label htmlFor="fullName">Full Name *</label>
               <input
+                id="fullName"
                 type="text"
                 value={billingAddress.name}
                 onChange={(e) => handleBillingAddressChange('name', e.target.value)}
@@ -216,8 +295,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Email *</label>
+              <label htmlFor="email">Email *</label>
               <input
+                id="email"
                 type="email"
                 value={billingAddress.email}
                 onChange={(e) => handleBillingAddressChange('email', e.target.value)}
@@ -228,8 +308,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
           </div>
 
           <div className={styles.formGroup}>
-            <label>Phone</label>
+            <label htmlFor="phone">Phone</label>
             <input
+              id="phone"
               type="tel"
               value={billingAddress.phone}
               onChange={(e) => handleBillingAddressChange('phone', e.target.value)}
@@ -238,8 +319,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
           </div>
 
           <div className={styles.formGroup}>
-            <label>Address Line 1 *</label>
+            <label htmlFor="address1">Address Line 1 *</label>
             <input
+              id="address1"
               type="text"
               value={billingAddress.address.line1}
               onChange={(e) => handleBillingAddressChange('address.line1', e.target.value)}
@@ -249,8 +331,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
           </div>
 
           <div className={styles.formGroup}>
-            <label>Address Line 2</label>
+            <label htmlFor="address2">Address Line 2</label>
             <input
+              id="address2"
               type="text"
               value={billingAddress.address.line2}
               onChange={(e) => handleBillingAddressChange('address.line2', e.target.value)}
@@ -260,8 +343,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label>City *</label>
+              <label htmlFor="city">City *</label>
               <input
+                id="city"
                 type="text"
                 value={billingAddress.address.city}
                 onChange={(e) => handleBillingAddressChange('address.city', e.target.value)}
@@ -270,8 +354,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
               />
             </div>
             <div className={styles.formGroup}>
-              <label>State *</label>
+              <label htmlFor="state">State *</label>
               <input
+                id="state"
                 type="text"
                 value={billingAddress.address.state}
                 onChange={(e) => handleBillingAddressChange('address.state', e.target.value)}
@@ -280,8 +365,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
               />
             </div>
             <div className={styles.formGroup}>
-              <label>ZIP Code *</label>
+              <label htmlFor="zip">ZIP Code *</label>
               <input
+                id="zip"
                 type="text"
                 value={billingAddress.address.postal_code}
                 onChange={(e) => handleBillingAddressChange('address.postal_code', e.target.value)}
@@ -292,8 +378,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
           </div>
 
           <div className={styles.formGroup}>
-            <label>Country *</label>
+            <label htmlFor="country">Country *</label>
             <select
+              id="country"
               value={billingAddress.address.country}
               onChange={(e) => handleBillingAddressChange('address.country', e.target.value)}
               className={styles.input}
