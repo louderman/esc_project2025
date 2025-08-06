@@ -16,6 +16,7 @@ export default function Amenities({
     <div className={styles.container}>
       {AMENITY_KEYS.map((amenity, i) => (
         <button
+          data-testid={'amenity-btn'}
           className={`${styles.amenityContainer} ${
             listingState.filterBy.amenities.includes(amenity)
               ? styles.selected
