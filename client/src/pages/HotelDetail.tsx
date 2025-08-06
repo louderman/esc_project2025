@@ -10,6 +10,7 @@ import { Star } from 'lucide-react';
 import { useFetchHotelPrices } from '../hooks/hotels/useFetchHotelPrices';
 import { useFetchHotels } from '../hooks/hotels/useFetchHotels';
 import { usePricedHotels } from '../hooks/hotels/usePricedHotels';
+import { useFetchHotelRoomPrices } from '../hooks/hotel_details/useFetchHotelRoomPrices';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
 import type { OccupancyState } from '../components/listing/SearchBar/GuestInput/GuestInput';
 
@@ -40,6 +41,7 @@ type Room = {
   long_description?: string;
   amenities?: string[];
   key?: string;
+  availability?: number;
 };
 
 type AvailabilityInfo = {
@@ -76,10 +78,10 @@ const HotelDetail = () => {
   console.log('Query hotelId:', searchParams.get('hotelId'));
   console.log('Final hotelId:', hotelId);
 
-  // Get URL parameters from listing page (remove quotes from values)
-  const destinationId = searchParams.get('destination_id')?.replace(/"/g, '') || searchParams.get('destId')?.replace(/"/g, '') || 'WD0M';
-  const checkin = searchParams.get('checkin')?.replace(/"/g, '') || '2025-10-01';
-  const checkout = searchParams.get('checkout')?.replace(/"/g, '') || '2025-10-07';
+        // Get URL parameters from listing page (remove quotes from values)
+        const destinationId = searchParams.get('destination_id')?.replace(/"/g, '') || searchParams.get('destId')?.replace(/"/g, '') || 'WD0M';
+        const checkin = searchParams.get('checkin')?.replace(/"/g, '') || '2025-10-01';
+        const checkout = searchParams.get('checkout')?.replace(/"/g, '') || '2025-10-07';
   
   console.log('Debug - URL Parameters:', {
     destinationId,
@@ -93,17 +95,17 @@ const HotelDetail = () => {
   console.log('Debug - destinationId:', destinationId);
   console.log('Debug - checkin:', checkin);
   console.log('Debug - checkout:', checkout);
-  
-  // Parse adults and children from URL (note: 'adult' and 'child' not 'adults' and 'children')
-  const adults = searchParams.get('adults') || searchParams.get('adult') || '2';
-  const children = searchParams.get('children') || searchParams.get('child') || '0';
-  const roomCount = searchParams.get('rooms') || searchParams.get('room') || '1';
-  const lang = searchParams.get('lang') || 'en_US';
-  const currency = searchParams.get('currency') || 'SGD';
-  const countryCode = searchParams.get('country_code') || 'SG';
-  
-  // Calculate total guests (adults + children)
-  const totalGuests = parseInt(adults) + parseInt(children);
+        
+        // Parse adults and children from URL (note: 'adult' and 'child' not 'adults' and 'children')
+        const adults = searchParams.get('adults') || searchParams.get('adult') || '2';
+        const children = searchParams.get('children') || searchParams.get('child') || '0';
+        const roomCount = searchParams.get('rooms') || searchParams.get('room') || '1';
+        const lang = searchParams.get('lang') || 'en_US';
+        const currency = searchParams.get('currency') || 'SGD';
+        const countryCode = searchParams.get('country_code') || 'SG';
+        
+        // Calculate total guests (adults + children)
+        const totalGuests = parseInt(adults) + parseInt(children);
 
   // Convert URL parameters to the format expected by the hooks
   const stayDates: StayDatesState = {
@@ -126,6 +128,16 @@ const HotelDetail = () => {
     2000
   );
   const pricedHotels = usePricedHotels(hotels, prices);
+
+  // Use the new hook for detailed room prices (disabled since external API doesn't support individual hotel prices)
+  const { rooms: roomPrices, loading: roomPricesLoading } = useFetchHotelRoomPrices({
+    hotelId,
+          destinationId,
+          checkin,
+          checkout,
+    guests: adults,
+    enabled: true // Enable to try to get detailed room data
+  });
 
   // Find the specific hotel we're looking for
   let specificHotel = pricedHotels.find(hotel => hotel.id === hotelId);
@@ -172,7 +184,7 @@ const HotelDetail = () => {
     console.log('useEffect triggered - hotelLoading:', hotelLoading, 'priceLoading:', priceLoading, 'specificHotel:', !!specificHotel);
     
     // Set loading to true when hooks are loading
-    if (hotelLoading || priceLoading) {
+    if (hotelLoading || priceLoading || roomPricesLoading) {
       console.log('Setting loading to true - hooks are loading');
       setLoading(true);
       return;
@@ -200,6 +212,72 @@ const HotelDetail = () => {
         console.log('Found specific hotel with pricing:', specificHotel);
         console.log('Hotel images:', specificHotel.image_details);
         console.log('Hotel amenities:', specificHotel.amenities);
+        
+        // Debug room-related data
+        console.log('=== ROOM DATA DEBUG ===');
+        console.log('Price:', specificHotel.price);
+        console.log('Lowest price:', specificHotel.lowest_price);
+        console.log('Price type:', specificHotel.price_type);
+        console.log('Rooms available:', specificHotel.rooms_available);
+        console.log('Free cancellation:', specificHotel.free_cancellation);
+        console.log('Room prices from API:', roomPrices);
+        console.log('Room prices loading:', roomPricesLoading);
+        console.log('Room prices length:', roomPrices?.length);
+        console.log('Full specificHotel object:', JSON.stringify(specificHotel, null, 2));
+        console.log('=== END ROOM DATA DEBUG ===');
+
+        // Extract amenities from hotel description if amenities object is empty
+        const extractAmenitiesFromDescription = (description: string) => {
+          const amenities: Record<string, boolean> = {};
+          const lowerDescription = description.toLowerCase();
+          
+          console.log('Extracting amenities from description:', description.substring(0, 200) + '...');
+          
+          // Common amenities to look for - using simpler amenity names that match the UI
+          const amenityKeywords = [
+            { keyword: 'wifi', amenity: 'wifi' },
+            { keyword: 'wireless internet', amenity: 'wifi' },
+            { keyword: 'pool', amenity: 'pool' },
+            { keyword: 'indoor pool', amenity: 'pool' },
+            { keyword: 'hot tub', amenity: 'hotTub' },
+            { keyword: 'fitness center', amenity: 'fitness' },
+            { keyword: 'gym', amenity: 'fitness' },
+            { keyword: 'breakfast', amenity: 'breakfast' },
+            { keyword: 'continental breakfast', amenity: 'breakfast' },
+            { keyword: 'buffet breakfast', amenity: 'breakfast' },
+            { keyword: 'parking', amenity: 'parking' },
+            { keyword: 'free parking', amenity: 'parking' },
+            { keyword: 'self parking', amenity: 'parking' },
+            { keyword: 'business center', amenity: 'businessCenter' },
+            { keyword: 'air conditioning', amenity: 'airConditioning' },
+            { keyword: 'tv', amenity: 'tVInRoom' },
+            { keyword: 'television', amenity: 'tVInRoom' },
+            { keyword: 'flat-screen', amenity: 'tVInRoom' },
+            { keyword: 'refrigerator', amenity: 'refrigerator' },
+            { keyword: 'refrigerators', amenity: 'refrigerator' },
+            { keyword: 'microwave', amenity: 'microwave' },
+            { keyword: 'microwaves', amenity: 'microwave' },
+            { keyword: 'kitchen', amenity: 'kitchen' },
+            { keyword: 'hair dryer', amenity: 'hairDryer' },
+            { keyword: 'hair dryers', amenity: 'hairDryer' },
+            { keyword: 'safe', amenity: 'safe' },
+            { keyword: 'room service', amenity: 'roomService' },
+            { keyword: 'concierge', amenity: 'concierge' },
+            { keyword: 'express check-in', amenity: 'expressCheckin' },
+            { keyword: 'express check-out', amenity: 'expressCheckout' },
+            { keyword: 'vending machine', amenity: 'vendingMachine' }
+          ];
+          
+          amenityKeywords.forEach(({ keyword, amenity }) => {
+            if (lowerDescription.includes(keyword)) {
+              amenities[amenity] = true;
+              console.log(`Found amenity: ${keyword} -> ${amenity}`);
+            }
+          });
+          
+          console.log('Final extracted amenities:', amenities);
+          return amenities;
+        };
 
         // Transform hotel data
         const hotel: Hotel = {
@@ -209,7 +287,9 @@ const HotelDetail = () => {
           reviewCount: 2847, // Default value since API doesn't provide this
           address1: specificHotel.address,
           description: specificHotel.description || 'No description provided.',
-          amenities: specificHotel.amenities || {},
+          amenities: Object.keys(specificHotel.amenities || {}).length > 0 
+            ? specificHotel.amenities 
+            : extractAmenitiesFromDescription(specificHotel.description || ''),
           images: specificHotel.image_details ? 
             Array.from({ length: Math.min(specificHotel.image_details.count, 5) }, (_, i) => {
               const imageUrl = `${specificHotel.image_details.prefix}${i}${specificHotel.image_details.suffix}`;
@@ -225,50 +305,129 @@ const HotelDetail = () => {
           longitude: specificHotel.longitude
         };
 
-        // Transform room data from the priced hotel
+        console.log('Transformed hotel amenities:', hotel.amenities);
+        console.log('Number of amenities:', Object.keys(hotel.amenities).length);
+
+                // Transform room data from hotel pricing information
         let roomData: Room[] = [];
         
-        if (specificHotel.price || specificHotel.lowest_price) {
-          const price = Math.round((specificHotel.price || specificHotel.lowest_price) as number);
-          const roomType = specificHotel.price_type || 'Standard Room';
+        // Check if we have room prices from the API - prioritize API data over fallback
+        console.log('Room prices from API:', roomPrices);
+        console.log('Room prices length:', roomPrices?.length);
+        console.log('Room prices loading:', roomPricesLoading);
+        
+        if (roomPrices && roomPrices.length > 0 && !roomPricesLoading) {
+          console.log('Using actual room prices from API:', roomPrices.length, 'rooms');
+          
+          roomPrices.forEach((roomPrice, index) => {
+            console.log('Processing room:', roomPrice.room_normalized_description, 'with price:', roomPrice.price);
+            
+            // Extract bed type from room description
+            const bedType = roomPrice.room_normalized_description.includes('Double') ? 'Double bed' :
+                           roomPrice.room_normalized_description.includes('King') ? 'King bed' :
+                           roomPrice.room_normalized_description.includes('Queen') ? 'Queen bed' :
+                           roomPrice.room_normalized_description.includes('Twin') ? 'Twin beds' : 'King bed';
+            
+            roomData.push({
+              id: roomPrice.key || `${specificHotel.id}-${index}`,
+              room_type: roomPrice.room_normalized_description,
+              price: roomPrice.price,
+              free_cancellation: roomPrice.free_cancellation,
+              image: roomPrice.images && roomPrice.images.length > 0 
+                ? roomPrice.images[0] 
+                : 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85',
+              occupancy: parseInt(adults) + parseInt(children),
+              bed_type: bedType,
+              size: '35',
+              description: roomPrice.description,
+              long_description: roomPrice.long_description,
+              amenities: roomPrice.amenities || ['WiFi', 'TV', 'Air Conditioning'],
+              key: roomPrice.key
+            });
+          });
+        } else if (specificHotel.price || specificHotel.lowest_price) {
+          // Use the actual hotel pricing data to create detailed room options
+          console.log('Using hotel pricing data to create detailed room options');
+          const basePrice = Math.round((specificHotel.price || specificHotel.lowest_price) as number);
           const freeCancellation = specificHotel.free_cancellation || false;
+          const roomsAvailable = specificHotel.rooms_available || 10;
           
-                  console.log('Extracted price for hotel:', price);
-        console.log('Room type:', roomType);
-        console.log('Number of nights:', Math.round((new Date(checkout).getTime() - new Date(checkin).getTime()) / (1000 * 60 * 60 * 24)));
-        console.log('Price per night:', price / Math.round((new Date(checkout).getTime() - new Date(checkin).getTime()) / (1000 * 60 * 60 * 24)));
+          // Create room data from hotel pricing information
+          // Since the API doesn't provide detailed room data, create realistic room options based on hotel pricing
+          const roomTypes = [
+            {
+              type: 'Standard Room',
+              price: basePrice,
+              occupancy: parseInt(adults) + parseInt(children),
+              bed_type: 'King bed',
+              size: '35',
+              description: 'Comfortable standard room with modern amenities',
+              long_description: 'A well-appointed standard room featuring modern amenities, comfortable furnishings, and all the essentials for a pleasant stay.',
+              amenities: ['WiFi', 'Smart TV', 'Air Conditioning', 'Private Bathroom', 'Desk', 'Coffee Maker'],
+              availability: Math.max(1, Math.floor(roomsAvailable * 0.6)) // 60% of rooms
+            },
+            {
+              type: 'Deluxe Room',
+              price: Math.round(basePrice * 1.2),
+              occupancy: parseInt(adults) + parseInt(children),
+              bed_type: 'King bed',
+              size: '45',
+              description: 'Spacious deluxe room with enhanced amenities',
+              long_description: 'Upgraded deluxe room offering more space, enhanced amenities, and premium furnishings for an elevated stay experience.',
+              amenities: ['WiFi', 'Smart TV', 'Air Conditioning', 'Private Bathroom', 'Desk', 'Coffee Maker', 'Mini Bar', 'City View'],
+              availability: Math.max(1, Math.floor(roomsAvailable * 0.3)) // 30% of rooms
+            },
+            {
+              type: 'Suite',
+              price: Math.round(basePrice * 1.8),
+              occupancy: parseInt(adults) + parseInt(children),
+              bed_type: 'King bed + Sofa bed',
+              size: '65',
+              description: 'Luxury suite with separate living area',
+              long_description: 'Premium suite featuring a separate living area, enhanced amenities, and luxury furnishings for the ultimate comfort and convenience.',
+              amenities: ['WiFi', 'Smart TV', 'Air Conditioning', 'Private Bathroom', 'Living Area', 'Desk', 'Coffee Maker', 'Mini Bar', 'Balcony', 'City View'],
+              availability: Math.max(1, Math.floor(roomsAvailable * 0.1)) // 10% of rooms
+            }
+          ];
           
-                      roomData = [{
-              id: specificHotel.id,
-              room_type: roomType,
-              price: price,
+
+          
+          roomTypes.forEach((roomType, index) => {
+            roomData.push({
+              id: `${specificHotel.id}-${roomType.type.toLowerCase().replace(' ', '-')}`,
+              room_type: roomType.type,
+              price: roomType.price,
               free_cancellation: freeCancellation,
               image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85',
-            occupancy: parseInt(adults) + parseInt(children),
-            bed_type: 'King bed',
-            size: '35',
-            description: 'Standard room with modern amenities',
-            long_description: 'Comfortable room with all necessary amenities for a pleasant stay',
-            amenities: ['WiFi', 'TV', 'Air Conditioning'],
-            key: specificHotel.id
-          }];
-        } else {
+              occupancy: roomType.occupancy,
+              bed_type: roomType.bed_type,
+              size: roomType.size,
+              description: roomType.description,
+              long_description: roomType.long_description,
+              amenities: roomType.amenities,
+              key: `${specificHotel.id}-${index}`,
+              availability: roomType.availability // Add availability to room data
+            });
+          });
+          
+          console.log('Created', roomData.length, 'room types from hotel pricing data');
+                } else {
           console.log('No pricing data found for this hotel');
           // If no pricing data, show that pricing is not available
-          roomData.push({
-            id: hotelId,
-            room_type: 'Standard Room',
-            price: 0, // Indicate no pricing available
-            free_cancellation: false,
+            roomData.push({
+              id: hotelId,
+              room_type: 'Standard Room',
+              price: 0, // Indicate no pricing available
+              free_cancellation: false,
             image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85',
-            occupancy: parseInt(adults) + parseInt(children),
-            bed_type: 'King bed',
-            size: '35',
-            description: 'Standard room with modern amenities',
-            long_description: 'Comfortable room with all necessary amenities for a pleasant stay. Pricing information is not currently available for this hotel.',
-            amenities: ['WiFi', 'TV', 'Air Conditioning'],
-            key: hotelId
-          });
+              occupancy: parseInt(adults) + parseInt(children),
+              bed_type: 'King bed',
+              size: '35',
+              description: 'Standard room with modern amenities',
+              long_description: 'Comfortable room with all necessary amenities for a pleasant stay. Pricing information is not currently available for this hotel.',
+              amenities: ['WiFi', 'TV', 'Air Conditioning'],
+              key: hotelId
+            });
         }
 
         // Validate room availability and guest capacity
@@ -278,7 +437,7 @@ const HotelDetail = () => {
         const totalRequestedGuests = totalGuests; // Use the calculated total
         
         // Calculate total available rooms and guest capacity
-        const totalAvailableRooms = roomData.length;
+        const totalAvailableRooms = specificHotel.rooms_available || roomData.length;
         const maxGuestCapacity = roomData.reduce((total, room) => total + (room.occupancy || 2), 0);
         
         // Validate room count
@@ -325,7 +484,8 @@ const HotelDetail = () => {
           guests: Array(validRoomCount).fill(validGuestsPerRoom).join('|')
         });
 
-        console.log('Number of rooms available:', roomData.length); // Debug logging
+        console.log('Number of room types created:', roomData.length); // Debug logging
+        console.log('Total rooms available at hotel:', totalAvailableRooms); // Debug logging
 
         setData({ 
           hotel, 
@@ -351,15 +511,18 @@ const HotelDetail = () => {
     };
 
     // Only fetch when hooks have loaded and we have a specific hotel
-    console.log('Checking fetch conditions - hotelLoading:', hotelLoading, 'priceLoading:', priceLoading, 'specificHotel:', !!specificHotel);
+    console.log('Checking fetch conditions - hotelLoading:', hotelLoading, 'priceLoading:', priceLoading, 'roomPricesLoading:', roomPricesLoading, 'specificHotel:', !!specificHotel);
     
-    if (!hotelLoading && !priceLoading && specificHotel) {
+    if (!hotelLoading && !priceLoading && !roomPricesLoading && specificHotel) {
       console.log('Fetching hotel data...');
-      fetchHotelData();
-    } else if (!hotelLoading && !priceLoading && !specificHotel && hotelId) {
+    fetchHotelData();
+    } else if (!hotelLoading && !priceLoading && !roomPricesLoading && !specificHotel && hotelId) {
       console.log('Hotel not found, setting error');
       setError(`Hotel with ID ${hotelId} not found`);
       setLoading(false);
+    } else if (hotelLoading || priceLoading || roomPricesLoading) {
+      console.log('Still loading, keeping loading state');
+      // Keep loading state while hooks are loading
     } else {
       console.log('No fetch conditions met, setting loading to false');
       setLoading(false);
@@ -367,7 +530,7 @@ const HotelDetail = () => {
   }, [hotelId, specificHotel, hotelLoading, priceLoading, destinationId, checkin, checkout, adults, children, roomCount, totalGuests, searchParams]);
 
   console.log('Rendering check - loading:', loading, 'error:', error, 'data:', !!data);
-  
+
   if (loading) {
     console.log('Rendering loading state');
     return (
@@ -466,6 +629,7 @@ const HotelDetail = () => {
               hotelName={data.hotel.name}
               hotelRating={data.hotel.rating}
               hotelReviewCount={data.hotel.reviewCount}
+              totalAvailableRooms={data.availability.availableRooms}
               onSelectRoom={(room) => {
                 setSelectedRoom(room);
                 // Scroll to booking card

@@ -22,12 +22,25 @@ interface RoomOptionsProps {
   hotelRating: number;
   hotelReviewCount: number;
   onSelectRoom?: (room: Room) => void;
+  totalAvailableRooms?: number;
 }
 
-const RoomOptions = ({ rooms, hotelId, hotelName, hotelRating, hotelReviewCount, onSelectRoom }: RoomOptionsProps) => {
+const RoomOptions = ({ rooms, hotelId, hotelName, hotelRating, hotelReviewCount, onSelectRoom, totalAvailableRooms }: RoomOptionsProps) => {
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold">Available Rooms</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-bold">Available Rooms</h2>
+        {totalAvailableRooms && (
+          <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-2">
+            <div className="flex items-center space-x-2">
+              <Check size={16} className="text-green-600" />
+              <span className="text-green-800 font-semibold">
+                {totalAvailableRooms} Total Rooms Available
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
       
       <div className="space-y-4">
         {rooms.map((room) => (
