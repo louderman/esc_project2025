@@ -112,6 +112,7 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
 
     // Validate card details using Stripe Elements (no API call)
     const { error: paymentMethodError } = await stripe.createPaymentMethod({
+    const { error: paymentMethodError } = await stripe.createPaymentMethod({
       type: 'card',
       card: cardElement,
       billing_details: {
@@ -131,6 +132,19 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
     }
 
     // Validate billing information
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (
+      !billingAddress.name ||
+      !billingAddress.email ||
+      !emailRegex.test(billingAddress.email) ||
+      !billingAddress.address.line1 ||
+      !billingAddress.address.city ||
+      !billingAddress.address.state ||
+      !billingAddress.address.postal_code
+    ) {
+      const errorMessage = 'Please fill in all required billing information.';
+      setError(errorMessage);
+      onPaymentError(errorMessage);
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (
       !billingAddress.name ||
@@ -181,6 +195,10 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
             throw new Error(`Booking creation failed: ${bookingResponse.status}`);
         }
 
+        if (!bookingResponse.ok) {
+            throw new Error(`Booking creation failed: ${bookingResponse.status}`);
+        }
+
         const bookingResult = await bookingResponse.json();
 
         if (bookingResult.error) {
@@ -201,12 +219,22 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
 
         // 3. Confirm payment on server (update booking status)
         const confirmResponse = await fetch(`${API_BASE_URL}/api/payment/confirm-payment`, {
+        // 2. Validate payment method client-side (no actual charge)
+        // This simulates payment processing for demo purposes
+        const mockPaymentIntentId = `pi_demo_${bookingId}_${Date.now()}`;
+        
+        // Simulate a small delay for payment processing
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // 3. Confirm payment on server (update booking status)
+        const confirmResponse = await fetch(`${API_BASE_URL}/api/payment/confirm-payment`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
                 bookingId,
+                paymentIntentId: mockPaymentIntentId,
                 paymentIntentId: mockPaymentIntentId,
             }),
         });
@@ -216,7 +244,16 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
         }
 
         const confirmResult = await confirmResponse.json();
+        if (!confirmResponse.ok) {
+            throw new Error(`Payment confirmation failed: ${confirmResponse.status}`);
+        }
 
+        const confirmResult = await confirmResponse.json();
+
+        if (confirmResult.error) {
+            setError(confirmResult.error);
+            onPaymentError(confirmResult.error);
+        } else if (confirmResult.success) {
         if (confirmResult.error) {
             setError(confirmResult.error);
             onPaymentError(confirmResult.error);
@@ -245,9 +282,35 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
                     bookingDetails: bookingData
                 }
             });
+            // Navigate to the correct route with proper state data
+            navigate(`/booking/confirmation`, {
+                state: {
+                    bookingId: confirmResult.booking_id,
+                    hotel: bookingData ? {
+                        id: bookingData.hotelId,
+                        name: bookingData.hotelName,
+                        price: bookingData.pricePerNight,
+                        address: 'Hotel Address', // BookingConfirmationPage uses hotel.address
+                        imageCount: 5,
+                        image_details: {
+                            prefix: '/listing/hotel_img_placeholder.png?id=',
+                            suffix: '',
+                        }
+                    } : null,
+                    stayDates: bookingData ? {
+                        checkinDate: bookingData.checkInDate && bookingData.checkInDate !== 'N/A' ? new Date(bookingData.checkInDate) : null,
+                        checkoutDate: bookingData.checkOutDate && bookingData.checkOutDate !== 'N/A' ? new Date(bookingData.checkOutDate) : null,
+                    } : null,
+                    totalAmount: amount / 100,
+                    bookingDetails: bookingData
+                }
+            });
         }
     } catch (error) {
         console.error("Payment processing error:", error);
+        const errorMessage = error instanceof Error ? error.message : "An error occurred while processing your payment.";
+        setError(errorMessage);
+        onPaymentError(errorMessage);
         const errorMessage = error instanceof Error ? error.message : "An error occurred while processing your payment.";
         setError(errorMessage);
         onPaymentError(errorMessage);
@@ -285,7 +348,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
               <label htmlFor="fullName">Full Name *</label>
+              <label htmlFor="fullName">Full Name *</label>
               <input
+                id="fullName"
                 id="fullName"
                 type="text"
                 value={billingAddress.name}
@@ -296,7 +361,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
             </div>
             <div className={styles.formGroup}>
               <label htmlFor="email">Email *</label>
+              <label htmlFor="email">Email *</label>
               <input
+                id="email"
                 id="email"
                 type="email"
                 value={billingAddress.email}
@@ -309,7 +376,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
 
           <div className={styles.formGroup}>
             <label htmlFor="phone">Phone</label>
+            <label htmlFor="phone">Phone</label>
             <input
+              id="phone"
               id="phone"
               type="tel"
               value={billingAddress.phone}
@@ -320,7 +389,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
 
           <div className={styles.formGroup}>
             <label htmlFor="address1">Address Line 1 *</label>
+            <label htmlFor="address1">Address Line 1 *</label>
             <input
+              id="address1"
               id="address1"
               type="text"
               value={billingAddress.address.line1}
@@ -332,7 +403,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
 
           <div className={styles.formGroup}>
             <label htmlFor="address2">Address Line 2</label>
+            <label htmlFor="address2">Address Line 2</label>
             <input
+              id="address2"
               id="address2"
               type="text"
               value={billingAddress.address.line2}
@@ -344,7 +417,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
               <label htmlFor="city">City *</label>
+              <label htmlFor="city">City *</label>
               <input
+                id="city"
                 id="city"
                 type="text"
                 value={billingAddress.address.city}
@@ -355,7 +430,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
             </div>
             <div className={styles.formGroup}>
               <label htmlFor="state">State *</label>
+              <label htmlFor="state">State *</label>
               <input
+                id="state"
                 id="state"
                 type="text"
                 value={billingAddress.address.state}
@@ -366,7 +443,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
             </div>
             <div className={styles.formGroup}>
               <label htmlFor="zip">ZIP Code *</label>
+              <label htmlFor="zip">ZIP Code *</label>
               <input
+                id="zip"
                 id="zip"
                 type="text"
                 value={billingAddress.address.postal_code}
@@ -379,7 +458,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
 
           <div className={styles.formGroup}>
             <label htmlFor="country">Country *</label>
+            <label htmlFor="country">Country *</label>
             <select
+              id="country"
               id="country"
               value={billingAddress.address.country}
               onChange={(e) => handleBillingAddressChange('address.country', e.target.value)}

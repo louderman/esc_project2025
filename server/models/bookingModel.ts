@@ -84,9 +84,35 @@ async function createBooking(bookingData: CreateBookingRequest): Promise<string>
         console.error('Database error creating booking:', error);
         throw new Error('Failed to create booking in database');
     }
+        return bookingId;
+    } catch (error) {
+        console.error('Database error creating booking:', error);
+        throw new Error('Failed to create booking in database');
+    }
 }
 
 async function getBookingById(bookingId: string): Promise<BookingData | null> {
+    if (!bookingId) {
+        throw new Error('Booking ID is required');
+    }
+
+    try {
+        const [rows]: any = await pool.query(`SELECT * FROM ${tableName} WHERE id = ? LIMIT 1`, [bookingId]);
+        if (rows.length > 0) {
+            const booking = rows[0];
+            try {
+                booking.whatsIncluded = JSON.parse(booking.whatsIncluded);
+            } catch (parseError) {
+                console.error('Error parsing whatsIncluded JSON:', parseError);
+                booking.whatsIncluded = [];
+            }
+            return booking;
+        }
+        return null;
+    } catch (error) {
+        console.error('Database error fetching booking:', error);
+        throw new Error('Failed to fetch booking from database');
+    }
     if (!bookingId) {
         throw new Error('Booking ID is required');
     }
