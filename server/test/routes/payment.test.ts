@@ -10,6 +10,8 @@ describe('POST /api/payment/confirm-payment', () => {
 
     it('should confirm payment and update booking status', async () => {
         const bookingData: CreateBookingRequest = {
+            userId: 'user_123',
+            email: 'test@example.com',
             hotelId: 'hotel_123',
             hotelName: 'Test Hotel',
             checkInDate: '2024-01-01',
@@ -20,6 +22,7 @@ describe('POST /api/payment/confirm-payment', () => {
             totalAmount: 400,
             whatsIncluded: ['Breakfast'],
             imageUrl: 'http://example.com/image.jpg',
+            bookingAddress: '123 Test Street, Test City, Test Country',
         };
         const bookingId = await createBooking(bookingData);
 

@@ -325,8 +325,9 @@ describe('BookingPage Integration Tests', () => {
       const payButton = within(paymentContainer).getByRole('button', { name: /pay \$1244\.00/i });
       await user.click(payButton);
 
-      const error = await screen.findByText(/Network error/i);
-      expect(paymentContainer.contains(error)).toBe(true);
+      const errorElements = await screen.findAllByText(/Network error/i);
+      const paymentFormError = errorElements.find(el => paymentContainer.contains(el));
+      expect(paymentFormError).toBeTruthy();
     });
 
     it('should handle Stripe errors', async () => {
@@ -351,8 +352,9 @@ describe('BookingPage Integration Tests', () => {
       const payButton = within(paymentContainer).getByRole('button', { name: /pay \$1244\.00/i });
       await user.click(payButton);
 
-      const error = await screen.findByText(/your card was declined/i);
-      expect(paymentContainer.contains(error)).toBe(true);
+      const errorElements = await screen.findAllByText(/your card was declined/i);
+      const paymentFormError = errorElements.find(el => paymentContainer.contains(el));
+      expect(paymentFormError).toBeTruthy();
     });
   });
 

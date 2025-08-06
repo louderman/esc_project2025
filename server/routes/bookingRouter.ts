@@ -1,6 +1,7 @@
 import express from 'express';
 import Stripe from 'stripe';
-import { updateBooking } from '../models/bookingModel';
+import { CreateBookingRequest } from '../../types/Booking';
+import { createBooking, getBookingById, updateBooking } from '../models/bookingModel';
 
 // Initialize Stripe only if secret key is provided
 const stripe = process.env.STRIPE_SECRET_KEY 
@@ -11,6 +12,102 @@ const stripe = process.env.STRIPE_SECRET_KEY
 
 const router = express.Router();
 
+// Create booking
+router.post('/', async (req, res) => {
+  try {
+    const bookingData: CreateBookingRequest = req.body;
+    
+    // Validate required fields
+    if (!bookingData.userId || !bookingData.email || !bookingData.hotelId || 
+        !bookingData.hotelName || !bookingData.checkInDate || !bookingData.checkOutDate ||
+        !bookingData.guests || !bookingData.bookingAddress) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: userId, email, hotelId, hotelName, checkInDate, checkOutDate, guests, or bookingAddress' 
+      });
+    }
+
+    if (bookingData.pricePerNight <= 0 || bookingData.numberOfNights <= 0 || bookingData.totalAmount <= 0) {
+      return res.status(400).json({ 
+        error: 'Invalid booking data: prices and nights must be positive values' 
+      });
+    }
+
+    const bookingId = await createBooking(bookingData);
+    
+    res.status(201).json({ 
+      bookingId,
+      message: 'Booking created successfully' 
+    });
+  } catch (error) {
+    console.error('Error creating booking:', error);
+    res.status(500).json({ 
+      error: 'Failed to create booking',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Get booking by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!id) {
+      return res.status(400).json({ error: 'Booking ID is required' });
+    }
+
+    const booking = await getBookingById(id);
+    
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    res.json(booking);
+  } catch (error) {
+    console.error('Error fetching booking:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch booking',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Update booking
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { paymentIntentId, status } = req.body;
+    
+    if (!id) {
+      return res.status(400).json({ error: 'Booking ID is required' });
+    }
+
+    if (!paymentIntentId || !status) {
+      return res.status(400).json({ error: 'Payment Intent ID and status are required' });
+    }
+
+    if (!['confirmed', 'cancelled'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status. Must be "confirmed" or "cancelled"' });
+    }
+
+    await updateBooking(id, paymentIntentId, status);
+    
+    res.json({ 
+      message: 'Booking updated successfully',
+      bookingId: id,
+      status 
+    });
+  } catch (error) {
+    console.error('Error updating booking:', error);
+    if (error instanceof Error && error.message.includes('Booking not found')) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+    res.status(500).json({ 
+      error: 'Failed to update booking',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
 
 // Create booking and payment intent
 router.post('/create-payment-intent', async (req, res) => {

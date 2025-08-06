@@ -10,6 +10,8 @@ describe('Booking API', () => {
 
     it('should create a new booking', async () => {
         const bookingData: CreateBookingRequest = {
+            userId: 'user_123',
+            email: 'test@example.com',
             hotelId: 'hotel_123',
             hotelName: 'Test Hotel',
             checkInDate: '2024-01-01',
@@ -20,6 +22,7 @@ describe('Booking API', () => {
             totalAmount: 400,
             whatsIncluded: ['Breakfast'],
             imageUrl: 'http://example.com/image.jpg',
+            bookingAddress: '123 Test Street, Test City, Test Country',
         };
 
         const res = await request(app)
@@ -36,6 +39,8 @@ describe('Booking API', () => {
 
     it('should get a booking by ID', async () => {
         const bookingData: CreateBookingRequest = {
+            userId: 'user_456',
+            email: 'test2@example.com',
             hotelId: 'hotel_456',
             hotelName: 'Another Test Hotel',
             checkInDate: '2024-02-01',
@@ -46,6 +51,7 @@ describe('Booking API', () => {
             totalAmount: 600,
             whatsIncluded: [],
             imageUrl: 'http://example.com/image2.jpg',
+            bookingAddress: '456 Test Avenue, Test City, Test Country',
         };
         const createRes = await request(app)
             .post('/api/bookings')
@@ -60,6 +66,8 @@ describe('Booking API', () => {
 
     it('should update a booking', async () => {
         const bookingData: CreateBookingRequest = {
+            userId: 'user_789',
+            email: 'test3@example.com',
             hotelId: 'hotel_789',
             hotelName: 'Update Test Hotel',
             checkInDate: '2024-03-01',
@@ -70,6 +78,7 @@ describe('Booking API', () => {
             totalAmount: 800,
             whatsIncluded: ['All-inclusive'],
             imageUrl: 'http://example.com/image3.jpg',
+            bookingAddress: '789 Test Boulevard, Test City, Test Country',
         };
         const createRes = await request(app)
             .post('/api/bookings')

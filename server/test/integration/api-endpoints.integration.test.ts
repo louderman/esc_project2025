@@ -170,7 +170,7 @@ describe('API Endpoints Integration Tests', () => {
                 {
                     name: 'missing bookingAddress',
                     data: createBookingData({ bookingAddress: '' }),
-                    expectedError: /booking address/,
+                    expectedError: /bookingAddress/,
                 },
             ];
 
