@@ -52,18 +52,21 @@ export function useControlPanelUrlSync({
       const rawValue = searchParams.get(key);
       if (!rawValue) continue;
 
-      try {
-        const parsed = JSON.parse(rawValue);
-        if (key === 'sortBy') {
-          listingDispatch({ type: 'SET_SORT', payload: parsed });
-        } else if (key in FILTER_OPTIONS) {
-          listingDispatch({ type: 'SET_FILTER', payload: { [key]: parsed } });
-        }
-      } catch (e) {
-        if (e instanceof Error) {
-          console.warn(
-            `Failed to parse URL param "${key}" raw: ${rawValue} error: ${e}`
-          );
+      // Only try to parse JSON for specific parameters that should be JSON
+      if (key === 'sortBy' || key in FILTER_OPTIONS) {
+        try {
+          const parsed = JSON.parse(rawValue);
+          if (key === 'sortBy') {
+            listingDispatch({ type: 'SET_SORT', payload: parsed });
+          } else if (key in FILTER_OPTIONS) {
+            listingDispatch({ type: 'SET_FILTER', payload: { [key]: parsed } });
+          }
+        } catch (e) {
+          if (e instanceof Error) {
+            console.warn(
+              `Failed to parse URL param "${key}" raw: ${rawValue} error: ${e}`
+            );
+          }
         }
       }
     }

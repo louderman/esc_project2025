@@ -191,6 +191,8 @@ const HotelDetail = () => {
         }
 
         console.log('Found specific hotel with pricing:', specificHotel);
+        console.log('Hotel images:', specificHotel.image_details);
+        console.log('Hotel amenities:', specificHotel.amenities);
 
         // Transform hotel data
         const hotel: Hotel = {
@@ -202,12 +204,15 @@ const HotelDetail = () => {
           description: specificHotel.description || 'No description provided.',
           amenities: specificHotel.amenities || {},
           images: specificHotel.image_details ? 
-            Array.from({ length: Math.min(specificHotel.image_details.count, 5) }, (_, i) => 
-              `${specificHotel.image_details.prefix}${i}${specificHotel.image_details.suffix}`
-            ) : [
-              'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=800&h=600&fit=crop',
-              'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=800&h=600&fit=crop',
-              'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&h=600&fit=crop'
+            Array.from({ length: Math.min(specificHotel.image_details.count, 5) }, (_, i) => {
+              const imageUrl = `${specificHotel.image_details.prefix}${i}${specificHotel.image_details.suffix}`;
+              console.log(`Generated image URL ${i}:`, imageUrl);
+              return imageUrl;
+            })
+          : [
+              'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1200&h=900&fit=crop&q=85',
+              'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85',
+              'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1200&h=900&fit=crop&q=85'
             ],
           latitude: specificHotel.latitude,
           longitude: specificHotel.longitude
@@ -221,15 +226,17 @@ const HotelDetail = () => {
           const roomType = specificHotel.price_type || 'Standard Room';
           const freeCancellation = specificHotel.free_cancellation || false;
           
-          console.log('Extracted price for hotel:', price);
-          console.log('Room type:', roomType);
+                  console.log('Extracted price for hotel:', price);
+        console.log('Room type:', roomType);
+        console.log('Number of nights:', Math.round((new Date(checkout).getTime() - new Date(checkin).getTime()) / (1000 * 60 * 60 * 24)));
+        console.log('Price per night:', price / Math.round((new Date(checkout).getTime() - new Date(checkin).getTime()) / (1000 * 60 * 60 * 24)));
           
-          roomData = [{
-            id: specificHotel.id,
-            room_type: roomType,
-            price: price,
-            free_cancellation: freeCancellation,
-            image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=800&h=600&fit=crop&q=85',
+                      roomData = [{
+              id: specificHotel.id,
+              room_type: roomType,
+              price: price,
+              free_cancellation: freeCancellation,
+              image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85',
             occupancy: parseInt(adults) + parseInt(children),
             bed_type: 'King bed',
             size: '35',
@@ -246,7 +253,7 @@ const HotelDetail = () => {
             room_type: 'Standard Room',
             price: 0, // Indicate no pricing available
             free_cancellation: false,
-            image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=800&h=600&fit=crop&q=85',
+            image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85',
             occupancy: parseInt(adults) + parseInt(children),
             bed_type: 'King bed',
             size: '35',
@@ -395,6 +402,8 @@ const HotelDetail = () => {
 
   console.log('Rendering HotelDetail with price:', data.rooms.length > 0 ? data.rooms[0].price : 0, 'and rooms:', data.rooms);
   console.log('Hotel coordinates:', { lat: data.hotel.latitude, lng: data.hotel.longitude });
+  console.log('Room data for display:', data.rooms[0]);
+  console.log('Hotel data for display:', data.hotel);
   
   return (
     <div className="hotel-detail-page">
