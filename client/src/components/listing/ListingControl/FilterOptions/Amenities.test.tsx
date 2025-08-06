@@ -10,6 +10,7 @@ import Amenities from './Amenities';
 import { AMENITY_KEYS, type AmenityKey } from '@/constants/amenities';
 import { useReducer } from 'react';
 import userEvent from '@testing-library/user-event';
+import styles from './amenities.module.css';
 
 beforeEach(() => {
   cleanup();
@@ -61,7 +62,7 @@ describe('Amenities', () => {
     });
   });
 
-  it('Test dispatches correct action when selecting an amenty', async () => {
+  it('Test dispatches correct action when selecting an amenity', async () => {
     render(
       <Amenities listingDispatch={mockDispatch} listingState={mockState} />
     );
@@ -81,7 +82,7 @@ describe('Amenities', () => {
     });
   });
 
-  it('Test dispatches correct action when deselecting an amenty', async () => {
+  it('Test dispatches correct action when deselecting an amenity', async () => {
     render(
       <Amenities listingDispatch={mockDispatch} listingState={mockState} />
     );
@@ -104,12 +105,39 @@ describe('Amenities', () => {
     render(<AmenitiesWrapper />);
     const button = screen.getAllByTestId('amenity-btn')[0];
 
-    expect(button.className).not.toContain('selected');
+    expect(button.classList.contains(styles.selected)).toBe(false);
 
     await userEvent.click(button);
-    expect(button.className).toContain('selected');
+    expect(button.classList.contains(styles.selected)).toBe(true);
 
     await userEvent.click(button);
-    expect(button.className).not.toContain('selected');
+    expect(button.classList.contains(styles.selected)).toBe(false);
+  });
+
+  it('Test allow multiple amenities to be selected', async () => {
+    render(<AmenitiesWrapper />);
+    let buttons = screen.getAllByTestId('amenity-btn');
+    let firstButton = buttons[0];
+    let secondButton = buttons[1];
+
+    expect(firstButton.classList.contains(styles.selected)).toBe(false);
+    expect(secondButton.classList.contains(styles.selected)).toBe(false);
+
+    await userEvent.click(firstButton);
+    await userEvent.click(secondButton);
+
+    buttons = screen.getAllByTestId('amenity-btn');
+    firstButton = buttons[0];
+    secondButton = buttons[1];
+    expect(firstButton.classList.contains(styles.selected)).toBe(true);
+    expect(secondButton.classList.contains(styles.selected)).toBe(true);
+
+    await userEvent.click(firstButton);
+    await userEvent.click(secondButton);
+    buttons = screen.getAllByTestId('amenity-btn');
+    firstButton = buttons[0];
+    secondButton = buttons[1];
+    expect(firstButton.classList.contains(styles.selected)).toBe(false);
+    expect(secondButton.classList.contains(styles.selected)).toBe(false);
   });
 });
