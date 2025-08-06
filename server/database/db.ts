@@ -20,7 +20,7 @@ async function cleanup() {
   await pool.end();
 }
 
-export { cleanup, pool };
+export { pool, cleanup };
 
 // CREATE USER 'your_username'@'your_host' IDENTIFIED BY 'your_password';
 // GRANT ALL PRIVILEGES ON db_name.* TO 'your_username'@'localhost';
