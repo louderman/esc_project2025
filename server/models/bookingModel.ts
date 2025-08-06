@@ -33,6 +33,7 @@ async function createBooking(bookingData: CreateBookingRequest): Promise<string>
         throw new Error('Missing required user fields: userId or email');
     }
 
+
     if (!bookingData.hotelId || !bookingData.hotelName || !bookingData.checkInDate || !bookingData.checkOutDate) {
         throw new Error('Missing required booking fields: hotelId, hotelName, checkInDate, or checkOutDate');
     }
@@ -40,6 +41,7 @@ async function createBooking(bookingData: CreateBookingRequest): Promise<string>
     if (!bookingData.guests || bookingData.pricePerNight <= 0 || bookingData.numberOfNights <= 0 || bookingData.totalAmount <= 0) {
         throw new Error('Invalid booking data: guests, prices, or nights must be valid positive values');
     }
+
 
     if (!bookingData.bookingAddress) {
         throw new Error('Missing required booking address');
@@ -58,6 +60,7 @@ async function createBooking(bookingData: CreateBookingRequest): Promise<string>
 
     try {
         await pool.query(
+
             `INSERT INTO ${tableName} (id, userId, email, hotelId, hotelName, checkInDate, checkOutDate, guests, pricePerNight, numberOfNights, totalAmount, whatsIncluded, imageUrl, bookingAddress, status, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 newBooking.id,
@@ -124,6 +127,7 @@ async function updateBooking(bookingId: string, paymentIntentId: string, status:
     }
 
     try {
+
         // First check if the booking exists
         const [existingRows]: any = await pool.query(`SELECT id FROM ${tableName} WHERE id = ? LIMIT 1`, [bookingId]);
         

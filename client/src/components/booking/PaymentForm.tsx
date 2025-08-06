@@ -1,9 +1,11 @@
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { CreateBookingRequest } from '../../../../types/Booking';
 import { API_BASE_URL } from '../../config/api';
 import { useAuth } from '../common/authcontext';
+
 import styles from './PaymentForm.module.css';
 
 interface PaymentFormProps {

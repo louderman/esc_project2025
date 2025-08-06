@@ -18,6 +18,7 @@ router.post('/', async (req, res) => {
     } catch (error) {
         console.error(error);
         const errorMessage = error instanceof Error ? error.message : 'Failed to create booking';
+
         
         // Return 400 for validation errors, 500 for other errors
         if (error instanceof Error && (

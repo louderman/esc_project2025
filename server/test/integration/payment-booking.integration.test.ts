@@ -35,7 +35,6 @@ const createBookingData = (overrides: Partial<CreateBookingRequest> = {}): Creat
     bookingAddress: '123 Test St, Test City, TC 12345, US',
     ...overrides,
 });
-
 describe('Payment-Booking Integration Tests', () => {
     beforeAll(async () => {
         await syncBooking();
@@ -138,9 +137,9 @@ describe('Payment-Booking Integration Tests', () => {
                 totalAmount: 1000,
                 whatsIncluded: ['All-inclusive'],
                 imageUrl: 'http://example.com/retrieval-hotel.jpg',
+
                 bookingAddress: '456 Retrieval St, Retrieval City, RC 67890, US',
             });
-
             const createRes = await request(app)
                 .post('/api/bookings')
                 .send(bookingData);
@@ -177,11 +176,9 @@ describe('Payment-Booking Integration Tests', () => {
                 numberOfNights: 0, // Invalid: zero
                 totalAmount: 0, // Invalid: zero
             });
-
             const res = await request(app)
                 .post('/api/bookings')
                 .send(invalidBookingData);
-
             expect(res.statusCode).toBe(400);
             expect(res.body.error).toBeDefined();
         });
@@ -191,13 +188,11 @@ describe('Payment-Booking Integration Tests', () => {
                 hotelId: 'hotel_db_error_test',
                 hotelName: 'DB Error Test Hotel',
             });
-
             // This test would require mocking the database to simulate an error
             // For now, we'll test with valid data to ensure the happy path works
             const res = await request(app)
                 .post('/api/bookings')
                 .send(bookingData);
-
             expect(res.statusCode).toBe(201);
             expect(res.body.bookingId).toBeDefined();
         });
@@ -217,12 +212,10 @@ describe('Payment-Booking Integration Tests', () => {
                     imageUrl: `http://example.com/hotel${i}.jpg`,
                     bookingAddress: `${100 + i} Concurrent St, Concurrent City, CC ${12345 + i}, US`,
                 });
-
                 return request(app)
                     .post('/api/bookings')
                     .send(bookingData);
             });
-
             const results = await Promise.all(bookingPromises);
 
             // All bookings should be created successfully
@@ -257,7 +250,6 @@ describe('Payment-Booking Integration Tests', () => {
                     totalAmount: testCase.amount,
                     bookingAddress: `${testCase.amount} Amount St, Amount City, AC ${testCase.amount}, US`,
                 });
-
                 const createRes = await request(app)
                     .post('/api/bookings')
                     .send(bookingData);

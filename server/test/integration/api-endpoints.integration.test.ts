@@ -44,6 +44,17 @@ describe('API Endpoints Integration Tests', () => {
     describe('Complete API Flow', () => {
         it('should handle complete booking lifecycle through API endpoints', async () => {
             const bookingData = createBookingData();
+            const bookingData: CreateBookingRequest = {
+                hotelId: 'hotel_api_test_123',
+                hotelName: 'API Test Hotel',
+                checkInDate: '2024-12-01',
+                checkOutDate: '2024-12-05',
+                guests: '2 adults, 1 child',
+                pricePerNight: 200,
+                numberOfNights: 4,
+                totalAmount: 800,
+                whatsIncluded: ['Breakfast', 'WiFi', 'Pool'],
+                imageUrl: 'http://example.com/api-test-hotel.jpg',
 
             // Step 1: Create booking
             const createResponse = await request(app)
@@ -65,10 +76,6 @@ describe('API Endpoints Integration Tests', () => {
                 id: bookingId,
                 userId: 'user-api-123',
                 email: 'api-test@example.com',
-                hotelId: 'hotel_api_test_123',
-                hotelName: 'API Test Hotel',
-                status: 'pending',
-                totalAmount: 800,
                 bookingAddress: '123 API Test St, API City, AC 12345, US',
                 paymentIntentId: null,
             });
@@ -109,12 +116,10 @@ describe('API Endpoints Integration Tests', () => {
                 numberOfNights: 0, // Invalid
                 totalAmount: 0, // Invalid
             });
-
             const response = await request(app)
                 .post('/api/bookings')
                 .send(invalidBookingData)
                 .expect(400);
-
             expect(response.body.error).toBeDefined();
         });
 
@@ -143,6 +148,7 @@ describe('API Endpoints Integration Tests', () => {
         it('should validate booking data fields consistently', async () => {
             const testCases = [
                 {
+
                     name: 'missing userId',
                     data: createBookingData({ userId: '' }),
                     expectedError: /userId/,
@@ -179,7 +185,6 @@ describe('API Endpoints Integration Tests', () => {
                     .post('/api/bookings')
                     .send(testCase.data)
                     .expect(400);
-
                 expect(response.body.error).toMatch(testCase.expectedError);
             }
         });
@@ -238,7 +243,6 @@ describe('API Endpoints Integration Tests', () => {
                     imageUrl: `http://example.com/hotel${i}.jpg`,
                     bookingAddress: `${100 + i} Concurrent St, Concurrent City, CC ${12345 + i}, US`,
                 });
-
                 return request(app)
                     .post('/api/bookings')
                     .send(bookingData);
@@ -282,7 +286,6 @@ describe('API Endpoints Integration Tests', () => {
                     hotelName: `Payment Concurrent Test Hotel ${i}`,
                     bookingAddress: `${200 + i} Payment St, Payment City, PC ${54321 + i}, US`,
                 });
-
                 return request(app)
                     .post('/api/bookings')
                     .send(bookingData);
@@ -343,7 +346,6 @@ describe('API Endpoints Integration Tests', () => {
                 imageUrl: 'http://example.com/luxury-hotel.jpg',
                 bookingAddress: '1 Luxury Ave, Luxury City, LC 99999, US',
             });
-
             const response = await request(app)
                 .post('/api/bookings')
                 .send(bookingData)
@@ -372,7 +374,6 @@ describe('API Endpoints Integration Tests', () => {
                 imageUrl: 'http://example.com/special-hotel.jpg',
                 bookingAddress: '123 Spéciál St, Ünique City, UC 12345, US',
             });
-
             const response = await request(app)
                 .post('/api/bookings')
                 .send(bookingData)
