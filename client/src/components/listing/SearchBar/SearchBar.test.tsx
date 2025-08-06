@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import userEvent from '@testing-library/user-event';
@@ -11,9 +11,7 @@ import { MemoryRouter } from 'react-router-dom';
 
 beforeEach(() => {
   global.fetch = vi.fn().mockImplementation((url) => {
-    console.log(url);
     if (url.includes('/api/destination/random')) {
-      console.log('called');
       return Promise.resolve({
         ok: true,
         json: async () => [
@@ -77,27 +75,30 @@ afterEach(() => {
 });
 
 describe('SearchBar', () => {
-  it('Test destination, stay dates, occupancy, and search buttons are rendered', () => {
+  it('Test destination, stay dates, occupancy, and search buttons are rendered', async () => {
     const onSubmit = vi.fn();
     render(<SearchBarWrapper onSubmit={onSubmit} />);
 
-    const destinationInp = screen.getByPlaceholderText(/Destination/);
-    expect(destinationInp).toBeInTheDocument();
+    // Wrap in waitFor because react state is changed
+    await waitFor(() => {
+      const destinationInp = screen.getByPlaceholderText(/Destination/);
+      expect(destinationInp).toBeInTheDocument();
 
-    const stayDatesInp = screen.getByRole('button', {
-      name: /select check in/,
-    });
-    expect(stayDatesInp).toBeInTheDocument();
+      const stayDatesInp = screen.getByRole('button', {
+        name: /select check in/,
+      });
+      expect(stayDatesInp).toBeInTheDocument();
 
-    const occupancyInp = screen.getByRole('button', {
-      name: /1 adult · 0 child · 1 room/,
-    });
-    expect(occupancyInp).toBeInTheDocument();
+      const occupancyInp = screen.getByRole('button', {
+        name: /1 adult · 0 child · 1 room/,
+      });
+      expect(occupancyInp).toBeInTheDocument();
 
-    const searchBtn = screen.getByRole('button', {
-      name: /find hotels/i,
+      const searchBtn = screen.getByRole('button', {
+        name: /find hotels/i,
+      });
+      expect(searchBtn).toBeInTheDocument();
     });
-    expect(searchBtn).toBeInTheDocument();
   });
 
   it('Test show error messages when destination or stay date input is invalid', async () => {

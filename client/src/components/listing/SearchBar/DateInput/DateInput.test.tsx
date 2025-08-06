@@ -93,7 +93,6 @@ describe('DateInput', () => {
       (checkoutDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
     );
     await userEvent.click(document.body);
-    console.log('formattedCheckin', formattedCheckIn);
     expect(screen.getByText(new RegExp(formattedCheckIn))).toBeInTheDocument();
     expect(screen.getByText(new RegExp(formattedCheckOut))).toBeInTheDocument();
     expect(

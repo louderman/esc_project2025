@@ -74,7 +74,6 @@ function useFetchHotelPrices(
           }`;
 
           const res = await fetch(url, { signal });
-          console.log('called!?', res, await res.json());
 
           if (!res.ok) {
             console.log(`Failed to fetch price for ${destId}`);
