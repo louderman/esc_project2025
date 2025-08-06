@@ -128,20 +128,22 @@ describe('useSearchBarUrlSync', () => {
     const newCheckin = parseDate('2025-5-29');
     const newCheckout = parseDate('2025-5-30');
 
-    stateChange.setDestination({
-      id: 'test_id12',
-      name: 'test_name12',
-    });
+    await waitFor(() => {
+      stateChange.setDestination({
+        id: 'test_id12',
+        name: 'test_name12',
+      });
 
-    stateChange.setOccupancy({
-      adults: 3,
-      children: 3,
-      rooms: 3,
-    });
+      stateChange.setOccupancy({
+        adults: 3,
+        children: 3,
+        rooms: 3,
+      });
 
-    stateChange.setStayDates({
-      checkinDate: newCheckin,
-      checkoutDate: newCheckout,
+      stateChange.setStayDates({
+        checkinDate: newCheckin,
+        checkoutDate: newCheckout,
+      });
     });
 
     await waitFor(() => {
