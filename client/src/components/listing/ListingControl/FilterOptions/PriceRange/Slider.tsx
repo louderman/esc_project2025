@@ -160,7 +160,6 @@ export default function Slider({
       };
     }, [data, rangeBoundary, dif]);
 
-  /** Helper to check if a bar overlaps with selected range */
   const isBarInRange = (min: number, max: number, [low, high]: number[]) =>
     (low <= min && min <= high) || (low <= max && max <= high);
 
