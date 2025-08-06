@@ -32,7 +32,57 @@ interface HotelInfoProps {
 }
 
 const HotelInfo = ({ hotel }: HotelInfoProps) => {
-  const amenityIcons: Record<string, JSX.Element> = {
+  // Extract attractions from hotel description
+  const extractAttractionsFromDescription = (description: string) => {
+    const attractions: string[] = [];
+    
+    // Common attraction keywords to look for with specific examples
+    const attractionKeywords = [
+      { keyword: 'disney', example: 'Disney World' },
+      { keyword: 'universal', example: 'Universal Studios' },
+      { keyword: 'seaworld', example: 'SeaWorld' },
+      { keyword: 'orlando', example: 'Orlando Attractions' },
+      { keyword: 'theme park', example: 'Theme Parks' },
+      { keyword: 'amusement park', example: 'Amusement Parks' },
+      { keyword: 'shopping', example: 'Shopping Centers' },
+      { keyword: 'mall', example: 'Shopping Malls' },
+      { keyword: 'outlet', example: 'Premium Outlets' },
+      { keyword: 'restaurant', example: 'Fine Dining' },
+      { keyword: 'dining', example: 'Restaurants' },
+      { keyword: 'cafe', example: 'Cafes & Coffee Shops' },
+      { keyword: 'airport', example: 'Orlando International Airport' },
+      { keyword: 'bus station', example: 'Bus Transportation' },
+      { keyword: 'train station', example: 'Train Services' },
+      { keyword: 'transportation', example: 'Public Transport' },
+      { keyword: 'museum', example: 'Local Museums' },
+      { keyword: 'gallery', example: 'Art Galleries' },
+      { keyword: 'theater', example: 'Theaters & Shows' },
+      { keyword: 'cinema', example: 'Movie Theaters' },
+      { keyword: 'stadium', example: 'Sports Venues' },
+      { keyword: 'arena', example: 'Event Arenas' },
+      { keyword: 'beach', example: 'Beach Access' },
+      { keyword: 'park', example: 'Public Parks' },
+      { keyword: 'garden', example: 'Botanical Gardens' },
+      { keyword: 'zoo', example: 'Wildlife Parks' },
+      { keyword: 'aquarium', example: 'Aquariums' }
+    ];
+    
+    const lowerDescription = description.toLowerCase();
+    
+    attractionKeywords.forEach(({ keyword, example }) => {
+      if (lowerDescription.includes(keyword)) {
+        if (!attractions.includes(example)) {
+          attractions.push(example);
+        }
+      }
+    });
+    
+    return attractions.slice(0, 6); // Limit to 6 attractions
+  };
+
+  const extractedAttractions = extractAttractionsFromDescription(hotel.description);
+
+  const amenityIcons: Record<string, any> = {
     // Core amenities
     airConditioning: <Snowflake size={16} />,
     parkingGarage: <Car size={16} />,
@@ -141,7 +191,6 @@ const HotelInfo = ({ hotel }: HotelInfoProps) => {
           <CardTitle>Facilities</CardTitle>
         </CardHeader>
         <CardContent>
-          {console.log('Available amenities:', Object.entries(hotel.amenities).filter(([_, available]) => available).map(([amenity]) => amenity))}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {Object.entries(hotel.amenities)
               .filter(([_, available]) => available)
@@ -194,7 +243,7 @@ const HotelInfo = ({ hotel }: HotelInfoProps) => {
         </CardContent>
       </Card>
 
-      {/* Nearby Attractions */}
+      {/* Nearby Attractions from Hotel Description */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -203,100 +252,50 @@ const HotelInfo = ({ hotel }: HotelInfoProps) => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Theme Parks */}
-            <div className="space-y-3">
-              <h4 className="font-medium text-lg flex items-center space-x-2">
-                <Plane size={18} className="text-hotel-gold" />
-                <span>Theme Parks</span>
-              </h4>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <Star size={14} className="text-hotel-gold fill-current" />
-                    <span className="text-sm font-medium">Universal Studios</span>
-                  </div>
-                  <span className="text-xs text-hotel-text-secondary">2.1 km</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <Star size={14} className="text-hotel-gold fill-current" />
-                    <span className="text-sm font-medium">Disney World</span>
-                  </div>
-                  <span className="text-xs text-hotel-text-secondary">3.5 km</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <Star size={14} className="text-hotel-gold fill-current" />
-                    <span className="text-sm font-medium">SeaWorld</span>
-                  </div>
-                  <span className="text-xs text-hotel-text-secondary">4.2 km</span>
+          {extractedAttractions.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <h4 className="font-medium text-lg flex items-center space-x-2">
+                  <Star size={18} className="text-hotel-gold" />
+                  <span>Attractions Mentioned</span>
+                </h4>
+                <div className="space-y-2">
+                  {extractedAttractions.slice(0, 3).map((attraction, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <MapPin size={14} className="text-hotel-gold" />
+                        <span className="text-sm font-medium">{attraction}</span>
+                      </div>
+                      <span className="text-xs text-hotel-text-secondary">Nearby</span>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
 
-            {/* Shopping & Dining */}
-            <div className="space-y-3">
-              <h4 className="font-medium text-lg flex items-center space-x-2">
-                <ShoppingBag size={18} className="text-hotel-gold" />
-                <span>Shopping & Dining</span>
-              </h4>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <Camera size={14} className="text-hotel-gold" />
-                    <span className="text-sm font-medium">Premium Outlets</span>
-                  </div>
-                  <span className="text-xs text-hotel-text-secondary">1.8 km</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <Utensils size={14} className="text-hotel-gold" />
-                    <span className="text-sm font-medium">Restaurant Row</span>
-                  </div>
-                  <span className="text-xs text-hotel-text-secondary">0.5 km</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <Coffee size={14} className="text-hotel-gold" />
-                    <span className="text-sm font-medium">Downtown District</span>
-                  </div>
-                  <span className="text-xs text-hotel-text-secondary">2.7 km</span>
+              <div className="space-y-3">
+                <h4 className="font-medium text-lg flex items-center space-x-2">
+                  <ShoppingBag size={18} className="text-hotel-gold" />
+                  <span>More Attractions</span>
+                </h4>
+                <div className="space-y-2">
+                  {extractedAttractions.slice(3, 6).map((attraction, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <Camera size={14} className="text-hotel-gold" />
+                        <span className="text-sm font-medium">{attraction}</span>
+                      </div>
+                      <span className="text-xs text-hotel-text-secondary">Nearby</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
-
-            {/* Transportation */}
-            <div className="space-y-3 md:col-span-2">
-              <h4 className="font-medium text-lg flex items-center space-x-2">
-                <Bus size={18} className="text-hotel-gold" />
-                <span>Transportation</span>
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <Plane size={14} className="text-hotel-gold" />
-                    <span className="text-sm font-medium">Orlando Airport</span>
-                  </div>
-                  <span className="text-xs text-hotel-text-secondary">15 km</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <Bus size={14} className="text-hotel-gold" />
-                    <span className="text-sm font-medium">Bus Station</span>
-                  </div>
-                  <span className="text-xs text-hotel-text-secondary">0.3 km</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <Car size={14} className="text-hotel-gold" />
-                    <span className="text-sm font-medium">Car Rental</span>
-                  </div>
-                  <span className="text-xs text-hotel-text-secondary">0.1 km</span>
-                </div>
-              </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-hotel-text-secondary">No specific attractions mentioned in hotel description</p>
+              <p className="text-sm text-hotel-text-secondary mt-2">Check the hotel overview above for more details</p>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -33,9 +33,9 @@ type Room = {
   price: number;
   free_cancellation: boolean;
   image: string;
-  occupancy: number;
-  bed_type: string;
-  size: string;
+  occupancy?: number;
+  bed_type?: string;
+  size?: string;
   description?: string;
   long_description?: string;
   amenities?: string[];
@@ -65,6 +65,7 @@ const HotelDetail = () => {
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const { hotelId: pathHotelId } = useParams<{ hotelId: string }>();
   const [searchParams] = useSearchParams();
   
@@ -168,8 +169,11 @@ const HotelDetail = () => {
   }
 
   useEffect(() => {
+    console.log('useEffect triggered - hotelLoading:', hotelLoading, 'priceLoading:', priceLoading, 'specificHotel:', !!specificHotel);
+    
     // Set loading to true when hooks are loading
     if (hotelLoading || priceLoading) {
+      console.log('Setting loading to true - hooks are loading');
       setLoading(true);
       return;
     }
@@ -184,6 +188,9 @@ const HotelDetail = () => {
       try {
         setLoading(true);
         setError(null);
+        
+        // Add a small delay to ensure loading state is visible
+        await new Promise(resolve => setTimeout(resolve, 500));
 
         // Use the hooks data instead of manual fetching
         if (!specificHotel) {
@@ -272,7 +279,7 @@ const HotelDetail = () => {
         
         // Calculate total available rooms and guest capacity
         const totalAvailableRooms = roomData.length;
-        const maxGuestCapacity = roomData.reduce((total, room) => total + room.occupancy, 0);
+        const maxGuestCapacity = roomData.reduce((total, room) => total + (room.occupancy || 2), 0);
         
         // Validate room count
         const validRoomCount = Math.min(requestedRooms, totalAvailableRooms);
@@ -344,21 +351,31 @@ const HotelDetail = () => {
     };
 
     // Only fetch when hooks have loaded and we have a specific hotel
+    console.log('Checking fetch conditions - hotelLoading:', hotelLoading, 'priceLoading:', priceLoading, 'specificHotel:', !!specificHotel);
+    
     if (!hotelLoading && !priceLoading && specificHotel) {
+      console.log('Fetching hotel data...');
       fetchHotelData();
     } else if (!hotelLoading && !priceLoading && !specificHotel && hotelId) {
+      console.log('Hotel not found, setting error');
       setError(`Hotel with ID ${hotelId} not found`);
+      setLoading(false);
+    } else {
+      console.log('No fetch conditions met, setting loading to false');
       setLoading(false);
     }
   }, [hotelId, specificHotel, hotelLoading, priceLoading, destinationId, checkin, checkout, adults, children, roomCount, totalGuests, searchParams]);
 
+  console.log('Rendering check - loading:', loading, 'error:', error, 'data:', !!data);
+  
   if (loading) {
+    console.log('Rendering loading state');
     return (
       <div className="hotel-detail-page min-h-screen bg-background">
         <HotelHeader />
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-hotel-gold mx-auto mb-4"></div>
             <p className="text-hotel-text-secondary">Loading hotel details...</p>
           </div>
         </div>
@@ -446,10 +463,16 @@ const HotelDetail = () => {
             <RoomOptions 
               rooms={data.rooms} 
               hotelId={hotelId}
-              onSelectRoom={(roomId) => {
-                // Redirect to Feature 4 (booking page) with room selection
-                const bookingUrl = `/booking?hotelId=${hotelId}&roomId=${roomId}&destination_id=${destinationId}&checkin=${checkin}&checkout=${checkout}&adults=${adults}&children=${children}&rooms=${roomCount}`;
-                window.location.href = bookingUrl;
+              hotelName={data.hotel.name}
+              hotelRating={data.hotel.rating}
+              hotelReviewCount={data.hotel.reviewCount}
+              onSelectRoom={(room) => {
+                setSelectedRoom(room);
+                // Scroll to booking card
+                const bookingCard = document.getElementById('booking-card');
+                if (bookingCard) {
+                  bookingCard.scrollIntoView({ behavior: 'smooth' });
+                }
               }}
             />
           ) : (
@@ -467,15 +490,16 @@ const HotelDetail = () => {
         </div>
 
         {/* Full Width Booking Card - Below Available Rooms */}
-        <div>
+        <div id="booking-card">
           <BookingCard 
-            price={data.rooms.length > 0 ? data.rooms[0].price : 0}
+            price={selectedRoom ? selectedRoom.price : (data.rooms.length > 0 ? data.rooms[0].price : 0)}
             rating={data.hotel.rating}
             reviewCount={data.hotel.reviewCount}
             hotelName={data.hotel.name}
             hotelId={hotelId}
             hasRooms={data.rooms.length > 0}
             availability={data.availability}
+            selectedRoom={selectedRoom}
           />
         </div>
 

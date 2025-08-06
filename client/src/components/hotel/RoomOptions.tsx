@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/hotel/ui/card";
 import { Button } from "@/components/hotel/ui/button";
 import { Badge } from "@/components/hotel/ui/badge";
 import { Users, Bed, Check } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 interface Room {
   id: string;
@@ -17,10 +18,13 @@ interface Room {
 interface RoomOptionsProps {
   rooms: Room[];
   hotelId: string;
-  onSelectRoom?: (roomId: string) => void;
+  hotelName: string;
+  hotelRating: number;
+  hotelReviewCount: number;
+  onSelectRoom?: (room: Room) => void;
 }
 
-const RoomOptions = ({ rooms, hotelId, onSelectRoom }: RoomOptionsProps) => {
+const RoomOptions = ({ rooms, hotelId, hotelName, hotelRating, hotelReviewCount, onSelectRoom }: RoomOptionsProps) => {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold">Available Rooms</h2>
@@ -69,7 +73,7 @@ const RoomOptions = ({ rooms, hotelId, onSelectRoom }: RoomOptionsProps) => {
                       <div className="text-sm text-hotel-text-secondary mb-3">total</div>
                       <Button 
                         className="bg-primary hover:bg-primary/90"
-                        onClick={() => onSelectRoom?.(room.id)}
+                        onClick={() => onSelectRoom?.(room)}
                       >
                         Select Room
                       </Button>

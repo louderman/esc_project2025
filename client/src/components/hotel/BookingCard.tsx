@@ -20,6 +20,21 @@ interface AvailabilityInfo {
   validChildren: number;
 }
 
+interface Room {
+  id: string;
+  room_type: string;
+  price: number;
+  free_cancellation: boolean;
+  image: string;
+  occupancy?: number;
+  bed_type?: string;
+  size?: string;
+  description?: string;
+  long_description?: string;
+  amenities?: string[];
+  key?: string;
+}
+
 interface BookingCardProps {
   price: number;
   rating: number;
@@ -28,9 +43,10 @@ interface BookingCardProps {
   hotelId?: string;
   hasRooms?: boolean;
   availability?: AvailabilityInfo;
+  selectedRoom?: Room | null;
 }
 
-const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms = false, availability }: BookingCardProps) => {
+const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms = false, availability, selectedRoom }: BookingCardProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [showCheckinCal, setShowCheckinCal] = useState(false);
@@ -112,7 +128,18 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
 
     // Prepare booking details
     const bookingDetails = {
-      selectedRoom: {
+      selectedRoom: selectedRoom ? {
+        id: selectedRoom.id,
+        room_type: selectedRoom.room_type,
+        price: price / numberOfNights, // Price per night
+        totalPrice: price, // Total price for the stay
+        free_cancellation: selectedRoom.free_cancellation,
+        occupancy: selectedRoom.occupancy || adults + children,
+        bed_type: selectedRoom.bed_type || 'King bed',
+        size: selectedRoom.size || '35',
+        description: selectedRoom.description || 'Standard room with modern amenities',
+        amenities: selectedRoom.amenities || ['WiFi', 'TV', 'Air Conditioning']
+      } : {
         id: hotelId || 'default',
         room_type: 'Standard Room',
         price: price / numberOfNights, // Price per night
@@ -180,6 +207,11 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
               <>
                 <div className="text-3xl font-bold text-orange-500">${price}</div>
                 <div className="text-base text-hotel-text-secondary">total</div>
+                {selectedRoom && (
+                  <div className="text-sm text-hotel-text-secondary mt-1">
+                    Selected: {selectedRoom.room_type}
+                  </div>
+                )}
               </>
             ) : (
               <div className="text-lg text-hotel-text-secondary">No availability</div>
