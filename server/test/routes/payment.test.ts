@@ -4,12 +4,10 @@ import { createBooking, getBookingById, sync as syncBooking } from '../../models
 import app from '../../server';
 
 describe('POST /api/payment/confirm-payment', () => {
-describe('POST /api/payment/confirm-payment', () => {
     beforeAll(async () => {
         await syncBooking();
     });
 
-    it('should confirm payment and update booking status', async () => {
     it('should confirm payment and update booking status', async () => {
         const bookingData: CreateBookingRequest = {
             userId: 'user-123',
@@ -30,17 +28,14 @@ describe('POST /api/payment/confirm-payment', () => {
 
         const res = await request(app)
             .post('/api/payment/confirm-payment')
-            .post('/api/payment/confirm-payment')
             .send({
                 bookingId,
-                paymentIntentId: 'pi_test_123',
                 paymentIntentId: 'pi_test_123',
             });
 
         expect(res.statusCode).toBe(200);
         expect(res.body.success).toBe(true);
         expect(res.body.booking_id).toBe(bookingId);
-        expect(res.body.message).toBe('Payment confirmed and booking updated successfully');
         expect(res.body.message).toBe('Payment confirmed and booking updated successfully');
 
         const booking = await getBookingById(bookingId);
@@ -52,50 +47,35 @@ describe('POST /api/payment/confirm-payment', () => {
     });
 
     it('should return 400 if bookingId is missing', async () => {
-    it('should return 400 if bookingId is missing', async () => {
         const res = await request(app)
             .post('/api/payment/confirm-payment')
-            .post('/api/payment/confirm-payment')
             .send({
-                paymentIntentId: 'pi_test_123',
                 paymentIntentId: 'pi_test_123',
             });
 
         expect(res.statusCode).toBe(400);
         expect(res.body.error).toBe('Missing booking ID');
-        expect(res.body.error).toBe('Missing booking ID');
     });
 
     it('should return 400 if paymentIntentId is missing', async () => {
-    it('should return 400 if paymentIntentId is missing', async () => {
         const res = await request(app)
             .post('/api/payment/confirm-payment')
-            .post('/api/payment/confirm-payment')
             .send({
-                bookingId: 'BK_TEST_123',
                 bookingId: 'BK_TEST_123',
             });
 
         expect(res.statusCode).toBe(400);
         expect(res.body.error).toBe('Missing payment intent ID');
-        expect(res.body.error).toBe('Missing payment intent ID');
     });
 
     it('should return 500 for non-existent booking', async () => {
-    it('should return 500 for non-existent booking', async () => {
         const res = await request(app)
-            .post('/api/payment/confirm-payment')
             .post('/api/payment/confirm-payment')
             .send({
                 bookingId: 'BK_NONEXISTENT_123',
                 paymentIntentId: 'pi_test_123',
-                bookingId: 'BK_NONEXISTENT_123',
-                paymentIntentId: 'pi_test_123',
             });
 
-        expect(res.statusCode).toBe(500);
-        expect(res.body.error).toBe('Failed to confirm payment and update booking');
-        expect(res.body.details).toBe('Booking not found or no changes made');
         expect(res.statusCode).toBe(500);
         expect(res.body.error).toBe('Failed to confirm payment and update booking');
         expect(res.body.details).toBe('Booking not found or no changes made');
