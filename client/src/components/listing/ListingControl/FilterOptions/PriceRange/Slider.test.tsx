@@ -113,7 +113,6 @@ describe('Slider', () => {
         setHoverCloserTo={setHoverCloserTo}
       />
     );
-    screen.debug(undefined, Infinity);
 
     const bars = screen.getAllByTestId('slider-bar');
     expect(bars.length).toBeGreaterThan(0);
