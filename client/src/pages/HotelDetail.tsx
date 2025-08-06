@@ -328,14 +328,24 @@ const HotelDetail = () => {
                            roomPrice.room_normalized_description.includes('Queen') ? 'Queen bed' :
                            roomPrice.room_normalized_description.includes('Twin') ? 'Twin beds' : 'King bed';
             
+            // Extract the hero image URL from the images array
+            let roomImageUrl = 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85'; // fallback
+            if (roomPrice.images && roomPrice.images.length > 0) {
+              // Find the hero image first, then fall back to the first image
+              const heroImage = roomPrice.images.find(img => img.hero_image);
+              if (heroImage) {
+                roomImageUrl = heroImage.url || heroImage.high_resolution_url;
+              } else {
+                roomImageUrl = roomPrice.images[0].url || roomPrice.images[0].high_resolution_url;
+              }
+            }
+            
             roomData.push({
               id: roomPrice.key || `${specificHotel.id}-${index}`,
               room_type: roomPrice.room_normalized_description,
               price: roomPrice.price,
               free_cancellation: roomPrice.free_cancellation,
-              image: roomPrice.images && roomPrice.images.length > 0 
-                ? roomPrice.images[0] 
-                : 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85',
+              image: roomImageUrl,
               occupancy: parseInt(adults) + parseInt(children),
               bed_type: bedType,
               size: '35',
@@ -411,7 +421,7 @@ const HotelDetail = () => {
           });
           
           console.log('Created', roomData.length, 'room types from hotel pricing data');
-                } else {
+          } else {
           console.log('No pricing data found for this hotel');
           // If no pricing data, show that pricing is not available
             roomData.push({
@@ -661,6 +671,7 @@ const HotelDetail = () => {
             reviewCount={data.hotel.reviewCount}
             hotelName={data.hotel.name}
             hotelId={hotelId}
+            hotelAddress={data.hotel.address1} // Add hotel address
             hasRooms={data.rooms.length > 0}
             availability={data.availability}
             selectedRoom={selectedRoom}

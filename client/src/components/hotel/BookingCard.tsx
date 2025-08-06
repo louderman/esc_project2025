@@ -41,12 +41,23 @@ interface BookingCardProps {
   reviewCount: number;
   hotelName: string;
   hotelId?: string;
+  hotelAddress?: string; // Add hotel address prop
   hasRooms?: boolean;
   availability?: AvailabilityInfo;
   selectedRoom?: Room | null;
 }
 
-const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms = false, availability, selectedRoom }: BookingCardProps) => {
+const BookingCard = ({ 
+  price, 
+  rating, 
+  reviewCount, 
+  hotelName, 
+  hotelId, 
+  hotelAddress, // Add hotel address parameter
+  hasRooms = false, 
+  availability, 
+  selectedRoom 
+}: BookingCardProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [showCheckinCal, setShowCheckinCal] = useState(false);
@@ -160,8 +171,8 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
       numberOfRooms: rooms,
       checkinDate: checkin,
       checkoutDate: checkout,
-              totalAmount: totalAmount,
-        pricePerNight: price / numberOfNights
+      totalAmount: totalAmount,
+      pricePerNight: price / numberOfNights
     };
 
     // Navigate to booking page with state
@@ -171,6 +182,7 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
         hotel: {
           id: hotelId,
           name: hotelName,
+          address: hotelAddress, // Add hotel address to booking state
           rating: rating,
           reviewCount: reviewCount,
           price: price
@@ -187,6 +199,10 @@ const BookingCard = ({ price, rating, reviewCount, hotelName, hotelId, hasRooms 
           <div className="flex items-center space-x-6">
             <div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">{hotelName}</h3>
+              {/* Add hotel address display */}
+              {hotelAddress && (
+                <p className="text-sm text-gray-600 mb-2">{hotelAddress}</p>
+              )}
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-1">
                   {[...Array(5)].map((_, i) => (
