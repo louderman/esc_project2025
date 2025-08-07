@@ -9,6 +9,7 @@ import { cleanup } from './database/db';
 
 import { sync as syncUser } from './models/userModel';
 import { sync as syncDest } from './models/destinationModel';
+import { sync as syncBooking } from './models/bookingModel';
 
 import { router as destRouter } from './routes/destinationRouter';
 import { router as priceRouter } from './routes/hotelpriceRouter';
@@ -36,8 +37,9 @@ process.on('SIGTERM', cleanup);
 
 syncUser();
 syncDest();
+syncBooking();
 
-// process.env.NODE_ENV === 'test' only when we run `npm run test`
+// Run test only when not in testing mode
 if (process.env.NODE_ENV !== 'test') {
   app.listen(5000, () => {
     console.log('Server listening on port 5000.');
