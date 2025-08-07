@@ -3,7 +3,10 @@ import parentStyles from './listingcard.module.css';
 
 export default function ListingCardSkeleton() {
   return (
-    <div className={`${parentStyles.container} ${styles.container}`}>
+    <div
+      data-testid='hotel-listing-card-skeleton'
+      className={`${parentStyles.container} ${styles.container}`}
+    >
       <div
         className={`${parentStyles.image} ${styles.image} ${styles.shimmer}`}
       />

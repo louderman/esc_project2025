@@ -18,7 +18,7 @@ export default function ListingCard({
   const navigate = useNavigate();
 
   const handleView = () => {
-    navigate('/booking', { state: { hotel, stayDates } });
+    navigate('/hotel_detail', { state: { hotel, stayDates } });
   };
 
   const userRating = hotel.categories.overall?.score;
@@ -32,7 +32,7 @@ export default function ListingCard({
       : 0;
 
   return (
-    <div className={styles.container}>
+    <div data-testid='hotel-listing-card' className={styles.container}>
       {hotel.imageCount > 0 ? (
         <img
           className={styles.image}
@@ -93,8 +93,9 @@ export default function ListingCard({
               }) ?? '...'}
             </span>
             <span className={styles.stayInfoText}>
-              {occupancy.rooms} room{occupancy.rooms > 0 ? 's' : ''},{' '}
-              {numNights} night{numNights > 0 ? 's' : ''}
+              {`${occupancy.rooms} room${
+                occupancy.rooms > 1 ? 's' : ''
+              }, ${numNights} night${numNights > 1 ? 's' : ''}`}
             </span>
             <div className={styles.userRatingBox}>
               <span className={styles.userRatingText}>Rating</span>
