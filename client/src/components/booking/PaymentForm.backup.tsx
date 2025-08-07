@@ -1,8 +1,9 @@
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { CreateBookingRequest } from '../../../../types/Booking';
 import { API_BASE_URL } from '../../config/api';
+import { useAuth } from '../common/authcontext';
 import styles from './PaymentForm.module.css';
 
 interface PaymentFormProps {
@@ -31,8 +32,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
   
-  // State for billing address
+  // State for billing address - initially empty, will be populated when user data is available
   const [billingAddress, setBillingAddress] = useState<BillingAddress>({
     name: '',
     email: '',
@@ -46,6 +48,17 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
       country: 'SG',
     },
   });
+
+  // Update billing address when user data becomes available
+  useEffect(() => {
+    if (user && (!billingAddress.name || !billingAddress.email)) {
+      setBillingAddress(prev => ({
+        ...prev,
+        name: user.name || prev.name,
+        email: user.email || prev.email,
+      }));
+    }
+  }, [user, billingAddress.name, billingAddress.email]);
 
   // Stripe hooks - these will return null if Elements provider is not available
   const stripe = useStripe();
@@ -136,13 +149,32 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
     }
 
     try {
-        // 1. Create a booking first
+        // Check if user is authenticated
+        if (!user) {
+            const errorMessage = 'You must be logged in to make a booking.';
+            setError(errorMessage);
+            onPaymentError(errorMessage);
+            setProcessing(false);
+            return;
+        }
+
+        // Format booking address from billing information
+        const bookingAddress = `${billingAddress.address.line1}${billingAddress.address.line2 ? ', ' + billingAddress.address.line2 : ''}, ${billingAddress.address.city}, ${billingAddress.address.state} ${billingAddress.address.postal_code}, ${billingAddress.address.country}`;
+
+        // 1. Create a booking first with user data and booking address
+        const bookingRequestData: CreateBookingRequest = {
+            ...bookingData!,
+            userId: user.id.toString(),
+            email: user.email,
+            bookingAddress: bookingAddress,
+        };
+
         const bookingResponse = await fetch(`${API_BASE_URL}/api/bookings`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(bookingData),
+            body: JSON.stringify(bookingRequestData),
         });
 
         if (!bookingResponse.ok) {
@@ -221,14 +253,13 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
         onPaymentError(errorMessage);
     }
 
-
     setProcessing(false);
   };
 
   const handleBillingAddressChange = (field: string, value: string) => {
     if (field.startsWith('address.')) {
       const addressField = field.split('.')[1];
-      setBillingAddress(prev => ({
+      setBillingAddress((prev: BillingAddress) => ({
         ...prev,
         address: {
           ...prev.address,
@@ -236,7 +267,7 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
         },
       }));
     } else {
-      setBillingAddress(prev => ({
+      setBillingAddress((prev: BillingAddress) => ({
         ...prev,
         [field]: value,
       }));
