@@ -311,6 +311,30 @@ const HotelDetail = () => {
                 // Transform room data from hotel pricing information
         let roomData: Room[] = [];
         
+        // Function to normalize room type names and remove duplicates
+        const normalizeRoomType = (roomType: string): string => {
+          if (!roomType || typeof roomType !== 'string') {
+            return 'Standard Room';
+          }
+          // Remove common suffixes that indicate duplicates
+          return roomType
+            .replace(/\s*\([^)]*\)/g, '') // Remove parentheses and their contents
+            .replace(/\s*\d+$/g, '') // Remove trailing numbers
+            .replace(/\s*-\s*\d+$/g, '') // Remove "- number" patterns
+            .replace(/\s*\([^)]*\)$/g, '') // Remove trailing parentheses
+            .trim();
+        };
+        
+        // Function to check if two rooms are essentially the same
+        const areRoomsSimilar = (room1: any, room2: any): boolean => {
+          const normalizedType1 = normalizeRoomType(room1.room_normalized_description || room1.room_type || '');
+          const normalizedType2 = normalizeRoomType(room2.room_normalized_description || room2.room_type || '');
+          
+          // Check if room types are similar (within 10% price difference and same normalized type)
+          const priceDiff = Math.abs(room1.price - room2.price) / Math.max(room1.price, room2.price);
+          return normalizedType1 === normalizedType2 && priceDiff < 0.1;
+        };
+        
         // Check if we have room prices from the API - prioritize API data over fallback
         console.log('Room prices from API:', roomPrices);
         console.log('Room prices length:', roomPrices?.length);
@@ -319,38 +343,78 @@ const HotelDetail = () => {
         if (roomPrices && roomPrices.length > 0 && !roomPricesLoading) {
           console.log('Using actual room prices from API:', roomPrices.length, 'rooms');
           
-          roomPrices.forEach((roomPrice, index) => {
+          // Filter out duplicates before processing
+          const uniqueRoomPrices = roomPrices.filter((roomPrice, index, array) => {
+            // Check if this room is a duplicate of any previous room
+            for (let i = 0; i < index; i++) {
+              if (areRoomsSimilar(roomPrice, array[i])) {
+                console.log('Filtering out duplicate room:', roomPrice.room_normalized_description, 'similar to:', array[i].room_normalized_description);
+                return false;
+              }
+            }
+            return true;
+          });
+          
+          console.log('After deduplication:', uniqueRoomPrices.length, 'unique rooms');
+          
+          uniqueRoomPrices.forEach((roomPrice, index) => {
             console.log('Processing room:', roomPrice.room_normalized_description, 'with price:', roomPrice.price);
             
             // Extract bed type from room description
-            const bedType = roomPrice.room_normalized_description.includes('Double') ? 'Double bed' :
-                           roomPrice.room_normalized_description.includes('King') ? 'King bed' :
-                           roomPrice.room_normalized_description.includes('Queen') ? 'Queen bed' :
-                           roomPrice.room_normalized_description.includes('Twin') ? 'Twin beds' : 'King bed';
+            const roomDescription = roomPrice.room_normalized_description || '';
+            const bedType = roomDescription.includes('Double') ? 'Double bed' :
+                           roomDescription.includes('King') ? 'King bed' :
+                           roomDescription.includes('Queen') ? 'Queen bed' :
+                           roomDescription.includes('Twin') ? 'Twin beds' : 'King bed';
             
-            // Extract the hero image URL from the images array
+            // Extract the room image URL from the images array
             let roomImageUrl = 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85'; // fallback
+            
+            // Try to get image from API first
             if (roomPrice.images && roomPrice.images.length > 0) {
-              // Find the hero image first, then fall back to the first image
-              const heroImage = roomPrice.images.find(img => img.hero_image);
-              if (heroImage) {
-                roomImageUrl = heroImage.url || heroImage.high_resolution_url;
-              } else {
-                roomImageUrl = roomPrice.images[0].url || roomPrice.images[0].high_resolution_url;
+              // Handle both string and object image formats
+              const validImage = roomPrice.images.find(img => {
+                if (typeof img === 'string') {
+                  return img && img.trim() !== '';
+                } else if (img && typeof img === 'object') {
+                  // Handle object format with url property
+                  return img.url && img.url.trim() !== '';
+                }
+                return false;
+              });
+              
+              if (validImage) {
+                if (typeof validImage === 'string') {
+                  roomImageUrl = validImage;
+                } else if (validImage.url) {
+                  roomImageUrl = validImage.url;
+                }
+              }
+            }
+            
+            // Use different fallback images based on room type if no valid API image
+            if (roomImageUrl === 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85') {
+              const roomTypeLower = roomPrice.room_normalized_description.toLowerCase();
+              if (roomTypeLower.includes('deluxe') || roomTypeLower.includes('premium')) {
+                roomImageUrl = 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1200&h=900&fit=crop&q=85';
+              } else if (roomTypeLower.includes('suite') || roomTypeLower.includes('executive')) {
+                roomImageUrl = 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1200&h=900&fit=crop&q=85';
+              } else if (roomTypeLower.includes('standard') || roomTypeLower.includes('basic')) {
+                roomImageUrl = 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85';
               }
             }
             
             roomData.push({
               id: roomPrice.key || `${specificHotel.id}-${index}`,
-              room_type: roomPrice.room_normalized_description,
+              room_type: roomPrice.room_normalized_description || 'Standard Room',
               price: roomPrice.price,
               free_cancellation: roomPrice.free_cancellation,
               image: roomImageUrl,
               occupancy: parseInt(adults) + parseInt(children),
               bed_type: bedType,
               size: '35',
-              description: roomPrice.description,
-              long_description: roomPrice.long_description,
+              description: roomPrice.description || 'Comfortable room with modern amenities',
+              long_description: roomPrice.long_description || 'A well-appointed room featuring modern amenities and comfortable furnishings.',
               amenities: roomPrice.amenities || ['WiFi', 'TV', 'Air Conditioning'],
               key: roomPrice.key
             });
@@ -402,13 +466,38 @@ const HotelDetail = () => {
           
 
           
-          roomTypes.forEach((roomType, index) => {
+          // Filter out duplicates from room types as well
+          const uniqueRoomTypes = roomTypes.filter((roomType, index, array) => {
+            // Check if this room type is a duplicate of any previous room type
+            for (let i = 0; i < index; i++) {
+              if (areRoomsSimilar(roomType, array[i])) {
+                console.log('Filtering out duplicate room type:', roomType.type, 'similar to:', array[i].type);
+                return false;
+              }
+            }
+            return true;
+          });
+          
+          console.log('After deduplication:', uniqueRoomTypes.length, 'unique room types');
+          
+          uniqueRoomTypes.forEach((roomType, index) => {
+            // Use different images for different room types
+            let roomImageUrl = 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85'; // default fallback
+            
+            if (roomType.type === 'Standard Room') {
+              roomImageUrl = 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85';
+            } else if (roomType.type === 'Deluxe Room') {
+              roomImageUrl = 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1200&h=900&fit=crop&q=85';
+            } else if (roomType.type === 'Suite') {
+              roomImageUrl = 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1200&h=900&fit=crop&q=85';
+            }
+            
             roomData.push({
               id: `${specificHotel.id}-${roomType.type.toLowerCase().replace(' ', '-')}`,
               room_type: roomType.type,
               price: roomType.price,
               free_cancellation: freeCancellation,
-              image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85',
+              image: roomImageUrl,
               occupancy: roomType.occupancy,
               bed_type: roomType.bed_type,
               size: roomType.size,

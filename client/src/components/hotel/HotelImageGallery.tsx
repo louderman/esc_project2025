@@ -16,7 +16,24 @@ const HotelImageGallery = ({ images, hotelName }: HotelImageGalleryProps) => {
     "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1200&h=900&fit=crop&q=85"
   ];
   
-  const galleryImages = images || defaultImages;
+  // Only use provided images if they exist and are valid URLs
+  const galleryImages = images && images.length > 0 && images.some(img => {
+    if (typeof img === 'string') {
+      return img && img.trim() !== '';
+    } else if (img && typeof img === 'object') {
+      return img.url && img.url.trim() !== '';
+    }
+    return false;
+  }) 
+    ? images.filter(img => {
+        if (typeof img === 'string') {
+          return img && img.trim() !== '';
+        } else if (img && typeof img === 'object') {
+          return img.url && img.url.trim() !== '';
+        }
+        return false;
+      }).map(img => typeof img === 'string' ? img : img.url)
+    : defaultImages;
 
   return (
     <div className="relative">
@@ -25,6 +42,15 @@ const HotelImageGallery = ({ images, hotelName }: HotelImageGalleryProps) => {
           src={galleryImages[currentImage]} 
           alt={`${hotelName} - Image ${currentImage + 1}`}
           className="w-full h-full object-cover"
+          onError={(e) => {
+            // If main image fails, try to show a fallback
+            if (galleryImages.length > 1) {
+              const nextImageIndex = (currentImage + 1) % galleryImages.length;
+              e.currentTarget.src = galleryImages[nextImageIndex];
+            } else {
+              e.currentTarget.src = "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1200&h=900&fit=crop&q=85";
+            }
+          }}
         />
       </div>
       
@@ -50,6 +76,10 @@ const HotelImageGallery = ({ images, hotelName }: HotelImageGalleryProps) => {
                 alt={`${hotelName} thumbnail ${index + 1}`}
                 className="w-full h-full object-cover"
                 loading="lazy"
+                onError={(e) => {
+                  // Hide broken images
+                  e.currentTarget.style.display = 'none';
+                }}
               />
             </button>
           ))}

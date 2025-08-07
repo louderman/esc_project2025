@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/hotel/ui/card";
 import { MapPin } from "lucide-react";
 import { APIProvider, Map, Marker } from '@vis.gl/react-google-maps';
-import { useRef } from 'react';
+import { useRef, useState, useCallback } from 'react';
 
 const API_KEY = 'AIzaSyBta33S3S8OPr_m0uL-TNn3UTW8MSVF-L8';
 const MAP_ID = 'a8079e059f31bc15534a6a3a';
@@ -15,6 +15,45 @@ interface LocationMapProps {
 
 const LocationMap = ({ address, latitude, longitude, hotelName }: LocationMapProps) => {
   const mapRef = useRef<google.maps.Map | null>(null);
+  const [mapCenter, setMapCenter] = useState({ lat: latitude || 0, lng: longitude || 0 });
+  const [mapZoom, setMapZoom] = useState(15);
+  
+  const handleMapLoad = useCallback((map: google.maps.Map) => {
+    mapRef.current = map;
+    // Enable all interactions
+    map.setOptions({
+      gestureHandling: 'greedy',
+      zoomControl: true,
+      mapTypeControl: true,
+      streetViewControl: true,
+      fullscreenControl: true,
+      draggable: true,
+      scrollwheel: true,
+      disableDoubleClickZoom: false,
+      keyboardShortcuts: true
+    });
+    
+    // Add event listeners to track map position
+    map.addListener('center_changed', () => {
+      const center = map.getCenter();
+      if (center) {
+        setMapCenter({ lat: center.lat(), lng: center.lng() });
+      }
+    });
+    
+    map.addListener('zoom_changed', () => {
+      setMapZoom(map.getZoom() || 15);
+    });
+  }, []);
+  
+  // Update center and zoom when props change (but only if they're different)
+  const currentCenter = { lat: latitude || 0, lng: longitude || 0 };
+  const shouldUpdateCenter = currentCenter.lat !== mapCenter.lat || currentCenter.lng !== mapCenter.lng;
+  
+  if (shouldUpdateCenter && latitude && longitude) {
+    setMapCenter(currentCenter);
+  }
+  
   return (
     <Card>
       <CardHeader>
@@ -33,19 +72,23 @@ const LocationMap = ({ address, latitude, longitude, hotelName }: LocationMapPro
                 <APIProvider apiKey={API_KEY}>
                   <Map
                     mapId={MAP_ID}
-                    center={{ lat: latitude, lng: longitude }}
-                    zoom={15}
+                    defaultCenter={mapCenter}
+                    defaultZoom={mapZoom}
                     className="w-full h-full"
                     gestureHandling="greedy"
-                    disableDefaultUI={false}
-                    mapTypeControl={true}
-                    streetViewControl={true}
-                    fullscreenControl={true}
-                    zoomControl={true}
-                    clickableIcons={true}
-                    draggable={true}
-                    scrollwheel={true}
-                    tilt={0}
+                    onLoad={handleMapLoad}
+                    options={{
+                      zoomControl: true,
+                      mapTypeControl: true,
+                      streetViewControl: true,
+                      fullscreenControl: true,
+                      gestureHandling: 'greedy',
+                      draggable: true,
+                      scrollwheel: true,
+                      disableDoubleClickZoom: false,
+                      keyboardShortcuts: true,
+                      clickableIcons: true
+                    }}
                   >
                     <Marker
                       position={{ lat: latitude, lng: longitude }}

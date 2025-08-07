@@ -67,6 +67,16 @@ const BookingCard = ({
   const checkinDate = searchParams.get('checkin')?.replace(/"/g, '') || '2025-10-01';
   const checkoutDate = searchParams.get('checkout')?.replace(/"/g, '') || '2025-10-07';
   
+  // Format dates for display
+  const formatDateForDisplay = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+  };
+  
   // Create stayDates state that persists across renders
   const [stayDates, setStayDatesState] = useState<StayDatesState>({
     checkinDate: new Date(checkinDate),
@@ -91,11 +101,27 @@ const BookingCard = ({
       // Update the local state first
       setStayDatesState(dates);
       
-      // Then update the URL and refresh the page
+      // Format dates for URL
+      const formatDateForUrl = (date: Date) => {
+        return date.toISOString().split('T')[0];
+      };
+      
+      // Update URL parameters without page refresh
       const currentUrl = new URL(window.location.href);
-      currentUrl.searchParams.set('checkin', dates.checkinDate.toISOString().split('T')[0]);
-      currentUrl.searchParams.set('checkout', dates.checkoutDate.toISOString().split('T')[0]);
-      window.location.href = currentUrl.toString();
+      currentUrl.searchParams.set('checkin', formatDateForUrl(dates.checkinDate));
+      currentUrl.searchParams.set('checkout', formatDateForUrl(dates.checkoutDate));
+      
+      // Use history API to update URL without refresh
+      window.history.pushState({}, '', currentUrl.toString());
+      
+      // Close calendar dropdowns
+      setShowCheckinCal(false);
+      setShowCheckoutCal(false);
+      
+      // Trigger a small delay then refresh to get updated data
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
     }
   };
   
@@ -221,7 +247,7 @@ const BookingCard = ({
           <div className="text-right">
             {hasRooms && price > 0 ? (
               <>
-                <div className="text-3xl font-bold text-orange-500">${price}</div>
+                <div className="text-3xl font-bold text-orange-500">${price.toFixed(2)}</div>
                 <div className="text-base text-hotel-text-secondary">total</div>
                 {selectedRoom && (
                   <div className="text-sm text-hotel-text-secondary mt-1">
@@ -251,7 +277,7 @@ const BookingCard = ({
                 onClick={() => setShowCheckinCal(!showCheckinCal)}
                 className="w-full text-left pl-10 pr-3 py-3 border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
-                {checkinDate}
+                {formatDateForDisplay(checkinDate)}
               </button>
               {showCheckinCal && (
                 <div className="absolute top-full left-0 z-20 mt-1" ref={calWrapperRef}>
@@ -273,7 +299,7 @@ const BookingCard = ({
                 onClick={() => setShowCheckoutCal(!showCheckoutCal)}
                 className="w-full text-left pl-10 pr-3 py-3 border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
-                {checkoutDate}
+                {formatDateForDisplay(checkoutDate)}
               </button>
               {showCheckoutCal && (
                 <div className="absolute top-full left-0 z-20 mt-1" ref={calWrapperRef}>
@@ -335,16 +361,16 @@ const BookingCard = ({
                 return (
                   <>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm">{nights} night{nights !== 1 ? 's' : ''} × {rooms} room{rooms !== 1 ? 's' : ''} × ${pricePerNight.toFixed(0)}/night</span>
-                      <span className="text-sm">${totalPrice}</span>
+                      <span className="text-sm">{nights} night{nights !== 1 ? 's' : ''} × {rooms} room{rooms !== 1 ? 's' : ''} × ${pricePerNight.toFixed(2)}/night</span>
+                      <span className="text-sm">${totalPrice.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm">Taxes & fees</span>
-                      <span className="text-sm">${taxes}</span>
+                      <span className="text-sm">${taxes.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center font-semibold text-lg border-t pt-2">
                       <span>Total</span>
-                      <span>${totalPrice + taxes}</span>
+                      <span>${(totalPrice + taxes).toFixed(2)}</span>
                     </div>
                   </>
                 );

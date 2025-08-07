@@ -139,7 +139,6 @@ button:not([class*="register"]):not([class*="login"]) {
 }
 
 /* Tailwind CSS - Only for hotel detail pages */
-/* Note: We'll import Tailwind components and utilities, but NOT base to avoid global resets */
 @tailwind components;
 @tailwind utilities;
 
