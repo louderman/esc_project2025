@@ -9,9 +9,7 @@ import type { SearchbarErrorState } from '../SearchBar';
 
 beforeEach(() => {
   global.fetch = vi.fn().mockImplementation((url) => {
-    console.log(url);
     if (url.includes('/api/destination/random')) {
-      console.log('called');
       return Promise.resolve({
         ok: true,
         json: async () => [
