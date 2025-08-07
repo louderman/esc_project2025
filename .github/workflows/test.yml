@@ -1,8 +1,5 @@
 name: Run Vitest and Jest Tests
 on:
-  pull_request:
-    branches:
-      - '**'
   push:
     branches:
       - '**'
