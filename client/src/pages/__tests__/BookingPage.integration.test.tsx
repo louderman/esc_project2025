@@ -1,9 +1,23 @@
 import { Elements } from '@stripe/react-stripe-js';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type MockInstance,
+} from 'vitest';
 import BookingPage from '../BookingPage';
 
 // Mock Stripe
@@ -28,8 +42,10 @@ vi.mock('@stripe/stripe-js', () => ({
 }));
 
 vi.mock('@stripe/react-stripe-js', () => ({
-  Elements: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  CardElement: () => <div data-testid="card-element">Mock Card Element</div>,
+  Elements: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  CardElement: () => <div data-testid='card-element'>Mock Card Element</div>,
   useStripe: () => mockStripe,
   useElements: () => mockElements,
 }));
@@ -70,6 +86,15 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
+let consoleErrorSpy: MockInstance;
+beforeEach(() => {
+  consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+});
+
+afterEach(() => {
+  consoleErrorSpy.mockClear();
+});
+
 describe('BookingPage Integration Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -97,7 +122,10 @@ describe('BookingPage Integration Tests', () => {
 
   describe('Page Rendering', () => {
     it('should render booking review and payment form', () => {
-      mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) });
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([]),
+      });
       renderBookingPage();
 
       // Check booking review section
@@ -112,15 +140,27 @@ describe('BookingPage Integration Tests', () => {
     });
 
     it('should display correct booking details from state', () => {
-      mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) });
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([]),
+      });
       renderBookingPage();
 
-      const reviewContainer = screen.getAllByText(/review booking/i)[0].parentElement!;
-      expect(within(reviewContainer).getByText(/oasia resort sentosa by far east hospitality/i)).toBeInTheDocument();
-      expect(within(reviewContainer).getByText(/1 room · 2 guests/i)).toBeInTheDocument();
-      
+      const reviewContainer =
+        screen.getAllByText(/review booking/i)[0].parentElement!;
+      expect(
+        within(reviewContainer).getByText(
+          /oasia resort sentosa by far east hospitality/i
+        )
+      ).toBeInTheDocument();
+      expect(
+        within(reviewContainer).getByText(/1 room · 2 guests/i)
+      ).toBeInTheDocument();
+
       const costContainer = screen.getByText('Cost').parentElement!;
-      expect(within(costContainer).getByText(/\$311 x 4 nights/)).toBeInTheDocument();
+      expect(
+        within(costContainer).getByText(/\$311 x 4 nights/)
+      ).toBeInTheDocument();
       expect(within(costContainer).getByText(/Total/)).toBeInTheDocument();
       expect(within(costContainer).getAllByText(/\$1244/)).toHaveLength(2);
     });
@@ -129,39 +169,49 @@ describe('BookingPage Integration Tests', () => {
   describe('Complete Booking Flow', () => {
     it('should complete full booking and payment process', async () => {
       const user = userEvent.setup();
-      
+
       mockFetch
         .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) }) // destination
-        .mockResolvedValueOnce({ // booking
+        .mockResolvedValueOnce({
+          // booking
           ok: true,
           json: () => Promise.resolve({ bookingId: 'BK123456789' }),
         })
-        .mockResolvedValueOnce({ // payment
+        .mockResolvedValueOnce({
+          // payment
           ok: true,
-          json: () => Promise.resolve({ 
-            success: true, 
-            booking_id: 'BK123456789' 
-          }),
+          json: () =>
+            Promise.resolve({
+              success: true,
+              booking_id: 'BK123456789',
+            }),
         });
 
       renderBookingPage();
 
       await user.type(screen.getByLabelText(/full name/i), 'John Doe');
       await user.type(screen.getByLabelText(/email/i), 'john.doe@example.com');
-      await user.type(screen.getByLabelText(/address line 1/i), '123 Main Street');
+      await user.type(
+        screen.getByLabelText(/address line 1/i),
+        '123 Main Street'
+      );
       await user.type(screen.getByLabelText(/city/i), 'Singapore');
       await user.type(screen.getByLabelText(/state/i), 'Central');
       await user.type(screen.getByLabelText(/zip code/i), '123456');
 
-      const paymentContainer = screen.getAllByText(/payment details/i)[0].parentElement!;
-      const payButton = within(paymentContainer).getByRole('button', { name: /pay \$1244\.00/i });
+      const paymentContainer =
+        screen.getAllByText(/payment details/i)[0].parentElement!;
+      const payButton = within(paymentContainer).getByRole('button', {
+        name: /pay \$1244\.00/i,
+      });
       await user.click(payButton);
 
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledTimes(3);
       });
 
-      expect(mockFetch).toHaveBeenNthCalledWith(2, 
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
         expect.stringContaining('/api/bookings'),
         expect.objectContaining({
           method: 'POST',
@@ -170,18 +220,21 @@ describe('BookingPage Integration Tests', () => {
         })
       );
 
-      expect(mockNavigate).toHaveBeenCalledWith('/booking/confirmation', expect.objectContaining({
-        state: expect.objectContaining({
-          bookingDetails: expect.any(Object),
-          hotel: expect.any(Object),
-          totalAmount: 1244,
-        }),
-      }));
+      expect(mockNavigate).toHaveBeenCalledWith(
+        '/booking/confirmation',
+        expect.objectContaining({
+          state: expect.objectContaining({
+            bookingDetails: expect.any(Object),
+            hotel: expect.any(Object),
+            totalAmount: 1244,
+          }),
+        })
+      );
     });
 
     it('should handle payment errors gracefully', async () => {
       const user = userEvent.setup();
-      
+
       mockFetch
         .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) })
         .mockResolvedValueOnce({
@@ -193,13 +246,19 @@ describe('BookingPage Integration Tests', () => {
 
       await user.type(screen.getByLabelText(/full name/i), 'John Doe');
       await user.type(screen.getByLabelText(/email/i), 'john.doe@example.com');
-      await user.type(screen.getByLabelText(/address line 1/i), '123 Main Street');
+      await user.type(
+        screen.getByLabelText(/address line 1/i),
+        '123 Main Street'
+      );
       await user.type(screen.getByLabelText(/city/i), 'Singapore');
       await user.type(screen.getByLabelText(/state/i), 'Central');
       await user.type(screen.getByLabelText(/zip code/i), '123456');
 
-      const paymentContainer = screen.getAllByText(/payment details/i)[0].parentElement!;
-      const payButton = within(paymentContainer).getByRole('button', { name: /pay \$1244\.00/i });
+      const paymentContainer =
+        screen.getAllByText(/payment details/i)[0].parentElement!;
+      const payButton = within(paymentContainer).getByRole('button', {
+        name: /pay \$1244\.00/i,
+      });
       await user.click(payButton);
 
       await waitFor(() => {
@@ -213,14 +272,20 @@ describe('BookingPage Integration Tests', () => {
   describe('Form Validation Integration', () => {
     it('should prevent submission with incomplete billing information', async () => {
       const user = userEvent.setup();
-      mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) });
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([]),
+      });
       renderBookingPage();
 
       await user.type(screen.getByLabelText(/full name/i), 'John Doe');
       await user.type(screen.getByLabelText(/email/i), 'john.doe@example.com');
 
-      const paymentContainer = screen.getAllByText(/payment details/i)[0].parentElement!;
-      const payButton = within(paymentContainer).getByRole('button', { name: /pay \$1244\.00/i });
+      const paymentContainer =
+        screen.getAllByText(/payment details/i)[0].parentElement!;
+      const payButton = within(paymentContainer).getByRole('button', {
+        name: /pay \$1244\.00/i,
+      });
       await user.click(payButton);
 
       expect(mockFetch).toHaveBeenCalledTimes(1);
@@ -228,18 +293,27 @@ describe('BookingPage Integration Tests', () => {
 
     it('should validate email format', async () => {
       const user = userEvent.setup();
-      mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) });
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([]),
+      });
       renderBookingPage();
 
       await user.type(screen.getByLabelText(/full name/i), 'John Doe');
       await user.type(screen.getByLabelText(/email/i), 'invalid-email');
-      await user.type(screen.getByLabelText(/address line 1/i), '123 Main Street');
+      await user.type(
+        screen.getByLabelText(/address line 1/i),
+        '123 Main Street'
+      );
       await user.type(screen.getByLabelText(/city/i), 'Singapore');
       await user.type(screen.getByLabelText(/state/i), 'Central');
       await user.type(screen.getByLabelText(/zip code/i), '123456');
 
-      const paymentContainer = screen.getAllByText(/payment details/i)[0].parentElement!;
-      const payButton = within(paymentContainer).getByRole('button', { name: /pay \$1244\.00/i });
+      const paymentContainer =
+        screen.getAllByText(/payment details/i)[0].parentElement!;
+      const payButton = within(paymentContainer).getByRole('button', {
+        name: /pay \$1244\.00/i,
+      });
       await user.click(payButton);
 
       // Wait a bit and verify that the form validation prevented submission
@@ -257,7 +331,7 @@ describe('BookingPage Integration Tests', () => {
   describe('Booking Data Transformation', () => {
     it('should correctly transform booking page data for API', async () => {
       const user = userEvent.setup();
-      
+
       mockFetch
         .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) })
         .mockResolvedValueOnce({
@@ -266,20 +340,27 @@ describe('BookingPage Integration Tests', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve({ success: true, booking_id: 'BK123456789' }),
+          json: () =>
+            Promise.resolve({ success: true, booking_id: 'BK123456789' }),
         });
 
       renderBookingPage();
 
       await user.type(screen.getByLabelText(/full name/i), 'John Doe');
       await user.type(screen.getByLabelText(/email/i), 'john.doe@example.com');
-      await user.type(screen.getByLabelText(/address line 1/i), '123 Main Street');
+      await user.type(
+        screen.getByLabelText(/address line 1/i),
+        '123 Main Street'
+      );
       await user.type(screen.getByLabelText(/city/i), 'Singapore');
       await user.type(screen.getByLabelText(/state/i), 'Central');
       await user.type(screen.getByLabelText(/zip code/i), '123456');
 
-      const paymentContainer = screen.getAllByText(/payment details/i)[0].parentElement!;
-      const payButton = within(paymentContainer).getByRole('button', { name: /pay \$1244\.00/i });
+      const paymentContainer =
+        screen.getAllByText(/payment details/i)[0].parentElement!;
+      const payButton = within(paymentContainer).getByRole('button', {
+        name: /pay \$1244\.00/i,
+      });
       await user.click(payButton);
 
       await waitFor(() => {
@@ -289,25 +370,27 @@ describe('BookingPage Integration Tests', () => {
       const bookingCall = mockFetch.mock.calls[1];
       const bookingData = JSON.parse(bookingCall[1].body);
 
-      expect(bookingData).toEqual(expect.objectContaining({
-        hotelId: 'test-hotel-123',
-        hotelName: 'Oasia Resort Sentosa By Far East Hospitality',
-        checkInDate: expect.any(String),
-        checkOutDate: expect.any(String),
-        guests: expect.any(String),
-        pricePerNight: 311,
-        numberOfNights: 4,
-        totalAmount: 1244,
-        whatsIncluded: expect.any(Array),
-        imageUrl: expect.any(String),
-      }));
+      expect(bookingData).toEqual(
+        expect.objectContaining({
+          hotelId: 'test-hotel-123',
+          hotelName: 'Oasia Resort Sentosa By Far East Hospitality',
+          checkInDate: expect.any(String),
+          checkOutDate: expect.any(String),
+          guests: expect.any(String),
+          pricePerNight: 311,
+          numberOfNights: 4,
+          totalAmount: 1244,
+          whatsIncluded: expect.any(Array),
+          imageUrl: expect.any(String),
+        })
+      );
     });
   });
 
   describe('Error Handling', () => {
     it('should handle network errors during booking creation', async () => {
       const user = userEvent.setup();
-      
+
       mockFetch
         .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) })
         .mockRejectedValueOnce(new Error('Network error'));
@@ -316,24 +399,35 @@ describe('BookingPage Integration Tests', () => {
 
       await user.type(screen.getByLabelText(/full name/i), 'John Doe');
       await user.type(screen.getByLabelText(/email/i), 'john.doe@example.com');
-      await user.type(screen.getByLabelText(/address line 1/i), '123 Main Street');
+      await user.type(
+        screen.getByLabelText(/address line 1/i),
+        '123 Main Street'
+      );
       await user.type(screen.getByLabelText(/city/i), 'Singapore');
       await user.type(screen.getByLabelText(/state/i), 'Central');
       await user.type(screen.getByLabelText(/zip code/i), '123456');
 
-      const paymentContainer = screen.getAllByText(/payment details/i)[0].parentElement!;
-      const payButton = within(paymentContainer).getByRole('button', { name: /pay \$1244\.00/i });
+      const paymentContainer =
+        screen.getAllByText(/payment details/i)[0].parentElement!;
+      const payButton = within(paymentContainer).getByRole('button', {
+        name: /pay \$1244\.00/i,
+      });
       await user.click(payButton);
 
       const errorElements = await screen.findAllByText(/Network error/i);
-      const paymentFormError = errorElements.find(el => paymentContainer.contains(el));
+      const paymentFormError = errorElements.find((el) =>
+        paymentContainer.contains(el)
+      );
       expect(paymentFormError).toBeTruthy();
     });
 
     it('should handle Stripe errors', async () => {
       const user = userEvent.setup();
-      mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) });
-      
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([]),
+      });
+
       mockStripe.createPaymentMethod.mockResolvedValue({
         error: { message: 'Your card was declined.' },
         paymentMethod: null,
@@ -343,17 +437,27 @@ describe('BookingPage Integration Tests', () => {
 
       await user.type(screen.getByLabelText(/full name/i), 'John Doe');
       await user.type(screen.getByLabelText(/email/i), 'john.doe@example.com');
-      await user.type(screen.getByLabelText(/address line 1/i), '123 Main Street');
+      await user.type(
+        screen.getByLabelText(/address line 1/i),
+        '123 Main Street'
+      );
       await user.type(screen.getByLabelText(/city/i), 'Singapore');
       await user.type(screen.getByLabelText(/state/i), 'Central');
       await user.type(screen.getByLabelText(/zip code/i), '123456');
 
-      const paymentContainer = screen.getAllByText(/payment details/i)[0].parentElement!;
-      const payButton = within(paymentContainer).getByRole('button', { name: /pay \$1244\.00/i });
+      const paymentContainer =
+        screen.getAllByText(/payment details/i)[0].parentElement!;
+      const payButton = within(paymentContainer).getByRole('button', {
+        name: /pay \$1244\.00/i,
+      });
       await user.click(payButton);
 
-      const errorElements = await screen.findAllByText(/your card was declined/i);
-      const paymentFormError = errorElements.find(el => paymentContainer.contains(el));
+      const errorElements = await screen.findAllByText(
+        /your card was declined/i
+      );
+      const paymentFormError = errorElements.find((el) =>
+        paymentContainer.contains(el)
+      );
       expect(paymentFormError).toBeTruthy();
     });
   });
@@ -361,30 +465,46 @@ describe('BookingPage Integration Tests', () => {
   describe('UI State Management', () => {
     it('should show loading state during payment processing', async () => {
       const user = userEvent.setup();
-      
+
       mockFetch
         .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) })
-        .mockImplementation(() => 
-          new Promise(resolve => setTimeout(() => resolve({
-            ok: true,
-            json: () => Promise.resolve({ bookingId: 'BK123456789' }),
-          }), 1000))
+        .mockImplementation(
+          () =>
+            new Promise((resolve) =>
+              setTimeout(
+                () =>
+                  resolve({
+                    ok: true,
+                    json: () => Promise.resolve({ bookingId: 'BK123456789' }),
+                  }),
+                1000
+              )
+            )
         );
 
       renderBookingPage();
 
       await user.type(screen.getByLabelText(/full name/i), 'John Doe');
       await user.type(screen.getByLabelText(/email/i), 'john.doe@example.com');
-      await user.type(screen.getByLabelText(/address line 1/i), '123 Main Street');
+      await user.type(
+        screen.getByLabelText(/address line 1/i),
+        '123 Main Street'
+      );
       await user.type(screen.getByLabelText(/city/i), 'Singapore');
       await user.type(screen.getByLabelText(/state/i), 'Central');
       await user.type(screen.getByLabelText(/zip code/i), '123456');
 
-      const paymentContainer = screen.getAllByText(/payment details/i)[0].parentElement!;
-      const payButton = within(paymentContainer).getByRole('button', { name: /pay \$1244\.00/i });
+      const paymentContainer =
+        screen.getAllByText(/payment details/i)[0].parentElement!;
+      const payButton = within(paymentContainer).getByRole('button', {
+        name: /pay \$1244\.00/i,
+      });
       await user.click(payButton);
 
-      const processingButton = await within(paymentContainer).findByRole('button', { name: /processing/i });
+      const processingButton = await within(paymentContainer).findByRole(
+        'button',
+        { name: /processing/i }
+      );
       expect(processingButton).toBeDisabled();
     });
   });
