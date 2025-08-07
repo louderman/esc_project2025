@@ -7,7 +7,7 @@ import type { Price, PriceResponse } from '../../../../types/Price';
 const priceCache = new Map<string, Price[]>();
 const SAFE_PRICE_COUNT = 3;
 
-export function useFetchHotelPrices(
+function useFetchHotelPrices(
   destIds: string[],
   stayDates: StayDatesState,
   occupancy: OccupancyState,
@@ -38,6 +38,7 @@ export function useFetchHotelPrices(
 
   const fetchPrice = useCallback(async () => {
     console.log('called fetch price');
+
     if (
       !destIds ||
       destIds.length === 0 ||
@@ -131,3 +132,5 @@ export function useFetchHotelPrices(
 
   return { prices, loading, error };
 }
+
+export { useFetchHotelPrices, priceCache };

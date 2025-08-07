@@ -51,9 +51,11 @@ export default function StarRating({
     <div className={styles.container}>
       {ratings.map((rating, i) => (
         <div
+          data-testid='rating-row'
           className={styles.row}
           key={`rating-row-${rating}`}
-          onClick={() => handleSelectRating(rating)}>
+          onClick={() => handleSelectRating(rating)}
+        >
           <label className={styles.inputContainer}>
             <input
               type='checkbox'

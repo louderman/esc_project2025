@@ -18,20 +18,19 @@ router.post('/confirm-payment', async (req, res) => {
   try {
     // Update booking status to confirmed
     await updateBooking(bookingId, paymentIntentId, 'confirmed');
-    
-    res.json({ 
-      success: true, 
-      booking_id: bookingId,
-      message: 'Payment confirmed and booking updated successfully'
-    });
 
+    res.json({
+      success: true,
+      booking_id: bookingId,
+      message: 'Payment confirmed and booking updated successfully',
+    });
   } catch (error) {
     console.error('Error confirming payment:', error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       error: 'Failed to confirm payment and update booking',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
 
-export default router;
+export { router };

@@ -87,8 +87,17 @@ export function useSearchBarUrlSync({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /** Reflect search bar state changes to URL */
-  const syncSearchBarToURL = (targetPath?: string) => {
+  /**
+   * Reflect search bar state changes to URL
+   * @param targetPath  the page url to redirect to. If empty, no redirection occurs and only url is updated
+   * @param override  we can provide values in override to prevent using stale react states
+   */
+  const syncSearchBarToURL = (
+    targetPath?: string,
+    override?: {
+      rooms?: number;
+    }
+  ) => {
     const urlParams = new URLSearchParams(location.search);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -117,7 +126,7 @@ export function useSearchBarUrlSync({
     );
     syncParam('adult', occupancy.adults);
     syncParam('child', occupancy.children);
-    syncParam('room', occupancy.rooms);
+    syncParam('room', override?.rooms ?? occupancy.rooms);
 
     navigate(
       {

@@ -34,11 +34,23 @@ export default function ListingPage() {
     checkinDate: null,
     checkoutDate: null,
   });
-  const [occupancy, setOccupancy] = useState<OccupancyState>({
+
+  // currentOccupancy: the occupancy state used for searchbar
+  const [currentOccupancy, setCurrentOccupancy] = useState<OccupancyState>({
     adults: 1,
     children: 0,
     rooms: 1,
   });
+  // submittedOccupancy: used for occupancy fetched (and synced) from url on mount
+  const [submittedOccupancy, setSubmittedOccupancy] =
+    useState<OccupancyState>(currentOccupancy);
+  // The occupancy state is split into two separate states to prevent real-time updates
+  // of the room count in the hotel listing card when the user modifies it in the search bar
+  useEffect(() => {
+    // Sync submittedOccupancy with occupancy from url as well
+    setCurrentOccupancy(submittedOccupancy);
+  }, [submittedOccupancy]);
+
   const [listingState, listingDispatch] = useReducer(
     listingReducer,
     initialListingState
@@ -58,8 +70,8 @@ export default function ListingPage() {
     destination,
     setDestination,
     navigate,
-    occupancy,
-    setOccupancy,
+    occupancy: submittedOccupancy,
+    setOccupancy: setSubmittedOccupancy,
     setStayDates,
     stayDates,
   });
@@ -71,7 +83,7 @@ export default function ListingPage() {
   const { prices, loading: priceLoading } = useFetchHotelPrices(
     [destId],
     stayDates,
-    occupancy,
+    submittedOccupancy,
     2000
   );
   const { hotels, loading: hotelLoading } = useFetchHotels([destId]);
@@ -122,7 +134,7 @@ export default function ListingPage() {
       {showMap && (
         <Map
           stayDates={stayDates}
-          occupancy={occupancy}
+          occupancy={submittedOccupancy}
           setShowMap={setShowMap}
           latLng={{
             lat: destinationObj?.lat ?? 0,
@@ -136,10 +148,12 @@ export default function ListingPage() {
           setDestination={setDestination}
           stayDates={stayDates}
           setStayDates={setStayDates}
-          occupancy={occupancy}
-          setOccupancy={setOccupancy}
+          occupancy={currentOccupancy}
+          setOccupancy={setCurrentOccupancy}
           onSubmit={() => {
-            syncSearchBarToURL();
+            syncSearchBarToURL(undefined, {
+              rooms: currentOccupancy.rooms,
+            });
           }}
         />
       </div>
@@ -149,7 +163,8 @@ export default function ListingPage() {
             <div className={styles.mapTogglerSection}>
               <button
                 className={styles.mapTogglerBtn}
-                onClick={() => setShowMap(true)}>
+                onClick={() => setShowMap(true)}
+              >
                 <img src='/listing/map_pin.svg' />
                 Show on Map
               </button>
@@ -178,7 +193,7 @@ export default function ListingPage() {
               page={page}
               setPage={setPage}
               stayDates={stayDates}
-              occupancy={occupancy}
+              occupancy={submittedOccupancy}
             />
           </div>
         </div>

@@ -45,7 +45,8 @@ export default function GuestInput({
       <button
         ref={inputButtonRef}
         className={`${inputStyles.inputBox} ${styles.button}`}
-        onClick={() => setShowPanel((prev) => !prev)}>
+        onClick={() => setShowPanel((prev) => !prev)}
+      >
         {occupancy.adults} adult{occupancy.adults > 1 && 's'} ·{' '}
         {occupancy.children} child{occupancy.children > 1 && 'ren'} ·{' '}
         {occupancy.rooms} room{occupancy.rooms > 1 && 's'}
@@ -55,7 +56,11 @@ export default function GuestInput({
           <div className={styles.panelContainer}>
             {(Object.keys(occupancy) as Array<keyof OccupancyState>).map(
               (info) => (
-                <div key={`info-${info}`} className={styles.rowContainer}>
+                <div
+                  data-testid={`div-${info}`}
+                  key={`info-${info}`}
+                  className={styles.rowContainer}
+                >
                   <span>{info}</span>
                   <Counter
                     count={occupancy[info]}
