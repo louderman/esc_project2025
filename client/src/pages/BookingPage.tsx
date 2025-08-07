@@ -4,6 +4,7 @@ import type { Hotel } from '../../../types/Hotel';
 import type { Price } from '../../../types/Price';
 import BookingForm from '../components/booking/BookingForm';
 import BookingReview from '../components/booking/BookingReview';
+import { useAuth } from '../components/common/authcontext';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
 import type { DestinationState } from '../components/listing/SearchBar/DestinationInput/DestinationInput';
 import type { OccupancyState } from '../components/listing/SearchBar/GuestInput/GuestInput';
@@ -13,6 +14,7 @@ import styles from './bookingpage.module.css';
 export default function BookingPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   
   // Get data from navigation state
   const stateData = location.state as {
@@ -190,7 +192,7 @@ export default function BookingPage() {
           month: 'short',
         })
       : 'N/A',
-    guests: `${occupancy.rooms} room${occupancy.rooms > 1 ? 's' : ''}, ${
+    guests: `${occupancy.rooms} room${occupancy.rooms > 1 ? 's' : ''} · ${
       occupancy.adults + occupancy.children
     } guest${occupancy.adults + occupancy.children > 1 ? 's' : ''}`,
     pricePerNight: stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0,
@@ -227,6 +229,8 @@ export default function BookingPage() {
     costPerNight: stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0,
     numberOfNights,
     bookingData: {
+      userId: user ? String(user.id) : '',
+      email: user ? user.email : '',
       hotelId: hotel.id,
       hotelName: hotel.name,
       checkInDate: bookingDetails.checkInDate,
@@ -237,6 +241,7 @@ export default function BookingPage() {
       totalAmount: stateData?.bookingDetails?.totalAmount ?? ((stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0) * numberOfNights),
       whatsIncluded: bookingDetails.whatsIncluded,
       imageUrl: bookingDetails.imageUrl,
+      bookingAddress: [hotel.address, hotel.address1].filter(Boolean).join(', '),
     },
     onPaymentSuccess: handlePaymentSuccess,
     onPaymentError: handlePaymentError,
