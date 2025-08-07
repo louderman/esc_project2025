@@ -137,12 +137,6 @@ async function updateBooking(bookingId: string, paymentIntentId: string, status:
             [paymentIntentId, status, bookingId]
         );
 
-        // For MySQL2, result is an array where the first element contains the result info
-        const updateResult = Array.isArray(result) ? result[0] : result;
-        
-        if (updateResult.affectedRows === 0) {
-            throw new Error('Booking not found or no changes made');
-        }
 
         return result;
     } catch (error) {
@@ -155,4 +149,3 @@ async function updateBooking(bookingId: string, paymentIntentId: string, status:
 }
 
 export { createBooking, getBookingById, sync, updateBooking };
-

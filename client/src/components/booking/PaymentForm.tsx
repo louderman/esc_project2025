@@ -136,13 +136,27 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
     }
 
     try {
+        if (!bookingData) {
+            throw new Error('Booking data is not available.');
+        }
+
         // 1. Create a booking first
+        const { line1, line2, city, state, postal_code, country } = billingAddress.address;
+        const fullAddress = [line1, line2, city, state, postal_code, country]
+            .filter(Boolean)
+            .join(', ');
+
+        const finalBookingData: CreateBookingRequest = {
+            ...bookingData,
+            bookingAddress: fullAddress,
+        };
+
         const bookingResponse = await fetch(`${API_BASE_URL}/api/bookings`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(bookingData),
+            body: JSON.stringify(finalBookingData),
         });
 
         if (!bookingResponse.ok) {
