@@ -30,7 +30,8 @@ export default function MapListingCard({
     <div
       className={styles.container}
       onMouseEnter={() => setHoveredHotelId(hotel.id)}
-      onMouseLeave={() => setHoveredHotelId(null)}>
+      onMouseLeave={() => setHoveredHotelId(null)}
+    >
       {hotel.imageCount > 0 ? (
         <img
           className={styles.image}
@@ -64,7 +65,8 @@ export default function MapListingCard({
             className={`${styles.userRatingNumber} ${
               (userRating === undefined || userRating === null) &&
               styles.noRating
-            }`}>
+            }`}
+          >
             {userRating ? (userRating / 10).toFixed(1) : '-'}
           </div>
         </div>
