@@ -65,18 +65,59 @@ const BookingCard = ({
   const checkinButtonRef = useRef<HTMLButtonElement>(null);
   const checkoutButtonRef = useRef<HTMLButtonElement>(null);
   
-  // Parse dates from URL parameters with proper fallbacks
+  // Error states
+  const [dateErrors, setDateErrors] = useState<{
+    checkin?: string;
+    checkout?: string;
+    general?: string;
+  }>({});
+  
+  // Store original dates (the dates user had when they first entered the page)
+  const [originalDates, setOriginalDates] = useState<StayDatesState | null>(null);
+  
+  // Parse dates from URL parameters with proper fallbacks and error handling
   const getDateFromParams = (paramName: string, fallback: string) => {
-    const param = searchParams.get(paramName)?.replace(/"/g, '');
-    if (param && param.trim() !== '') {
-      // Parse date in local timezone to avoid offset issues
-      const [year, month, day] = param.split('-').map(Number);
-      if (year && month && day) {
-        const date = new Date(year, month - 1, day); // month is 0-indexed
-        if (!isNaN(date.getTime())) {
-          return param;
+    try {
+      const param = searchParams.get(paramName)?.replace(/"/g, '');
+      if (param && param.trim() !== '') {
+        // Validate date format (YYYY-MM-DD)
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dateRegex.test(param)) {
+          console.warn(`Invalid date format for ${paramName}:`, param);
+          return fallback;
         }
+        
+        // Parse date in local timezone to avoid offset issues
+        const [year, month, day] = param.split('-').map(Number);
+        
+        // Validate date components
+        if (!year || !month || !day || 
+            year < 1900 || year > 2100 || 
+            month < 1 || month > 12 || 
+            day < 1 || day > 31) {
+          console.warn(`Invalid date components for ${paramName}:`, { year, month, day });
+          return fallback;
+        }
+        
+        const date = new Date(year, month - 1, day); // month is 0-indexed
+        
+        // Check if the date is valid and not in the past
+        if (isNaN(date.getTime())) {
+          console.warn(`Invalid date for ${paramName}:`, param);
+          return fallback;
+        }
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (date < today) {
+          console.warn(`Past date for ${paramName}:`, param);
+          return fallback;
+        }
+        
+        return param;
       }
+    } catch (error) {
+      console.error(`Error parsing date for ${paramName}:`, error);
     }
     return fallback;
   };
@@ -84,7 +125,7 @@ const BookingCard = ({
   const checkinDate = getDateFromParams('checkin', '2025-08-12');
   const checkoutDate = getDateFromParams('checkout', '2025-08-30');
   
-  // Format dates for display
+  // Format dates for display with error handling
   const formatDateForDisplay = (dateString: string) => {
     try {
       const date = new Date(dateString);
@@ -97,11 +138,12 @@ const BookingCard = ({
         year: 'numeric' 
       });
     } catch (error) {
+      console.error('Error formatting date for display:', error);
       return 'Select date';
     }
   };
 
-  // Helper function to format date for display from Date object
+  // Helper function to format date for display from Date object with error handling
   const formatDateFromDate = (date: Date) => {
     try {
       if (!date || isNaN(date.getTime())) {
@@ -113,27 +155,115 @@ const BookingCard = ({
         year: 'numeric' 
       });
     } catch (error) {
+      console.error('Error formatting date from Date object:', error);
       return 'Select date';
+    }
+  };
+
+  // Helper function to create local date with error handling
+  const createLocalDate = (dateString: string): Date => {
+    try {
+      const [year, month, day] = dateString.split('-').map(Number);
+      
+      // Validate date components
+      if (!year || !month || !day || 
+          year < 1900 || year > 2100 || 
+          month < 1 || month > 12 || 
+          day < 1 || day > 31) {
+        throw new Error(`Invalid date components: ${year}-${month}-${day}`);
+      }
+      
+      const date = new Date(year, month - 1, day); // month is 0-indexed
+      
+      if (isNaN(date.getTime())) {
+        throw new Error(`Invalid date: ${dateString}`);
+      }
+      
+      return date;
+    } catch (error) {
+      console.error('Error creating local date:', error);
+      // Return a fallback date (tomorrow)
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return tomorrow;
+    }
+  };
+
+  // Validate date range
+  const validateDateRange = (checkin: Date, checkout: Date): { isValid: boolean; error?: string } => {
+    try {
+      // Check if dates are valid
+      if (isNaN(checkin.getTime()) || isNaN(checkout.getTime())) {
+        return { isValid: false, error: 'Invalid dates selected' };
+      }
+      
+      // Check if checkout is after checkin
+      if (checkout <= checkin) {
+        return { isValid: false, error: 'Check-out date must be after check-in date' };
+      }
+      
+      // Check if dates are in the future
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (checkin < today) {
+        return { isValid: false, error: 'Check-in date cannot be in the past' };
+      }
+      
+      if (checkout < today) {
+        return { isValid: false, error: 'Check-out date cannot be in the past' };
+      }
+      
+      // Check if stay is too long (e.g., more than 30 days)
+      const daysDiff = Math.ceil((checkout.getTime() - checkin.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysDiff > 30) {
+        return { isValid: false, error: 'Stay cannot be longer than 30 days' };
+      }
+      
+      return { isValid: true };
+    } catch (error) {
+      console.error('Error validating date range:', error);
+      return { isValid: false, error: 'Error validating dates' };
     }
   };
   
   // Create stayDates state that persists across renders
   const [stayDates, setStayDatesState] = useState<StayDatesState>(() => {
     try {
-      // Create dates in local timezone to avoid offset issues
-      const createLocalDate = (dateString: string) => {
-        const [year, month, day] = dateString.split('-').map(Number);
-        return new Date(year, month - 1, day); // month is 0-indexed
-      };
+      const checkin = createLocalDate(checkinDate);
+      const checkout = createLocalDate(checkoutDate);
+      
+      // Validate the initial date range
+      const validation = validateDateRange(checkin, checkout);
+      if (!validation.isValid) {
+        console.warn('Initial date range validation failed:', validation.error);
+        // Use fallback dates
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const dayAfterTomorrow = new Date();
+        dayAfterTomorrow.setDate(tomorrow.getDate() + 1);
+        
+        return {
+          checkinDate: tomorrow,
+          checkoutDate: dayAfterTomorrow
+        };
+      }
       
       return {
-        checkinDate: createLocalDate(checkinDate),
-        checkoutDate: createLocalDate(checkoutDate)
+        checkinDate: checkin,
+        checkoutDate: checkout
       };
     } catch (error) {
+      console.error('Error creating initial stayDates:', error);
+      // Use fallback dates
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const dayAfterTomorrow = new Date();
+      dayAfterTomorrow.setDate(tomorrow.getDate() + 1);
+      
       return {
-        checkinDate: new Date(2025, 7, 12), // August 12, 2025 (month is 0-indexed)
-        checkoutDate: new Date(2025, 7, 30)  // August 30, 2025 (month is 0-indexed)
+        checkinDate: tomorrow,
+        checkoutDate: dayAfterTomorrow
       };
     }
   });
@@ -141,23 +271,103 @@ const BookingCard = ({
   // Add state for temporary dates (not yet saved to URL)
   const [tempDates, setTempDates] = useState<StayDatesState>(() => {
     try {
-      // Create dates in local timezone to avoid offset issues
-      const createLocalDate = (dateString: string) => {
-        const [year, month, day] = dateString.split('-').map(Number);
-        return new Date(year, month - 1, day); // month is 0-indexed
-      };
+      const checkin = createLocalDate(checkinDate);
+      const checkout = createLocalDate(checkoutDate);
+      
+      // Validate the initial date range
+      const validation = validateDateRange(checkin, checkout);
+      if (!validation.isValid) {
+        console.warn('Initial temp date range validation failed:', validation.error);
+        // Use fallback dates
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const dayAfterTomorrow = new Date();
+        dayAfterTomorrow.setDate(tomorrow.getDate() + 1);
+        
+        return {
+          checkinDate: tomorrow,
+          checkoutDate: dayAfterTomorrow
+        };
+      }
       
       return {
-        checkinDate: createLocalDate(checkinDate),
-        checkoutDate: createLocalDate(checkoutDate)
+        checkinDate: checkin,
+        checkoutDate: checkout
       };
     } catch (error) {
+      console.error('Error creating initial tempDates:', error);
+      // Use fallback dates
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const dayAfterTomorrow = new Date();
+      dayAfterTomorrow.setDate(tomorrow.getDate() + 1);
+      
       return {
-        checkinDate: new Date(2025, 7, 12), // August 12, 2025 (month is 0-indexed)
-        checkoutDate: new Date(2025, 7, 30)  // August 30, 2025 (month is 0-indexed)
+        checkinDate: tomorrow,
+        checkoutDate: dayAfterTomorrow
       };
     }
   });
+  
+  // Function to reset dates to original values
+  const resetToOriginalDates = () => {
+    try {
+      if (originalDates) {
+        console.log('Resetting to original dates:', originalDates);
+        setTempDates(originalDates);
+        setDateErrors({}); // Clear any errors
+        setShowCheckinCal(false);
+        setShowCheckoutCal(false);
+      } else {
+        console.warn('No original dates available for reset');
+      }
+    } catch (error) {
+      console.error('Error resetting to original dates:', error);
+    }
+  };
+  
+  // Initialize original dates on first load
+  useEffect(() => {
+    if (!originalDates) {
+      try {
+        const checkin = createLocalDate(checkinDate);
+        const checkout = createLocalDate(checkoutDate);
+        
+        // Validate the initial date range
+        const validation = validateDateRange(checkin, checkout);
+        if (!validation.isValid) {
+          console.warn('Initial date range validation failed for original dates:', validation.error);
+          // Use fallback dates
+          const tomorrow = new Date();
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          const dayAfterTomorrow = new Date();
+          dayAfterTomorrow.setDate(tomorrow.getDate() + 1);
+          
+          setOriginalDates({
+            checkinDate: tomorrow,
+            checkoutDate: dayAfterTomorrow
+          });
+        } else {
+          setOriginalDates({
+            checkinDate: checkin,
+            checkoutDate: checkout
+          });
+        }
+      } catch (error) {
+        console.error('Error creating original dates:', error);
+        // Use fallback dates
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const dayAfterTomorrow = new Date();
+        dayAfterTomorrow.setDate(tomorrow.getDate() + 1);
+        
+        setOriginalDates({
+          checkinDate: tomorrow,
+          checkoutDate: dayAfterTomorrow
+        });
+      }
+    }
+  }, [originalDates, checkinDate, checkoutDate]);
   
   // Update stayDates when URL parameters change
   useEffect(() => {
@@ -165,47 +375,91 @@ const BookingCard = ({
       const newCheckinDate = getDateFromParams('checkin', '2025-08-12');
       const newCheckoutDate = getDateFromParams('checkout', '2025-08-30');
       
-      // Create dates in local timezone to avoid offset issues
-      const createLocalDate = (dateString: string) => {
-        const [year, month, day] = dateString.split('-').map(Number);
-        return new Date(year, month - 1, day); // month is 0-indexed
-      };
+      const checkin = createLocalDate(newCheckinDate);
+      const checkout = createLocalDate(newCheckoutDate);
+      
+      // Validate the date range
+      const validation = validateDateRange(checkin, checkout);
+      if (!validation.isValid) {
+        console.warn('Date range validation failed:', validation.error);
+        setDateErrors({ general: validation.error });
+        return;
+      }
+      
+      // Clear any existing errors
+      setDateErrors({});
       
       const newDates = {
-        checkinDate: createLocalDate(newCheckinDate),
-        checkoutDate: createLocalDate(newCheckoutDate)
+        checkinDate: checkin,
+        checkoutDate: checkout
       };
       
       setStayDatesState(newDates);
-      setTempDates(newDates); // Also update temp dates to match
+      setTempDates(newDates);
+      setOriginalDates(newDates); // Store original dates
     } catch (error) {
       console.error('Error updating stay dates:', error);
-      // Use fallback dates if there's an error
+      setDateErrors({ general: 'Error updating dates' });
+      // Use fallback dates
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const dayAfterTomorrow = new Date();
+      dayAfterTomorrow.setDate(tomorrow.getDate() + 1);
+      
       const fallbackDates = {
-        checkinDate: new Date(2025, 7, 12), // August 12, 2025 (month is 0-indexed)
-        checkoutDate: new Date(2025, 7, 30)  // August 30, 2025 (month is 0-indexed)
+        checkinDate: tomorrow,
+        checkoutDate: dayAfterTomorrow
       };
       setStayDatesState(fallbackDates);
       setTempDates(fallbackDates);
+      setOriginalDates(fallbackDates); // Store original dates
     }
   }, [searchParams]);
   
   const setStayDates = (newDates: StayDatesState | ((prev: StayDatesState) => StayDatesState)) => {
-    const dates = typeof newDates === 'function' ? newDates(tempDates) : newDates;
-    
-    // Only update the temporary dates, don't update URL yet
-    setTempDates(dates);
-    
-    // Close calendar dropdowns
-    setShowCheckinCal(false);
-    setShowCheckoutCal(false);
-    
-    console.log('Temporary dates updated:', dates);
+    try {
+      const dates = typeof newDates === 'function' ? newDates(tempDates) : newDates;
+      
+      // Validate the new date range
+      const validation = validateDateRange(dates.checkinDate, dates.checkoutDate);
+      if (!validation.isValid) {
+        console.warn('Date range validation failed:', validation.error);
+        setDateErrors({ general: validation.error });
+        return;
+      }
+      
+      // Clear any existing errors
+      setDateErrors({});
+      
+      // Only update the temporary dates, don't update URL yet
+      setTempDates(dates);
+      
+      // Close calendar dropdowns
+      setShowCheckinCal(false);
+      setShowCheckoutCal(false);
+      
+      console.log('Temporary dates updated:', dates);
+    } catch (error) {
+      console.error('Error setting stay dates:', error);
+      setDateErrors({ general: 'Error setting dates' });
+    }
   };
 
   // New function to handle refresh bookings
   const handleRefreshBookings = () => {
-    if (tempDates.checkinDate && tempDates.checkoutDate) {
+    try {
+      if (!tempDates.checkinDate || !tempDates.checkoutDate) {
+        setDateErrors({ general: 'Please select both check-in and check-out dates' });
+        return;
+      }
+      
+      // Validate the date range before refreshing
+      const validation = validateDateRange(tempDates.checkinDate, tempDates.checkoutDate);
+      if (!validation.isValid) {
+        setDateErrors({ general: validation.error });
+        return;
+      }
+      
       // Format dates for URL - fix timezone offset issue
       const formatDateForUrl = (date: Date) => {
         const year = date.getFullYear();
@@ -222,6 +476,9 @@ const BookingCard = ({
       const currentCheckout = searchParams.get('checkout')?.replace(/"/g, '') || '2025-08-30';
       
       if (newCheckin !== currentCheckin || newCheckout !== currentCheckout) {
+        // Clear any existing errors
+        setDateErrors({});
+        
         // Update URL parameters
         const currentUrl = new URL(window.location.href);
         currentUrl.searchParams.set('checkin', newCheckin);
@@ -239,6 +496,9 @@ const BookingCard = ({
       } else {
         console.log('Dates unchanged, no refresh needed');
       }
+    } catch (error) {
+      console.error('Error refreshing bookings:', error);
+      setDateErrors({ general: 'Error refreshing bookings' });
     }
   };
 
@@ -404,6 +664,25 @@ const BookingCard = ({
             <CalendarIcon size={20} className="mr-2 text-orange-500" />
             Select Your Dates
           </h4>
+          
+          {/* Error Display */}
+          {dateErrors.general && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-800 font-medium">
+                    {dateErrors.general}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Check-in Date */}
             <div className="space-y-2">
@@ -418,17 +697,22 @@ const BookingCard = ({
                 <button
                   ref={checkinButtonRef}
                   onClick={() => setShowCheckinCal(!showCheckinCal)}
-                  className="w-full text-left pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 shadow-sm"
+                  className={`w-full text-left pl-12 pr-4 py-3 border-2 rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 shadow-sm ${
+                    dateErrors.checkin ? 'border-red-300' : 'border-gray-200'
+                  }`}
                 >
                   <div className="font-medium text-gray-900">{formatDateFromDate(tempDates.checkinDate)}</div>
                   <div className="text-sm text-gray-500">Check-in</div>
                 </button>
                 {showCheckinCal && (
                   <div className="absolute top-full left-0 z-50 mt-2 shadow-2xl rounded-xl border border-gray-200 bg-white transform -translate-x-0 sm:left-0" ref={calWrapperRef}>
-                    <Calendar stayDates={tempDates} setStayDates={setStayDates} mode="checkin" />
+                    <Calendar stayDates={tempDates} setStayDates={setStayDates} mode="checkin" onReset={resetToOriginalDates} />
                   </div>
                 )}
               </div>
+              {dateErrors.checkin && (
+                <p className="text-xs text-red-600 mt-1">{dateErrors.checkin}</p>
+              )}
             </div>
             
             {/* Check-out Date */}
@@ -444,32 +728,49 @@ const BookingCard = ({
                 <button
                   ref={checkoutButtonRef}
                   onClick={() => setShowCheckoutCal(!showCheckoutCal)}
-                  className="w-full text-left pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 shadow-sm"
+                  className={`w-full text-left pl-12 pr-4 py-3 border-2 rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 shadow-sm ${
+                    dateErrors.checkout ? 'border-red-300' : 'border-gray-200'
+                  }`}
                 >
                   <div className="font-medium text-gray-900">{formatDateFromDate(tempDates.checkoutDate)}</div>
                   <div className="text-sm text-gray-500">Check-out</div>
                 </button>
                 {showCheckoutCal && (
                   <div className="absolute top-full left-0 z-50 mt-2 shadow-2xl rounded-xl border border-gray-200 bg-white transform -translate-x-0 sm:left-0" ref={calWrapperRef}>
-                    <Calendar stayDates={tempDates} setStayDates={setStayDates} mode="checkout" />
+                    <Calendar stayDates={tempDates} setStayDates={setStayDates} mode="checkout" onReset={resetToOriginalDates} />
                   </div>
                 )}
               </div>
+              {dateErrors.checkout && (
+                <p className="text-xs text-red-600 mt-1">{dateErrors.checkout}</p>
+              )}
             </div>
           </div>
           
           {/* Refresh Bookings Button */}
-          <div className="flex justify-center pt-4">
+          <div className="flex justify-center pt-4 space-x-4">
+            {/* Reset to Original Dates Button */}
+            {originalDates && (
+              <Button
+                onClick={resetToOriginalDates}
+                variant="outline"
+                className="font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-200 transform hover:scale-105 border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                🔄 Reset to Original
+              </Button>
+            )}
+            
+            {/* Refresh Bookings Button */}
             <Button
               onClick={handleRefreshBookings}
               className={`font-semibold py-2 px-6 rounded-lg shadow-md transition-all duration-200 transform hover:scale-105 ${
-                shouldEnableRefresh() 
+                shouldEnableRefresh() && !dateErrors.general
                   ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white' 
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
-              disabled={!shouldEnableRefresh()}
+              disabled={!shouldEnableRefresh() || !!dateErrors.general}
             >
-              {shouldEnableRefresh() ? '🔄 Refresh Bookings' : '✓ Dates Up to Date'}
+              {dateErrors.general ? '⚠️ Fix Date Errors' : shouldEnableRefresh() ? '🔄 Refresh Bookings' : '✓ Dates Up to Date'}
             </Button>
           </div>
         </div>

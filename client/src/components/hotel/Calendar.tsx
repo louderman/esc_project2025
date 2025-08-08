@@ -10,9 +10,10 @@ interface CalendarProps {
   stayDates: StayDatesState;
   setStayDates: (dates: StayDatesState | ((prev: StayDatesState) => StayDatesState)) => void;
   mode?: 'checkin' | 'checkout';
+  onReset?: () => void;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ stayDates, setStayDates, mode = 'checkin' }) => {
+const Calendar: React.FC<CalendarProps> = ({ stayDates, setStayDates, mode = 'checkin', onReset }) => {
   const [currentMonth, setCurrentMonth] = useState(() => {
     // Start with the month of the relevant date if it exists, otherwise current month
     const relevantDate = mode === 'checkin' ? stayDates.checkinDate : stayDates.checkoutDate;
@@ -69,57 +70,98 @@ const Calendar: React.FC<CalendarProps> = ({ stayDates, setStayDates, mode = 'ch
   };
 
   const handleDateClick = (date: Date) => {
-    const currentDate = new Date(date);
-    
-    // Create a new date object to avoid timezone issues
-    const selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
-    
-    if (mode === 'checkin') {
-      // Set check-in date
-      console.log('Setting check-in date:', selectedDate.toLocaleDateString());
-      setStayDates({
-        checkinDate: selectedDate,
-        checkoutDate: stayDates.checkoutDate || selectedDate
-      });
-    } else {
-      // Set check-out date
-      console.log('Setting check-out date:', selectedDate.toLocaleDateString());
-      setStayDates({
-        checkinDate: stayDates.checkinDate || selectedDate,
-        checkoutDate: selectedDate
-      });
+    try {
+      const currentDate = new Date(date);
+      
+      // Validate the date
+      if (isNaN(currentDate.getTime())) {
+        console.error('Invalid date selected:', date);
+        return;
+      }
+      
+      // Create a new date object to avoid timezone issues
+      const selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+      
+      // Additional validation
+      if (isNaN(selectedDate.getTime())) {
+        console.error('Error creating selected date');
+        return;
+      }
+      
+      if (mode === 'checkin') {
+        // Set check-in date
+        console.log('Setting check-in date:', selectedDate.toLocaleDateString());
+        setStayDates({
+          checkinDate: selectedDate,
+          checkoutDate: stayDates.checkoutDate || selectedDate
+        });
+      } else {
+        // Set check-out date
+        console.log('Setting check-out date:', selectedDate.toLocaleDateString());
+        setStayDates({
+          checkinDate: stayDates.checkinDate || selectedDate,
+          checkoutDate: selectedDate
+        });
+      }
+    } catch (error) {
+      console.error('Error handling date click:', error);
     }
   };
 
   const resetSelection = () => {
-    if (mode === 'checkin') {
-      setStayDates({
-        checkinDate: new Date(),
-        checkoutDate: stayDates.checkoutDate || new Date()
-      });
-    } else {
-      setStayDates({
-        checkinDate: stayDates.checkinDate || new Date(),
-        checkoutDate: new Date()
-      });
+    try {
+      if (onReset) {
+        // Use the provided reset function (which will reset to original dates)
+        onReset();
+      } else {
+        // Fallback to default reset behavior
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        if (mode === 'checkin') {
+          setStayDates({
+            checkinDate: tomorrow,
+            checkoutDate: stayDates.checkoutDate || tomorrow
+          });
+        } else {
+          setStayDates({
+            checkinDate: stayDates.checkinDate || tomorrow,
+            checkoutDate: tomorrow
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error resetting selection:', error);
     }
   };
 
   const isDateDisabled = (date: Date) => {
-    const currentDate = new Date();
-    currentDate.setHours(0, 0, 0, 0);
-    
-    // Disable past dates
-    if (date < currentDate) return true;
-    
-    // For checkout, disable dates before check-in
-    if (mode === 'checkout' && stayDates.checkinDate) {
-      const checkinDate = new Date(stayDates.checkinDate);
-      checkinDate.setHours(0, 0, 0, 0);
-      if (date <= checkinDate) return true;
+    try {
+      if (!date || isNaN(date.getTime())) {
+        return true;
+      }
+      
+      const currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0);
+      
+      // Disable past dates
+      if (date < currentDate) return true;
+      
+      // For checkout, disable dates before check-in
+      if (mode === 'checkout' && stayDates.checkinDate) {
+        const checkinDate = new Date(stayDates.checkinDate);
+        if (isNaN(checkinDate.getTime())) {
+          return true;
+        }
+        checkinDate.setHours(0, 0, 0, 0);
+        if (date <= checkinDate) return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error checking if date is disabled:', error);
+      return true; // Disable date if there's an error
     }
-    
-    return false;
   };
 
   const getDateClassName = (day: Date) => {
@@ -187,7 +229,7 @@ const Calendar: React.FC<CalendarProps> = ({ stayDates, setStayDates, mode = 'ch
             onClick={resetSelection}
             className="text-xs text-orange-600 hover:text-orange-800 underline"
           >
-            Reset
+            {onReset ? 'Reset to Original' : 'Reset'}
           </button>
         </div>
       </div>
