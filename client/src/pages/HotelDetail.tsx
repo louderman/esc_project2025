@@ -7,9 +7,9 @@ import HotelInfo from '../components/hotel/HotelInfo';
 import RoomOptions from '../components/hotel/RoomOptions';
 import LocationMap from '../components/hotel/LocationMap';
 import { Star } from 'lucide-react';
-import { useFetchHotelPrices } from '../hooks/hotels/useFetchHotelPrices';
-import { useFetchHotels } from '../hooks/hotels/useFetchHotels';
-import { usePricedHotels } from '../hooks/hotels/usePricedHotels';
+import { useFetchHotelPricesForDetails } from '../hooks/hotel_details/useFetchHotelPricesForDetails';
+import { useFetchHotelsForDetails } from '../hooks/hotel_details/useFetchHotelsForDetails';
+import { usePricedHotelsForDetails } from '../hooks/hotel_details/usePricedHotelsForDetails';
 import { useFetchHotelRoomPrices } from '../hooks/hotel_details/useFetchHotelRoomPrices';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
 import type { OccupancyState } from '../components/listing/SearchBar/GuestInput/GuestInput';
@@ -121,14 +121,14 @@ const HotelDetail = () => {
   };
 
   // Use the same hooks as the listing page
-  const { hotels, loading: hotelLoading } = useFetchHotels([destinationId]);
-  const { prices, loading: priceLoading } = useFetchHotelPrices(
+  const { hotels, loading: hotelLoading } = useFetchHotelsForDetails([destinationId]);
+  const { prices, loading: priceLoading } = useFetchHotelPricesForDetails(
     [destinationId],
     stayDates,
     occupancy,
     2000
   );
-  const pricedHotels = usePricedHotels(hotels, prices);
+  const pricedHotels = usePricedHotelsForDetails(hotels, prices);
 
   // Use the new hook for detailed room prices (disabled since external API doesn't support individual hotel prices)
   const { rooms: roomPrices, loading: roomPricesLoading } = useFetchHotelRoomPrices({
@@ -373,13 +373,19 @@ const HotelDetail = () => {
             
             // Try to get image from API first
             if (roomPrice.images && roomPrice.images.length > 0) {
-              // Handle string array format (as defined in RoomPrice interface)
-              const validImage = roomPrice.images.find((img: string) => {
-                return img && img.trim() !== '';
+              // Handle different image formats - could be strings or objects
+              const validImage = roomPrice.images.find((img: any) => {
+                if (typeof img === 'string') {
+                  return img && img.trim() !== '';
+                } else if (img && typeof img === 'object' && img.url) {
+                  return img.url && img.url.trim() !== '';
+                }
+                return false;
               });
               
               if (validImage) {
-                roomImageUrl = validImage;
+                // Extract URL from either string or object format
+                roomImageUrl = typeof validImage === 'string' ? validImage : validImage.url;
               }
             }
             
