@@ -4,7 +4,7 @@ import type { Hotel } from '../../../../types/Hotel';
 const hotelCache = new Map<string, Hotel[]>();
 const SAFE_HOTEL_COUNT = 3; // to prevent getting blocked...
 
-export function useFetchHotels(
+function useFetchHotels(
   destIds: string[],
   options?: { cache?: boolean; maxParallelFetchCount?: number }
 ) {
@@ -95,3 +95,5 @@ export function useFetchHotels(
 
   return { hotels, loading, error };
 }
+
+export { useFetchHotels, hotelCache };

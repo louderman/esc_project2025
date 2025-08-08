@@ -3,7 +3,7 @@ import { Button } from "@/components/hotel/ui/button";
 import { Camera } from "lucide-react";
 
 interface HotelImageGalleryProps {
-  images?: string[];
+  images?: (string | { url: string })[];
   hotelName: string;
 }
 
@@ -16,23 +16,20 @@ const HotelImageGallery = ({ images, hotelName }: HotelImageGalleryProps) => {
     "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1200&h=900&fit=crop&q=85"
   ];
   
+  // Helper function to extract URL from image item
+  const getImageUrl = (img: string | { url: string }): string => {
+    return typeof img === 'string' ? img : img.url;
+  };
+  
+  // Helper function to check if image is valid
+  const isValidImage = (img: string | { url: string }): boolean => {
+    const url = getImageUrl(img);
+    return Boolean(url && url.trim() !== '');
+  };
+  
   // Only use provided images if they exist and are valid URLs
-  const galleryImages = images && images.length > 0 && images.some(img => {
-    if (typeof img === 'string') {
-      return img && img.trim() !== '';
-    } else if (img && typeof img === 'object') {
-      return img.url && img.url.trim() !== '';
-    }
-    return false;
-  }) 
-    ? images.filter(img => {
-        if (typeof img === 'string') {
-          return img && img.trim() !== '';
-        } else if (img && typeof img === 'object') {
-          return img.url && img.url.trim() !== '';
-        }
-        return false;
-      }).map(img => typeof img === 'string' ? img : img.url)
+  const galleryImages = images && images.length > 0 && images.some(isValidImage)
+    ? images.filter(isValidImage).map(getImageUrl)
     : defaultImages;
 
   return (

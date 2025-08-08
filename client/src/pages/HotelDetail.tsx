@@ -13,6 +13,7 @@ import { usePricedHotels } from '../hooks/hotels/usePricedHotels';
 import { useFetchHotelRoomPrices } from '../hooks/hotel_details/useFetchHotelRoomPrices';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
 import type { OccupancyState } from '../components/listing/SearchBar/GuestInput/GuestInput';
+import type { Hotel } from '../../../../types/Hotel';
 
 // Data types
 type Hotel = {
@@ -290,7 +291,7 @@ const HotelDetail = () => {
           amenities: Object.keys(specificHotel.amenities || {}).length > 0 
             ? specificHotel.amenities 
             : extractAmenitiesFromDescription(specificHotel.description || ''),
-          images: specificHotel.image_details ? 
+          images: specificHotel.image_details && specificHotel.image_details.count > 0 ? 
             Array.from({ length: Math.min(specificHotel.image_details.count, 5) }, (_, i) => {
               const imageUrl = `${specificHotel.image_details.prefix}${i}${specificHotel.image_details.suffix}`;
               console.log(`Generated image URL ${i}:`, imageUrl);
@@ -372,23 +373,13 @@ const HotelDetail = () => {
             
             // Try to get image from API first
             if (roomPrice.images && roomPrice.images.length > 0) {
-              // Handle both string and object image formats
-              const validImage = roomPrice.images.find(img => {
-                if (typeof img === 'string') {
-                  return img && img.trim() !== '';
-                } else if (img && typeof img === 'object') {
-                  // Handle object format with url property
-                  return img.url && img.url.trim() !== '';
-                }
-                return false;
+              // Handle string array format (as defined in RoomPrice interface)
+              const validImage = roomPrice.images.find((img: string) => {
+                return img && img.trim() !== '';
               });
               
               if (validImage) {
-                if (typeof validImage === 'string') {
-                  roomImageUrl = validImage;
-                } else if (validImage.url) {
-                  roomImageUrl = validImage.url;
-                }
+                roomImageUrl = validImage;
               }
             }
             
