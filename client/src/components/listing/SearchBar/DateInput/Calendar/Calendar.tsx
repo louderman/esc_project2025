@@ -78,6 +78,7 @@ export default function Calendar({
       <div className={styles.calendarSection}>
         {prevDate.getTime() >= today.getTime() && (
           <button
+            data-testid='prev-btn'
             onClick={() => setCurDate(prevDate)}
             className={`${styles.changeMonthBtn} ${styles.leftBtn}`}
           >
@@ -107,6 +108,7 @@ export default function Calendar({
         />
         {nextDate.getTime() <= maxDate.getTime() && (
           <button
+            data-testid='next-btn'
             onClick={() => setCurDate(nextDate)}
             className={`${styles.changeMonthBtn} ${styles.rightBtn}`}
           >

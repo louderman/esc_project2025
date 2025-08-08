@@ -28,10 +28,7 @@ export default function Listings({
 
   useEffect(() => {
     function handleScroll() {
-      if (
-        Object.values(loading).some(Boolean) ||
-        page * ITEMS_PER_PAGE > hotels.length
-      ) {
+      if (loading || page * ITEMS_PER_PAGE > hotels.length) {
         return;
       }
       if (

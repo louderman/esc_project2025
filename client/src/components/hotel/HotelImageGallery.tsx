@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/hotel/ui/button";
-import { Camera } from "lucide-react";
+import { Camera, ImageOff } from "lucide-react";
 
 interface HotelImageGalleryProps {
   images?: (string | { url: string })[];
@@ -24,13 +24,54 @@ const HotelImageGallery = ({ images, hotelName }: HotelImageGalleryProps) => {
   // Helper function to check if image is valid
   const isValidImage = (img: string | { url: string }): boolean => {
     const url = getImageUrl(img);
-    return Boolean(url && url.trim() !== '');
+    return Boolean(url && url.trim() !== '' && url !== 'undefined' && url !== 'null');
   };
   
+  // Check if we have valid images - handle all edge cases
+  const hasValidImages = images && Array.isArray(images) && images.length > 0 && images.some(isValidImage);
+  
   // Only use provided images if they exist and are valid URLs
-  const galleryImages = images && images.length > 0 && images.some(isValidImage)
-    ? images.filter(isValidImage).map(getImageUrl)
+  const galleryImages = hasValidImages
+    ? images!.filter(isValidImage).map(getImageUrl)
     : defaultImages;
+
+  // If no valid images are provided, show the "No image available" card
+  if (!hasValidImages) {
+    return (
+      <div className="relative">
+        <div className="aspect-[4/3] overflow-hidden rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300">
+          <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center">
+            <div className="mb-4">
+              <div className="w-16 h-16 mx-auto bg-gray-300 rounded-full flex items-center justify-center mb-4">
+                <ImageOff size={32} className="text-gray-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                No Images Available
+              </h3>
+              <p className="text-gray-500 text-sm max-w-md">
+                We don't have any photos of {hotelName} at the moment. 
+                Please check back later or contact the hotel directly for more information.
+              </p>
+            </div>
+            
+            {/* Decorative elements */}
+            <div className="flex space-x-2 mt-6">
+              <div className="w-2 h-2 bg-gray-300 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 bg-gray-300 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+              <div className="w-2 h-2 bg-gray-300 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="absolute bottom-4 right-4">
+          <Button variant="secondary" size="sm" className="bg-black/50 text-white hover:bg-black/70">
+            <Camera size={16} className="mr-2" />
+            No Photos
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative">

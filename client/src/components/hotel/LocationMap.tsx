@@ -46,22 +46,9 @@ const LocationMap = ({ address, latitude, longitude, hotelName }: LocationMapPro
                   defaultCenter={mapCenter}
                   defaultZoom={mapZoom}
                   gestureHandling="greedy"
-                  options={{
-                    zoomControl: true,
-                    mapTypeControl: true,
-                    streetViewControl: true,
-                    fullscreenControl: true,
-                    gestureHandling: 'greedy',
-                    draggable: true,
-                    scrollwheel: true,
-                    disableDoubleClickZoom: false,
-                    keyboardShortcuts: true,
-                    clickableIcons: true
-                  }}
                 >
                   <Marker
                     position={{ lat: latitude, lng: longitude }}
-                    title={hotelName}
                   />
                 </Map>
               </APIProvider>

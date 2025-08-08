@@ -1,4 +1,5 @@
 import express from 'express';
+<<<<<<< HEAD
 import Stripe from 'stripe';
 import { BookingData } from '../../types/Booking';
 
@@ -8,33 +9,25 @@ const stripe = process.env.STRIPE_SECRET_KEY
       apiVersion: '2025-07-30.basil',
     })
   : null;
+=======
+import { updateBooking } from '../models/bookingModel';
+>>>>>>> origin/main
 
 const router = express.Router();
 
-// In-memory storage for bookings (in production, use a database)
-const bookings: Map<string, BookingData> = new Map();
+// Confirm payment (client-side payment processing completed)
+router.post('/confirm-payment', async (req, res) => {
+  const { bookingId, paymentIntentId } = req.body;
 
-// Generate a unique booking ID that doesn't already exist
-function generateBookingId(): string {
-  let bookingId: string;
-  do {
-    bookingId = 'BK' + Date.now() + Math.random().toString(36).substr(2, 9);
-  } while (bookings.has(bookingId));
-  return bookingId;
-}
-
-// Create booking and payment intent
-router.post('/create-payment-intent', async (req, res) => {
-  const { paymentMethodId, amount, bookingData } = req.body;
-
-  if (!paymentMethodId || !amount) {
-    return res.status(400).json({ error: 'Missing paymentMethodId or amount' });
+  if (!bookingId) {
+    return res.status(400).json({ error: 'Missing booking ID' });
   }
 
-  if (!bookingData) {
-    return res.status(400).json({ error: 'Missing booking data' });
+  if (!paymentIntentId) {
+    return res.status(400).json({ error: 'Missing payment intent ID' });
   }
 
+<<<<<<< HEAD
   // Check if Stripe is configured
   if (!stripe) {
     return res.status(503).json({ 
@@ -54,16 +47,24 @@ router.post('/create-payment-intent', async (req, res) => {
   // Store booking
   bookings.set(bookingId, booking);
 
+=======
+>>>>>>> origin/main
   try {
-    // Create and confirm a PaymentIntent with authentication disabled for testing
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount,
-      currency: 'sgd', // You can make this dynamic if needed
-      payment_method: paymentMethodId,
-      confirm: true,
-      confirmation_method: 'manual', // Disable authentication for testing
-      return_url: `https://localhost:5173/booking/confirmation?bookingId=${bookingId}`
+    // Update booking status to confirmed
+    await updateBooking(bookingId, paymentIntentId, 'confirmed');
+
+    res.json({
+      success: true,
+      booking_id: bookingId,
+      message: 'Payment confirmed and booking updated successfully',
     });
+  } catch (error) {
+    console.error('Error confirming payment:', error);
+    return res.status(500).json({
+      error: 'Failed to confirm payment and update booking',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    });
+<<<<<<< HEAD
 
     // Update booking with payment intent ID
     booking.paymentIntentId = paymentIntent.id;
@@ -102,26 +103,9 @@ router.post('/create-payment-intent', async (req, res) => {
     // Handle other generic errors
     console.error(e);
     return res.status(500).json({ error: 'An internal server error occurred.' });
+=======
+>>>>>>> origin/main
   }
 });
 
-// Get booking by ID
-router.get('/booking/:bookingId', (req, res) => {
-  const { bookingId } = req.params;
-  
-  const booking = bookings.get(bookingId);
-  
-  if (!booking) {
-    return res.status(404).json({ error: 'Booking not found' });
-  }
-  
-  res.json({ booking });
-});
-
-// Get all bookings (for debugging/admin purposes)
-router.get('/bookings', (req, res) => {
-  const allBookings = Array.from(bookings.values());
-  res.json({ bookings: allBookings });
-});
-
-export default router;
+export { router };

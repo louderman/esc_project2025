@@ -10,7 +10,7 @@ import {
   deleteTestDestinations,
   insertTestDestinations,
   withTestDestinations,
-} from '../utils/testDestinationUtils';
+} from '../utils/destinationTestUtils';
 
 // Test edit distance dp function
 describe('Test edit distance dp function', () => {

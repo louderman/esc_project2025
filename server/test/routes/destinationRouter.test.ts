@@ -4,7 +4,7 @@ import {
   deleteTestDestinations,
   insertTestDestinations,
   withTestDestinations,
-} from '../utils/testDestinationUtils';
+} from '../utils/destinationTestUtils';
 import { Destination } from '../../../types/Destination';
 import generateRobustWorstBoundaryCases from '../utils/generateRobustWorst';
 import { searchDestinationsInBounds } from '../../models/destinationModel';

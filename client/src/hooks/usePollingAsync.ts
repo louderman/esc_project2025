@@ -19,6 +19,7 @@ export function usePollingAsync(
 ) {
   const stop = useRef(false); // stop polling?
   const completed = useRef(false); // completed request once? (to prevent repoll when `start` changes)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!start) return;
@@ -41,8 +42,12 @@ export function usePollingAsync(
           )}ms sec before sending another req`
         );
 
-        await new Promise((res) =>
-          setTimeout(res, Math.max(SAFE_INTERVAL, interval))
+        await new Promise(
+          (res) =>
+            (timeoutRef.current = setTimeout(
+              res,
+              Math.max(SAFE_INTERVAL, interval)
+            ))
         );
       }
     }
@@ -50,6 +55,9 @@ export function usePollingAsync(
 
     return () => {
       stop.current = true;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
   }, [start]); // Removed callback from dependencies since it's already stable
 }

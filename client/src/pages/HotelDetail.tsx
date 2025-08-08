@@ -13,7 +13,6 @@ import { usePricedHotelsForDetails } from '../hooks/hotel_details/usePricedHotel
 import { useFetchHotelRoomPrices } from '../hooks/hotel_details/useFetchHotelRoomPrices';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
 import type { OccupancyState } from '../components/listing/SearchBar/GuestInput/GuestInput';
-import type { Hotel } from '../../../../types/Hotel';
 
 // Data types
 type Hotel = {
@@ -81,8 +80,21 @@ const HotelDetail = () => {
 
         // Get URL parameters from listing page (remove quotes from values)
         const destinationId = searchParams.get('destination_id')?.replace(/"/g, '') || searchParams.get('destId')?.replace(/"/g, '') || 'WD0M';
-        const checkin = searchParams.get('checkin')?.replace(/"/g, '') || '2025-10-01';
-        const checkout = searchParams.get('checkout')?.replace(/"/g, '') || '2025-10-07';
+        
+        // Parse dates with proper fallbacks
+        const getDateFromParams = (paramName: string, fallback: string) => {
+          const param = searchParams.get(paramName)?.replace(/"/g, '');
+          if (param && param.trim() !== '') {
+            const date = new Date(param);
+            if (!isNaN(date.getTime())) {
+              return param;
+            }
+          }
+          return fallback;
+        };
+        
+        const checkin = getDateFromParams('checkin', '2025-08-12');
+        const checkout = getDateFromParams('checkout', '2025-08-30');
   
   console.log('Debug - URL Parameters:', {
     destinationId,
@@ -143,10 +155,54 @@ const HotelDetail = () => {
   // Find the specific hotel we're looking for
   let specificHotel = pricedHotels.find(hotel => hotel.id === hotelId);
   
-  // If hotel not found, use the first available hotel as fallback
+  // If hotel not found in pricedHotels, try to find it in the hotels array
+  if (!specificHotel) {
+    const hotelFromHotels = hotels.find(hotel => hotel.id === hotelId);
+    if (hotelFromHotels) {
+      console.log('Debug - Hotel found in hotels array but not in pricedHotels, creating basic hotel object');
+      // Create a basic hotel object with the data from hotels array
+      specificHotel = {
+        ...hotelFromHotels,
+        price: 0,
+        lowest_price: 0,
+        price_type: 'unknown',
+        rooms_available: 0,
+        free_cancellation: false,
+        // Add missing properties required by PricedHotel type
+        searchRank: 0,
+        max_cash_payment: 0,
+        coverted_max_cash_payment: 0,
+        points: 0,
+        bonuses: 0,
+        // Add any other required fields with defaults
+      } as any; // Use type assertion to avoid TypeScript errors
+    }
+  }
+  
+  // If hotel still not found, use the first available hotel as fallback
   if (!specificHotel && pricedHotels.length > 0) {
     console.log('Debug - Using fallback hotel:', pricedHotels[0]?.id);
     specificHotel = pricedHotels[0];
+  }
+  
+  // If still no hotel found, try to use the first hotel from hotels array
+  if (!specificHotel && hotels.length > 0) {
+    console.log('Debug - Using fallback hotel from hotels array:', hotels[0]?.id);
+    const fallbackHotel = hotels[0];
+    specificHotel = {
+      ...fallbackHotel,
+      price: 0,
+      lowest_price: 0,
+      price_type: 'unknown',
+      rooms_available: 0,
+      free_cancellation: false,
+      // Add missing properties required by PricedHotel type
+      searchRank: 0,
+      max_cash_payment: 0,
+      coverted_max_cash_payment: 0,
+      points: 0,
+      bonuses: 0,
+    } as any; // Use type assertion to avoid TypeScript errors
   }
   
   console.log('Debug - Hooks Status:', {
@@ -182,7 +238,7 @@ const HotelDetail = () => {
   }
 
   useEffect(() => {
-    console.log('useEffect triggered - hotelLoading:', hotelLoading, 'priceLoading:', priceLoading, 'specificHotel:', !!specificHotel);
+    console.log('useEffect triggered - hotelLoading:', hotelLoading, 'priceLoading:', priceLoading, 'roomPricesLoading:', roomPricesLoading, 'specificHotel:', !!specificHotel);
     
     // Set loading to true when hooks are loading
     if (hotelLoading || priceLoading || roomPricesLoading) {
@@ -202,8 +258,11 @@ const HotelDetail = () => {
         setLoading(true);
         setError(null);
         
-        // Add a small delay to ensure loading state is visible
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Wait for all data to be loaded before proceeding
+        if (hotelLoading || priceLoading || roomPricesLoading) {
+          console.log('Still waiting for data to load...');
+          return;
+        }
 
         // Use the hooks data instead of manual fetching
         if (!specificHotel) {
@@ -226,6 +285,17 @@ const HotelDetail = () => {
         console.log('Room prices length:', roomPrices?.length);
         console.log('Full specificHotel object:', JSON.stringify(specificHotel, null, 2));
         console.log('=== END ROOM DATA DEBUG ===');
+
+        // Wait for room prices to be loaded if the hook is enabled
+        if (roomPricesLoading) {
+          console.log('Room prices still loading, waiting...');
+          return;
+        }
+
+        // Add a 3-second delay to ensure all room data is fully loaded
+        console.log('All data loaded, waiting 3 seconds for room data to fully load...');
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        console.log('3-second delay completed, proceeding with data processing...');
 
         // Extract amenities from hotel description if amenities object is empty
         const extractAmenitiesFromDescription = (description: string) => {
@@ -341,7 +411,13 @@ const HotelDetail = () => {
         console.log('Room prices length:', roomPrices?.length);
         console.log('Room prices loading:', roomPricesLoading);
         
-        if (roomPrices && roomPrices.length > 0 && !roomPricesLoading) {
+        // Wait for room prices to be loaded if the hook is enabled
+        if (roomPricesLoading) {
+          console.log('Room prices still loading, waiting...');
+          return;
+        }
+        
+        if (roomPrices && roomPrices.length > 0) {
           console.log('Using actual room prices from API:', roomPrices.length, 'rooms');
           
           // Filter out duplicates before processing
@@ -377,7 +453,7 @@ const HotelDetail = () => {
               const validImage = roomPrice.images.find((img: any) => {
                 if (typeof img === 'string') {
                   return img && img.trim() !== '';
-                } else if (img && typeof img === 'object' && img.url) {
+                } else if (img && typeof img === 'object' && 'url' in img) {
                   return img.url && img.url.trim() !== '';
                 }
                 return false;
@@ -385,7 +461,7 @@ const HotelDetail = () => {
               
               if (validImage) {
                 // Extract URL from either string or object format
-                roomImageUrl = typeof validImage === 'string' ? validImage : validImage.url;
+                roomImageUrl = typeof validImage === 'string' ? validImage : (validImage as any).url;
               }
             }
             
@@ -609,16 +685,17 @@ const HotelDetail = () => {
     // Only fetch when hooks have loaded and we have a specific hotel
     console.log('Checking fetch conditions - hotelLoading:', hotelLoading, 'priceLoading:', priceLoading, 'roomPricesLoading:', roomPricesLoading, 'specificHotel:', !!specificHotel);
     
+    // Wait for all data to be loaded before proceeding
     if (!hotelLoading && !priceLoading && !roomPricesLoading && specificHotel) {
-      console.log('Fetching hotel data...');
-    fetchHotelData();
+      console.log('All data loaded, fetching hotel data...');
+      fetchHotelData();
     } else if (!hotelLoading && !priceLoading && !roomPricesLoading && !specificHotel && hotelId) {
       console.log('Hotel not found, setting error');
       setError(`Hotel with ID ${hotelId} not found`);
       setLoading(false);
     } else if (hotelLoading || priceLoading || roomPricesLoading) {
-      console.log('Still loading, keeping loading state');
-      // Keep loading state while hooks are loading
+      console.log('Still loading data, keeping loading state');
+      setLoading(true);
     } else {
       console.log('No fetch conditions met, setting loading to false');
       setLoading(false);

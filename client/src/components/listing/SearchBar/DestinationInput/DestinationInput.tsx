@@ -4,6 +4,8 @@ import styles from './destinationinput.module.css';
 import { type Destination } from '../../../../../../types/Destination';
 import { useDebounceAsync } from '../../../../hooks/useDebounceAsync';
 import { useSearchParams } from 'react-router-dom';
+import type { SearchbarErrorState } from '../SearchBar';
+import ErrorMsgBox from '../ErrorMsgBox';
 
 export type DestinationState = {
   id: string;
@@ -11,9 +13,13 @@ export type DestinationState = {
 };
 
 export default function DestinationInput({
+  errorMsg,
+  setErrorMsg,
   destination,
   setDestination,
 }: {
+  errorMsg: SearchbarErrorState;
+  setErrorMsg: React.Dispatch<React.SetStateAction<SearchbarErrorState>>;
   destination: DestinationState;
   setDestination: React.Dispatch<React.SetStateAction<DestinationState>>;
 }) {
@@ -22,6 +28,7 @@ export default function DestinationInput({
   const [searchParams] = useSearchParams();
 
   function handleOnFocus() {
+    setErrorMsg((prev) => ({ ...prev, destination: '' }));
     setShowSuggestions(true);
   }
 
@@ -31,43 +38,24 @@ export default function DestinationInput({
 
   useEffect(() => {
     async function fetchInitialDest() {
-      try {
-        // TODO: don't hardcode url param
-        const urlDestName = searchParams.get('destName');
-        let url;
-        if (urlDestName && urlDestName.length > 0) {
-          url = `/api/destination/query/name/${urlDestName}?count=10`;
-        } else {
-          url = `/api/destination/random?count=5`;
-        }
-
-        const res = await fetch(url, {
-          method: 'GET',
-        });
-        
-        if (!res.ok) {
-          console.error('Failed to fetch destinations:', res.status);
-          setSuggestedDests([]);
-          return;
-        }
-        
-        const dests: Destination[] = await res.json();
-        setSuggestedDests(Array.isArray(dests) ? dests : []);
-      } catch (error) {
-        console.error('Error fetching destinations:', error);
-        setSuggestedDests([]);
+      // TODO: don't hardcode url param
+      const urlDestName = searchParams.get('destName');
+      let url;
+      if (urlDestName && urlDestName.length > 0) {
+        url = `/api/destination/query/name/${urlDestName}?count=10`;
+      } else {
+        url = `/api/destination/random?count=5`;
       }
+
+      const res = await fetch(url);
+      const dests: Destination[] = await res.json();
+      setSuggestedDests(dests);
     }
     fetchInitialDest();
-  }, [searchParams]);
+  }, []);
 
   const debouncedFetch = useDebounceAsync(async (userInput: string) => {
     const controller = new AbortController();
-
-    // Don't make API call if input is empty or too short
-    if (!userInput || userInput.trim().length < 2) {
-      return [];
-    }
 
     try {
       let url;
@@ -80,14 +68,8 @@ export default function DestinationInput({
       const res = await fetch(url, {
         signal: controller.signal,
       });
-      
-      if (!res.ok) {
-        console.error('Failed to fetch destinations:', res.status);
-        return [];
-      }
-      
       const dests: Destination[] = await res.json();
-      return Array.isArray(dests) ? dests : [];
+      return dests;
     } catch (e) {
       if (e instanceof Error && e.name !== 'AbortError') {
         console.error(e);
@@ -99,27 +81,17 @@ export default function DestinationInput({
     const inputValue = e.target.value;
 
     setDestination((prev) => ({ ...prev, name: inputValue }));
-    
-    // Only call debouncedFetch if input has meaningful content
-    if (inputValue && inputValue.trim().length >= 2) {
-      const dests = await debouncedFetch(e.target.value);
-      setSuggestedDests(dests);
-      setDestination((prev) => ({
-        ...prev,
-        id: dests.length > 0 ? dests[0].dest_id : '',
-      }));
-    } else {
-      // Clear suggestions if input is empty or too short
-      setSuggestedDests([]);
-      setDestination((prev) => ({
-        ...prev,
-        id: '',
-      }));
-    }
+    const dests = await debouncedFetch(e.target.value);
+    setSuggestedDests(dests);
+    setDestination((prev) => ({
+      ...prev,
+      id: dests.length > 0 ? dests[0].dest_id : '',
+    }));
   }
 
   return (
     <div className={inputStyles.inputWrapper}>
+      {errorMsg.destination && <ErrorMsgBox errorMsg={errorMsg.destination} />}
       <img src='/listing/destination_red.svg' />
       <input
         onFocus={handleOnFocus}
@@ -138,7 +110,8 @@ export default function DestinationInput({
               onMouseDown={() =>
                 setDestination({ id: dest.dest_id, name: dest.term })
               }
-              className={styles.suggestionItem}>
+              className={styles.suggestionItem}
+            >
               <img src='/listing/destination_gray.svg' />
               <div className={styles.itemTextSection}>
                 <span className={styles.itemDestName}>{dest.term}</span>
