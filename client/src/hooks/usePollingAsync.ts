@@ -59,5 +59,5 @@ export function usePollingAsync(
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [start]); // Removed callback from dependencies since it's already stable
+  }, [callback, start]);
 }

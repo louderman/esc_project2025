@@ -60,7 +60,7 @@ function ListingWrapper({
             />
           }
         />
-        <Route path='/hotel_detail' element={<div>Hotel Detail Page</div>} />
+        <Route path='/hotel/:hotelId' element={<div>Hotel Detail Page</div>} />
       </Routes>
     </MemoryRouter>
   );

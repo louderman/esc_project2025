@@ -103,10 +103,10 @@ async function searchDestinationsByName(
 
     // If found rows are lesser than `returnCount`, then
     if (rows.length < returnCount) {
+      // TODO: optimize this
       // Get every destinations and do fuzzy matching with edit distance dp
       const allRows = await getAllDestinations();
       const textParts = text.toLowerCase().split(/[\s,]+/); // Split user input by comma
-      
       for (let i = 0; i < allRows.length && rows.length < returnCount; i++) {
         const row = allRows[i];
         const included = rows.some((r) => r.id === row.id);
@@ -120,10 +120,11 @@ async function searchDestinationsByName(
         // relative to any db destination data text part
         const rowParts = row.term.toLowerCase().split(/[\s,]+/);
         const isFuzzyMatch = textParts.every((userWord) =>
-          rowParts.some((p) => {
-            const distance = editDistance(p, userWord);
-            return distance <= distanceThresh;
-          })
+          rowParts.some(
+            (p) =>
+              Math.abs(p.length - userWord.length) <= distanceThresh &&
+              rowParts.some((p) => editDistance(p, userWord) <= distanceThresh)
+          )
         );
 
         if (isFuzzyMatch) {
@@ -132,8 +133,7 @@ async function searchDestinationsByName(
       }
     }
 
-    // Return only up to returnCount items
-    return rows.slice(0, returnCount);
+    return rows;
   } catch (e) {
     console.error(e);
     return [];
@@ -167,23 +167,16 @@ async function searchDestinationsInBounds({
   [minLat, maxLat] = minLat < maxLat ? [minLat, maxLat] : [maxLat, minLat];
   [minLng, maxLng] = minLng < maxLng ? [minLng, maxLng] : [maxLng, minLng];
 
-  // Add small epsilon to handle floating-point precision issues
-  const epsilon = 0.0001;
   const [rows] = (await pool.query(
     `
         SELECT * FROM destination
-        WHERE lat >= ? AND lat <= ? AND lng >= ? AND lng <= ?;
+        WHERE ROUND(LAT, 4) BETWEEN ROUND(?, 4) AND ROUND(?, 4) AND ROUND(LNG, 4) BETWEEN ROUND(?, 4) AND ROUND(?, 4);
     `,
-    [minLat - epsilon, maxLat + epsilon, minLng - epsilon, maxLng + epsilon]
+    [minLat, maxLat, minLng, maxLng]
   )) as [Destination[], FieldPacket[]];
 
   return rows;
 }
-
-// Aliases for backward compatibility
-const all = getAllDestinations;
-const random = getRandomDestinations;
-const query = searchDestinationsByName;
 
 export {
   tableName,
@@ -194,8 +187,4 @@ export {
   searchDestinationsByName,
   searchDestinationsByDestId,
   searchDestinationsInBounds,
-  // Aliases for backward compatibility
-  all,
-  random,
-  query,
 };
