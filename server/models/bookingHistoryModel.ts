@@ -1,7 +1,6 @@
-import { pool } from '../database/db'; // or your actual db import
+import { pool } from '../database/db'; 
 
 const tableName = 'bookings';
-
 
 //Filter by userId
 async function getBookingHistory(userId?: string) {

@@ -2,7 +2,6 @@ import express from 'express';
 import { getBookingHistory } from '../models/bookingHistoryModel';
 const router = express.Router();
 
-
 //get booking history for specific userId
 router.get('/history/:userId', async (req, res) => {
   try {
