@@ -143,7 +143,8 @@ export default function GoogleMap({
       <div className={styles.container}>
         <button
           className={styles.closeButton}
-          onClick={() => setShowMap(false)}>
+          onClick={() => setShowMap(false)}
+        >
           Close Map <Close className={styles.closeIcon} />
         </button>
         <Map
@@ -155,7 +156,8 @@ export default function GoogleMap({
           onIdle={(ev) => {
             handleOnIdle(ev);
             mapRef.current = ev.map;
-          }}>
+          }}
+        >
           {destinations.map((d) => (
             <DestinationMarker destination={d} key={`dest-marker-${d.id}`} />
           ))}
