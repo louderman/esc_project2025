@@ -95,10 +95,13 @@ export function useSearchBarUrlSync({
   const syncSearchBarToURL = (
     targetPath?: string,
     override?: {
-      rooms?: number;
+      occupancy?: OccupancyState;
+      stayDates?: StayDatesState;
     }
   ) => {
     const urlParams = new URLSearchParams(location.search);
+    const finalOccupancy = override?.occupancy ?? occupancy;
+    const finalStayDates = override?.stayDates ?? stayDates;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const syncParam = (key: string, value: any) => {
@@ -114,19 +117,19 @@ export function useSearchBarUrlSync({
 
     syncParam(
       'checkin',
-      stayDates.checkinDate
-        ? stayDates.checkinDate.toLocaleDateString('en-CA')
+      finalStayDates.checkinDate
+        ? finalStayDates.checkinDate.toLocaleDateString('en-CA')
         : null
     );
     syncParam(
       'checkout',
-      stayDates.checkoutDate
-        ? stayDates.checkoutDate.toLocaleDateString('en-CA')
+      finalStayDates.checkoutDate
+        ? finalStayDates.checkoutDate.toLocaleDateString('en-CA')
         : null
     );
-    syncParam('adult', occupancy.adults);
-    syncParam('child', occupancy.children);
-    syncParam('room', override?.rooms ?? occupancy.rooms);
+    syncParam('adult', finalOccupancy.adults);
+    syncParam('child', finalOccupancy.children);
+    syncParam('room', finalOccupancy.rooms);
 
     navigate(
       {
