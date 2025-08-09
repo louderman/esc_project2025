@@ -30,24 +30,35 @@ export default function ListingPage() {
     id: '',
     name: '',
   });
-  const [stayDates, setStayDates] = useState<StayDatesState>({
+
+  // currentStayDates & currentOccupancy: states used for searchbar only
+  // submittedStayDates & submittedOccupancy: used for states fetched (and synced) from url on mount
+  //
+  // These states are split into two separate states to prevent real-time updates
+  // of the room count and number of nights in the hotel listing card when the user modifies it in the search bar
+  const [currentStayDates, setCurrentStayDates] = useState<StayDatesState>({
     checkinDate: null,
     checkoutDate: null,
   });
+  const [submittedStayDates, setSubmittedStayDates] = useState<StayDatesState>({
+    checkinDate: null,
+    checkoutDate: null,
+  });
+  useEffect(() => {
+    // Sync submittedStayDates with stay dates from url
+    setCurrentStayDates(submittedStayDates);
+  }, [submittedStayDates]);
 
-  // currentOccupancy: the occupancy state used for searchbar
   const [currentOccupancy, setCurrentOccupancy] = useState<OccupancyState>({
     adults: 1,
     children: 0,
     rooms: 1,
   });
-  // submittedOccupancy: used for occupancy fetched (and synced) from url on mount
   const [submittedOccupancy, setSubmittedOccupancy] =
     useState<OccupancyState>(currentOccupancy);
-  // The occupancy state is split into two separate states to prevent real-time updates
-  // of the room count in the hotel listing card when the user modifies it in the search bar
+
   useEffect(() => {
-    // Sync submittedOccupancy with occupancy from url as well
+    // Sync submittedOccupancy with occupancy from url
     setCurrentOccupancy(submittedOccupancy);
   }, [submittedOccupancy]);
 
@@ -72,8 +83,8 @@ export default function ListingPage() {
     navigate,
     occupancy: submittedOccupancy,
     setOccupancy: setSubmittedOccupancy,
-    setStayDates,
-    stayDates,
+    stayDates: submittedStayDates,
+    setStayDates: setSubmittedStayDates,
   });
 
   // Fetch destination, hotels and prices
@@ -82,7 +93,7 @@ export default function ListingPage() {
 
   const { prices, loading: priceLoading } = useFetchHotelPrices(
     [destId],
-    stayDates,
+    submittedStayDates,
     submittedOccupancy,
     2000
   );
@@ -133,7 +144,7 @@ export default function ListingPage() {
     <div className={styles.container}>
       {showMap && (
         <Map
-          stayDates={stayDates}
+          stayDates={submittedStayDates}
           occupancy={submittedOccupancy}
           setShowMap={setShowMap}
           latLng={{
@@ -146,13 +157,14 @@ export default function ListingPage() {
         <SearchBar
           destination={destination}
           setDestination={setDestination}
-          stayDates={stayDates}
-          setStayDates={setStayDates}
+          stayDates={currentStayDates}
+          setStayDates={setCurrentStayDates}
           occupancy={currentOccupancy}
           setOccupancy={setCurrentOccupancy}
           onSubmit={() => {
             syncSearchBarToURL(undefined, {
-              rooms: currentOccupancy.rooms,
+              occupancy: currentOccupancy,
+              stayDates: currentStayDates,
             });
           }}
         />
@@ -192,7 +204,7 @@ export default function ListingPage() {
               loading={hotelLoading || priceLoading}
               page={page}
               setPage={setPage}
-              stayDates={stayDates}
+              stayDates={submittedStayDates}
               occupancy={submittedOccupancy}
             />
           </div>
