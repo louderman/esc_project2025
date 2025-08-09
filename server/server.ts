@@ -18,6 +18,7 @@ import { router as authRouter } from './routes/authRouter';
 import { router as paymentRouter } from './routes/payment';
 import { router as bookingRouter } from './routes/bookingRouter';
 import { router as hotelDetailRouter } from './routes/hoteldetailRouter';
+import { router as bookingHistoryRouter } from './routes/bookingHistoryRouter';
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/payment', paymentRouter);
 app.use('/api/bookings', bookingRouter);
 app.use('/api/hotel-detail', hotelDetailRouter);
+app.use('/api/booking-history', bookingHistoryRouter) 
 
 // Debug route to check if server is working
 app.get('/api/debug', (req, res) => {
