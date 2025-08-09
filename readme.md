@@ -3,7 +3,7 @@
 ## Tech Stack
 
 - **Frontend:** React
-- **Backend:** Node.js, Express
+- **Backend:** Node.js, Express, MySQL
 - **APIs:** Ascenda API
 - **Tests:**
   - **Frontend:** Vitest, Cypress
@@ -72,7 +72,7 @@ npm test
 
 ```
 esc_project2025
-├─── github
+├─── .github
 │    └─── workflows
 ├─── client
 │    ├─── public
@@ -84,12 +84,15 @@ esc_project2025
 │         ├─── reducers
 │         ├─── config
 │         ├─── constants
-│         └─── utils
+│         ├─── utils
+│         ├─── App.tsx
+│         └─── index.html
 ├─── server
 │    ├─── database
 │    ├─── models
 │    ├─── public
 │    ├─── routes
-│    └─── test
+│    ├─── test
+│    └─── server.ts
 └─── types
 ```
