@@ -9,7 +9,7 @@ import {
 describe('listingReducer', () => {
   it('Test returns initial state when passed an unknown action (and correct initial state)', () => {
     const result = listingReducer(initialListingState, {
-      type: 'UNKNOWN_ACTION' as never,
+      type: 'UNKNOWN_ACTION' as any,
     });
     expect(result).toEqual(initialListingState);
   });

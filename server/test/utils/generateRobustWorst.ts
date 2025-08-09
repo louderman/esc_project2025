@@ -45,20 +45,52 @@ export default function generateRobustWorstBoundaryCases(
   const midX = (minX + maxX) / 2;
   const midY = (minY + maxY) / 2;
 
-  // Generate exactly 25 unique points in a 5x5 grid pattern
-  const points: BoundaryTestCase[] = [];
-  
-  // Create a 5x5 grid of points within the bounds
-  for (let i = 0; i < 5; i++) {
-    for (let j = 0; j < 5; j++) {
-      const lat = minX + (maxX - minX) * (i / 4);
-      const lng = minY + (maxY - minY) * (j / 4);
-      points.push([lat, lng]);
+  const getCorner = (cx: number, cy: number): BoundaryTestCase[] => {
+    return [
+      // first row
+      [cx - delta, cy - delta],
+      [cx, cy - delta],
+      [cx + delta, cy - delta],
+      // second row
+      [cx - delta, cy],
+      [cx, cy],
+      [cx + delta, cy],
+      // third row
+      [cx - delta, cy + delta],
+      [cx, cy + delta],
+      [cx + delta, cy + delta],
+    ];
+  };
+
+  const getBorder = (
+    cx: number,
+    cy: number,
+    horizontalBorder: boolean
+  ): BoundaryTestCase[] => {
+    if (horizontalBorder) {
+      return [
+        [cx, cy - delta],
+        [cx, cy],
+        [cx, cy + delta],
+      ];
+    } else {
+      return [
+        [cx - delta, cy],
+        [cx, cy],
+        [cx + delta, cy],
+      ];
     }
-  }
-  
-  console.log(`Generated ${points.length} points for bounds:`, bounds);
-  console.log('Sample points:', points.slice(0, 3));
-  
-  return points;
+  };
+
+  return [
+    ...getCorner(minX, maxY), // top left
+    ...getCorner(maxX, maxY), // top right
+    ...getCorner(minX, minY), // bottom left
+    ...getCorner(maxX, minY), // bottom right
+    [midX, midY], // center
+    ...getBorder(midX, maxY, true), // top edge
+    ...getBorder(maxX, midY, false), // right edge
+    ...getBorder(midX, minY, true), // down edge
+    ...getBorder(minX, midY, false), // left edge
+  ];
 }

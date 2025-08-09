@@ -39,12 +39,9 @@ export default function Calendar({
    * nextDate: One month after curDate.
    * maxDate: The latest date the calendar can navigate to (1 year from today).
    */
-  const today = useMemo(() => {
-    const date = new Date();
-    date.setDate(1);
-    date.setHours(0, 0, 0, 0);
-    return date;
-  }, []);
+  const today = new Date();
+  today.setDate(1);
+  today.setHours(0, 0, 0, 0);
   const [curDate, setCurDate] = useState(stayDates.checkinDate ?? today);
   const [hoverDate, setHoverDate] = useState<Date | null>(null);
   const prevDate = useMemo(
@@ -59,7 +56,7 @@ export default function Calendar({
     const date = new Date(today.getFullYear() + 1, today.getMonth() + 1, 0);
     date.setHours(23, 59, 59, 999);
     return date;
-  }, [today]);
+  }, [curDate]);
 
   let nightCount;
   if (

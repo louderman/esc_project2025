@@ -3,9 +3,8 @@ import {
   getRandomDestinations,
   searchDestinationsByName,
   searchDestinationsInBounds,
-  getAllDestinations,
 } from '../../models/destinationModel';
-import generateRobustWorstBoundaryCases from '../utils/generateRobustWorst';
+import generateRobustWorstBoundaryTCs from '../utils/generateRobustWorst';
 import {
   deleteTestDestinations,
   insertTestDestinations,
@@ -62,47 +61,25 @@ describe('Test getRandomDestinations', () => {
     type: 'city',
     state: 'TestState',
   }));
+  withTestDestinations(testDestinations);
 
   it('Test returned destination length matches positive count', async () => {
-    // Ensure clean state and insert test data
-    await deleteTestDestinations();
-    await insertTestDestinations(testDestinations);
-    
-    try {
-      const res = await getRandomDestinations(5);
-      expect(res).toHaveLength(5);
-    } finally {
-      await deleteTestDestinations();
-    }
+    const res = await getRandomDestinations(5);
+    expect(res).toHaveLength(5);
   });
 
   it('Test zero random destination count', async () => {
-    // Ensure clean state and insert test data
-    await deleteTestDestinations();
-    await insertTestDestinations(testDestinations);
-    
-    try {
-      const res = await getRandomDestinations(0);
-      expect(res).toHaveLength(0);
-    } finally {
-      await deleteTestDestinations();
-    }
+    const res = await getRandomDestinations(0);
+    expect(res).toHaveLength(0);
   });
 
   it('Test negative random destination count', async () => {
-    // Ensure clean state and insert test data
-    await deleteTestDestinations();
-    await insertTestDestinations(testDestinations);
-    
-    try {
-      const res = await getRandomDestinations(-1);
-      expect(res).toHaveLength(0);
-    } finally {
-      await deleteTestDestinations();
-    }
+    const res = await getRandomDestinations(-1);
+    expect(res).toHaveLength(0);
   });
 });
 
+// Test searchDestinations function
 describe('Test searchDestinations', () => {
   const testDestinations = [
     {
@@ -206,11 +183,9 @@ describe('Test searchDestinationsInBounds (worst robust boundary testing)', () =
       maxLng: 1.511,
     };
 
-    console.log('Bounds:', bounds);
-
     // Generate all the points for worst robust boundary,
     // for (minLat, minLng) <= (X, Y) <= (maxLat, maxLng), only 25 out of 45 points should be returned.
-    const testDestinations = generateRobustWorstBoundaryCases(
+    const testDestinations = generateRobustWorstBoundaryTCs(
       {
         minX: bounds.minLat,
         maxX: bounds.maxLat,
@@ -228,25 +203,9 @@ describe('Test searchDestinationsInBounds (worst robust boundary testing)', () =
       state: 'TestState',
     }));
 
-    console.log('Generated test destinations:', testDestinations.length);
-    console.log('First few destinations:', testDestinations.slice(0, 3));
-
-    // Ensure clean state before test
-    await deleteTestDestinations();
-    
     try {
       await insertTestDestinations(testDestinations);
-      
-      // Verify we have exactly the right number of destinations inserted
-      const allDests = await getAllDestinations();
-      const testDests = allDests.filter(d => d.dest_id.startsWith('Test_'));
-      console.log(`Inserted ${testDests.length} test destinations`);
-      console.log('Sample inserted destinations:', testDests.slice(0, 3));
-
-      
       const res = await searchDestinationsInBounds(bounds);
-      console.log(`Found ${res.length} destinations within bounds`);
-      console.log('Sample found destinations:', res.slice(0, 3));
       expect(res).toHaveLength(25);
       expect(
         res.every(

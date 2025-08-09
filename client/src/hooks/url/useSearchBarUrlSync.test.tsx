@@ -74,11 +74,7 @@ describe('useSearchBarUrlSync', () => {
   it('Test read initial URL params and update states on mount', async () => {
     const url = `/listing?destName=%22Singapore%2C+Singapore%22&destId=%22RsBU%22&checkin=%222025-07-26%22&checkout=%222025-07-28%22&adult=2&child=1&room=2`;
 
-    let capturedState: {
-      destination: DestinationState;
-      stayDates: StayDatesState;
-      occupancy: OccupancyState;
-    } | null = null;
+    let capturedState: any = null;
     const onSync = vi.fn();
 
     render(
@@ -114,14 +110,7 @@ describe('useSearchBarUrlSync', () => {
   it('Test correctly reflects stayDates in the URL', async () => {
     const navigateSpy = vi.fn();
     let triggerSync: () => void = () => {};
-    let stateChange: {
-      destination: DestinationState;
-      stayDates: StayDatesState;
-      occupancy: OccupancyState;
-      setDestination: React.Dispatch<React.SetStateAction<DestinationState>>;
-      setStayDates: React.Dispatch<React.SetStateAction<StayDatesState>>;
-      setOccupancy: React.Dispatch<React.SetStateAction<OccupancyState>>;
-    } | null = null;
+    let stateChange: any = null;
     const url = `/listing?destName=%22Singapore%2C+Singapore%22&destId=%22RsBU%22&checkin=%222025-07-26%22&checkout=%222025-07-28%22&adult=2&child=1&room=2`;
 
     render(

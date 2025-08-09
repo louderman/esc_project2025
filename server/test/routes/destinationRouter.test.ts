@@ -8,7 +8,6 @@ import {
 import { Destination } from '../../../types/Destination';
 import generateRobustWorstBoundaryCases from '../utils/generateRobustWorst';
 import { searchDestinationsInBounds } from '../../models/destinationModel';
-import { getAllDestinations } from '../../models/destinationModel';
 
 // Test /api/destination/random route
 describe('GET /api/destination/random?count={}', () => {
@@ -187,8 +186,6 @@ describe('GET /api/destination/bounds?minLat={}&maxLat={}&minLng={}&maxLng={}', 
       maxLng: 4.511,
     };
 
-    console.log('Bounds:', bounds);
-
     const testDestinations = generateRobustWorstBoundaryCases(
       {
         minX: bounds.minLat,
@@ -207,12 +204,6 @@ describe('GET /api/destination/bounds?minLat={}&maxLat={}&minLng={}&maxLng={}', 
       state: 'TestState',
     }));
 
-    console.log('Generated test destinations:', testDestinations.length);
-    console.log('First few destinations:', testDestinations.slice(0, 3));
-
-    // Ensure clean state before test
-    await deleteTestDestinations();
-    
     try {
       await insertTestDestinations(testDestinations);
       const res = await request(app).get(

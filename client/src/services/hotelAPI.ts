@@ -154,7 +154,7 @@ class HotelApiService {
       urls.push(this.generateImageUrl(imageDetails, i));
     }
     
-    // If we don't have enough images, fill with fallback URLs
+    // If don't have enough images, fill with fallback URLs
     while (urls.length < count) {
       const fallbackUrls = [
         'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=800&h=600&fit=crop',
