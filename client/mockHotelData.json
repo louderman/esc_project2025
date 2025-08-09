@@ -1,0 +1,23 @@
+{
+  "hotel": {
+    "id": "A6Dz",
+    "name": "Grand Paradise Hotel",
+    "rating": 4.5,
+    "address1": "123 Beachfront Ave",
+    "description": "Luxury beachfront resort with amazing views",
+    "amenities": {
+      "airConditioning": true,
+      "pool": true,
+      "wifi": true
+    }
+  },
+  "prices": {
+    "hotels": [{
+      "id": "room1",
+      "price_type": "Deluxe King",
+      "price": 299.99,
+      "free_cancellation": true,
+      "rooms_available": 5
+    }]
+  }
+}

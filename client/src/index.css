@@ -1,3 +1,4 @@
+/* Working CSS - Restore original styles */
 :root {
   /* font-family: system-ui, Avenir, Helvetica, Arial, sans-serif; */
   line-height: 1.5;
@@ -25,13 +26,15 @@ body {
   font-family: 'Inter', sans-serif;
 }
 
-input,
-textarea,
-button {
+/* Only apply font-family to elements that don't have existing styles */
+input:not([class*="register"]):not([class*="login"]),
+textarea:not([class*="register"]):not([class*="login"]),
+button:not([class*="register"]):not([class*="login"]) {
   font-family: inherit;
 }
 
-button {
+/* Only apply cursor pointer to buttons that don't have existing styles */
+button:not([class*="register"]):not([class*="login"]) {
   cursor: pointer;
 }
 
@@ -42,4 +45,245 @@ button {
 
 .gw-style-iw-chr {
   padding-top: 0px !important;
+}
+
+/* Protect login and register page styles from global overrides */
+[class*="login"], [class*="register"] {
+  font-family: inherit !important;
+}
+
+[class*="login"] h2, [class*="register"] h2 {
+  font-weight: inherit !important;
+  font-size: inherit !important;
+}
+
+/* Protect navbar styles from global overrides */
+[class*="navbar"] {
+  font-family: inherit !important;
+}
+
+[class*="navbar"] * {
+  font-family: inherit !important;
+  font-weight: inherit !important;
+  font-size: inherit !important;
+}
+
+/* Working CSS - Restore original styles */
+:root {
+  /* font-family: system-ui, Avenir, Helvetica, Arial, sans-serif; */
+  line-height: 1.5;
+  font-weight: 400;
+
+  color: #1a1a1a;
+  /* background-color: #242424; */
+  background-color: #f5f7fa;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Only apply font-family to elements that don't have existing styles */
+input:not([class*="register"]):not([class*="login"]),
+textarea:not([class*="register"]):not([class*="login"]),
+button:not([class*="register"]):not([class*="login"]) {
+  font-family: inherit;
+}
+
+/* Only apply cursor pointer to buttons that don't have existing styles */
+button:not([class*="register"]):not([class*="login"]) {
+  cursor: pointer;
+}
+
+/* To disable google map info window close button */
+.gm-style-iw button[aria-label='Close'] {
+  display: none !important;
+}
+
+.gw-style-iw-chr {
+  padding-top: 0px !important;
+}
+
+/* Protect login and register page styles from global overrides */
+[class*="login"], [class*="register"] {
+  font-family: inherit !important;
+}
+
+[class*="login"] h2, [class*="register"] h2 {
+  font-weight: inherit !important;
+  font-size: inherit !important;
+}
+
+/* Protect navbar styles from global overrides */
+[class*="navbar"] {
+  font-family: inherit !important;
+}
+
+[class*="navbar"] * {
+  font-family: inherit !important;
+  font-weight: inherit !important;
+  font-size: inherit !important;
+}
+
+/* Tailwind CSS - Only for hotel detail pages */
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here.
+All colors MUST be HSL.
+*/
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 220 13% 18%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 220 13% 18%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 13% 18%;
+
+  --primary: 31 97% 55%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 220 13% 18%;
+
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+
+  --accent: 43 89% 95%;
+  --accent-foreground: 220 13% 18%;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 31 97% 55%;
+
+  --radius: 0.75rem;
+
+  --hotel-gold: 43 89% 61%;
+  --hotel-gold-light: 43 89% 95%;
+  --hotel-text-secondary: 215.4 16.3% 46.9%;
+  --hotel-border-light: 214.3 31.8% 91.4%;
+
+  --sidebar-background: 0 0% 98%;
+
+  --sidebar-foreground: 240 5.3% 26.1%;
+
+  --sidebar-primary: 240 5.9% 10%;
+
+  --sidebar-primary-foreground: 0 0% 98%;
+
+  --sidebar-accent: 240 4.8% 95.9%;
+
+  --sidebar-accent-foreground: 240 5.9% 10%;
+
+  --sidebar-border: 220 13% 91%;
+
+  --sidebar-ring: 217.2 91.2% 59.8%;
+}
+
+.dark {
+  --background: 220 13% 18%;
+  --foreground: 210 40% 98%;
+
+  --card: 220 13% 18%;
+  --card-foreground: 210 40% 98%;
+
+  --popover: 220 13% 18%;
+  --popover-foreground: 210 40% 98%;
+
+  --primary: 31 97% 55%;
+  --primary-foreground: 220 13% 18%;
+
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 31 97% 55%;
+
+  --hotel-gold: 43 89% 61%;
+  --hotel-gold-light: 43 89% 15%;
+  --hotel-text-secondary: 215 20.2% 65.1%;
+  --hotel-border-light: 217.2 32.6% 17.5%;
+  --sidebar-background: 240 5.9% 10%;
+  --sidebar-foreground: 240 4.8% 95.9%;
+  --sidebar-primary: 224.3 76.3% 48%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 240 3.7% 15.9%;
+  --sidebar-accent-foreground: 240 4.8% 95.9%;
+  --sidebar-border: 240 3.7% 15.9%;
+  --sidebar-ring: 217.2 91.2% 59.8%;
+}
+
+/* Tailwind utilities - available globally but only used by hotel detail pages */
+@layer utilities {
+  /* Hotel detail specific utilities */
+  .text-hotel-gold {
+    color: hsl(var(--hotel-gold));
+  }
+
+  .text-hotel-text-secondary {
+    color: hsl(var(--hotel-text-secondary));
+  }
+
+  .bg-hotel-gold {
+    background-color: hsl(var(--hotel-gold));
+  }
+
+  .border-hotel-border-light {
+    border-color: hsl(var(--hotel-border-light));
+  }
+}
+
+/* Ensure register page h2 is bold */
+[class*="register"] h2 {
+  font-weight: bold !important;
+}
+
+/* Hotel detail page specific styles */
+.hotel-detail-page {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.hotel-detail-page main {
+  background: transparent;
+}
+
+/* Map container improvements */
+.hotel-detail-page .aspect-\[16\/9\] {
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Booking card styling */
+.hotel-detail-page .shadow-xl {
+  border: 2px solid #fed7aa;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }

@@ -18,7 +18,25 @@ export default function ListingCard({
   const navigate = useNavigate();
 
   const handleView = () => {
-    navigate('/hotel_detail', { state: { hotel, stayDates } });
+    // Build URL parameters for hotel detail page
+    const params = new URLSearchParams();
+    
+    if (stayDates.checkinDate) {
+      params.set('checkin', stayDates.checkinDate.toISOString().split('T')[0]);
+    }
+    if (stayDates.checkoutDate) {
+      params.set('checkout', stayDates.checkoutDate.toISOString().split('T')[0]);
+    }
+    params.set('adults', occupancy.adults.toString());
+    params.set('children', occupancy.children.toString());
+    params.set('rooms', occupancy.rooms.toString());
+    // Get the destination ID from the current URL (should be passed down from parent)
+    const currentDestId = new URLSearchParams(window.location.search).get('destId');
+    if (currentDestId) {
+      params.set('destination_id', JSON.parse(currentDestId));
+    }
+    
+    navigate(`/hotel/${hotel.id}?${params.toString()}`);
   };
 
   const userRating = hotel.categories.overall?.score;

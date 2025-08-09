@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Button } from "@/components/hotel/ui/button";
-import { Camera } from "lucide-react";
+import { Camera, ImageOff } from "lucide-react";
 
 interface HotelImageGalleryProps {
-  images?: string[];
+  images?: (string | { url: string })[];
   hotelName: string;
 }
 
@@ -11,12 +11,67 @@ const HotelImageGallery = ({ images, hotelName }: HotelImageGalleryProps) => {
   const [currentImage, setCurrentImage] = useState(0);
   
   const defaultImages = [
-    "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=800&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=800&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&h=600&fit=crop"
+    "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1200&h=900&fit=crop&q=85",
+    "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85",
+    "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1200&h=900&fit=crop&q=85"
   ];
   
-  const galleryImages = images || defaultImages;
+  // Helper function to extract URL from image item
+  const getImageUrl = (img: string | { url: string }): string => {
+    return typeof img === 'string' ? img : img.url;
+  };
+  
+  // Helper function to check if image is valid
+  const isValidImage = (img: string | { url: string }): boolean => {
+    const url = getImageUrl(img);
+    return Boolean(url && url.trim() !== '' && url !== 'undefined' && url !== 'null');
+  };
+  
+  // Check if we have valid images - handle all edge cases
+  const hasValidImages = images && Array.isArray(images) && images.length > 0 && images.some(isValidImage);
+  
+  // Only use provided images if they exist and are valid URLs
+  const galleryImages = hasValidImages
+    ? images!.filter(isValidImage).map(getImageUrl)
+    : defaultImages;
+
+  // If no valid images are provided, show the "No image available" card
+  if (!hasValidImages) {
+    return (
+      <div className="relative">
+        <div className="aspect-[4/3] overflow-hidden rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300">
+          <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center">
+            <div className="mb-4">
+              <div className="w-16 h-16 mx-auto bg-gray-300 rounded-full flex items-center justify-center mb-4">
+                <ImageOff size={32} className="text-gray-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                No Images Available
+              </h3>
+              <p className="text-gray-500 text-sm max-w-md">
+                We don't have any photos of {hotelName} at the moment. 
+                Please check back later or contact the hotel directly for more information.
+              </p>
+            </div>
+            
+            {/* Decorative elements */}
+            <div className="flex space-x-2 mt-6">
+              <div className="w-2 h-2 bg-gray-300 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 bg-gray-300 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+              <div className="w-2 h-2 bg-gray-300 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="absolute bottom-4 right-4">
+          <Button variant="secondary" size="sm" className="bg-black/50 text-white hover:bg-black/70">
+            <Camera size={16} className="mr-2" />
+            No Photos
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
@@ -25,6 +80,15 @@ const HotelImageGallery = ({ images, hotelName }: HotelImageGalleryProps) => {
           src={galleryImages[currentImage]} 
           alt={`${hotelName} - Image ${currentImage + 1}`}
           className="w-full h-full object-cover"
+          onError={(e) => {
+            // If main image fails, try to show a fallback
+            if (galleryImages.length > 1) {
+              const nextImageIndex = (currentImage + 1) % galleryImages.length;
+              e.currentTarget.src = galleryImages[nextImageIndex];
+            } else {
+              e.currentTarget.src = "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1200&h=900&fit=crop&q=85";
+            }
+          }}
         />
       </div>
       
@@ -41,7 +105,7 @@ const HotelImageGallery = ({ images, hotelName }: HotelImageGalleryProps) => {
             <button
               key={index}
               onClick={() => setCurrentImage(index)}
-              className={`relative flex-1 aspect-video rounded-md overflow-hidden border-2 transition-all ${
+              className={`relative flex-1 h-20 rounded-md overflow-hidden border-2 transition-all ${
                 currentImage === index ? 'border-primary' : 'border-transparent'
               }`}
             >
@@ -49,6 +113,11 @@ const HotelImageGallery = ({ images, hotelName }: HotelImageGalleryProps) => {
                 src={image} 
                 alt={`${hotelName} thumbnail ${index + 1}`}
                 className="w-full h-full object-cover"
+                loading="lazy"
+                onError={(e) => {
+                  // Hide broken images
+                  e.currentTarget.style.display = 'none';
+                }}
               />
             </button>
           ))}
