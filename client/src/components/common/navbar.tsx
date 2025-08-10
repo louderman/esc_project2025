@@ -41,6 +41,18 @@ export default function NavBar() {
             </div>
           </div>
         </Link>
+
+        {user && (
+          <div className={styles.navigationSection}>
+            <Link to="/listing" className={styles.navLink}>
+              Listings
+            </Link>
+            <Link to="/past_booking" className={styles.navLink}>
+              Past Bookings
+            </Link>
+          </div>
+        )}
+
         <div className={styles.userSection}>
           <div className={styles.currencySection}>SGD En</div>
 
