@@ -1,18 +1,18 @@
+import { Star } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
+import BookingCard from '../components/hotel/BookingCard';
 import HotelHeader from '../components/hotel/HotelHeader';
 import HotelImageGallery from '../components/hotel/HotelImageGallery';
-import BookingCard from '../components/hotel/BookingCard';
 import HotelInfo from '../components/hotel/HotelInfo';
-import RoomOptions from '../components/hotel/RoomOptions';
 import LocationMap from '../components/hotel/LocationMap';
-import { Star } from 'lucide-react';
-import { useFetchHotelPricesForDetails } from '../hooks/hotel_details/useFetchHotelPricesForDetails';
-import { useFetchHotelsForDetails } from '../hooks/hotel_details/useFetchHotelsForDetails';
-import { usePricedHotelsForDetails } from '../hooks/hotel_details/usePricedHotelsForDetails';
-import { useFetchHotelRoomPrices } from '../hooks/hotel_details/useFetchHotelRoomPrices';
+import RoomOptions from '../components/hotel/RoomOptions';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
 import type { OccupancyState } from '../components/listing/SearchBar/GuestInput/GuestInput';
+import { useFetchHotelPricesForDetails } from '../hooks/hotel_details/useFetchHotelPricesForDetails';
+import { useFetchHotelRoomPrices } from '../hooks/hotel_details/useFetchHotelRoomPrices';
+import { useFetchHotelsForDetails } from '../hooks/hotel_details/useFetchHotelsForDetails';
+import { usePricedHotelsForDetails } from '../hooks/hotel_details/usePricedHotelsForDetails';
 
 // Data types
 type Hotel = {
@@ -838,6 +838,7 @@ const HotelDetail = () => {
             hasRooms={data.rooms.length > 0}
             availability={data.availability}
             selectedRoom={selectedRoom}
+            hotelImages={data.hotel.images} // Pass actual hotel images
           />
         </div>
 

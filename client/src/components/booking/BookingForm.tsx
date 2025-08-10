@@ -23,7 +23,8 @@ export default function BookingForm({
   onPaymentSuccess,
   onPaymentError,
 }: BookingFormProps) {
-  const totalCost = costPerNight * numberOfNights;
+  const roundedCostPerNight = Math.round(costPerNight * 100) / 100;
+  const totalCost = Math.round(roundedCostPerNight * numberOfNights * 100) / 100;
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const handlePaymentSuccess = () => {
@@ -57,7 +58,7 @@ export default function BookingForm({
       <div className={styles.cost}>
         <h3>Cost</h3>
         <div className={styles.costItem}>
-          <span>${costPerNight} x {numberOfNights} nights</span>
+          <span>${roundedCostPerNight} x {numberOfNights} nights</span>
           <span>${totalCost}</span>
         </div>
         <div className={`${styles.costItem} ${styles.total}`}>
