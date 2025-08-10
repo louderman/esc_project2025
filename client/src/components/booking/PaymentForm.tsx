@@ -141,14 +141,9 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
         }
 
         // 1. Create a booking first
-        const { line1, line2, city, state, postal_code, country } = billingAddress.address;
-        const fullAddress = [line1, line2, city, state, postal_code, country]
-            .filter(Boolean)
-            .join(', ');
-
+        // Use the hotel address that's already provided in bookingData
         const finalBookingData: CreateBookingRequest = {
             ...bookingData,
-            bookingAddress: fullAddress,
         };
 
         const bookingResponse = await fetch(`${API_BASE_URL}/api/bookings`, {
@@ -212,7 +207,7 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
                         id: bookingData.hotelId,
                         name: bookingData.hotelName,
                         price: bookingData.pricePerNight,
-                        address: 'Hotel Address', // BookingConfirmationPage uses hotel.address
+                        address: bookingData.bookingAddress, // Use the actual hotel address from bookingData
                         imageCount: 5,
                         image_details: {
                             prefix: '/listing/hotel_img_placeholder.png?id=',

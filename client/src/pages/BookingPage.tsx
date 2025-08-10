@@ -195,14 +195,11 @@ export default function BookingPage() {
     guests: `${occupancy.rooms} room${occupancy.rooms > 1 ? 's' : ''} · ${
       occupancy.adults + occupancy.children
     } guest${occupancy.adults + occupancy.children > 1 ? 's' : ''}`,
-    pricePerNight: stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0,
+    pricePerNight: Math.round((stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0) * 100) / 100,
     whatsIncluded: stateData?.bookingDetails?.selectedRoom?.amenities ?? Object.entries(hotel.amenities)
       .filter(([_, value]) => value)
       .map(([key]) => key.replace(/([A-Z])/g, ' $1').trim()),
-    imageUrl:
-      hotel.imageCount > 0
-        ? `${hotel.image_details.prefix}0${hotel.image_details.suffix}`
-        : '/listing/hotel_img_placeholder.png',
+    imageUrl: '/listing/hotel_img_placeholder.png',
   };
 
   const handlePaymentSuccess = () => {
@@ -226,7 +223,7 @@ export default function BookingPage() {
     guaranteePolicy: 'Credit Card is required at the time of booking.',
     cancelPolicy:
       'Reservation must be cancelled by 3pm local time 1 day before arrival to avoid penalty of 1 night room and tax.',
-    costPerNight: stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0,
+    costPerNight: Math.round((stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0) * 100) / 100,
     numberOfNights,
     bookingData: {
       userId: user ? String(user.id) : '',
@@ -236,7 +233,7 @@ export default function BookingPage() {
       checkInDate: bookingDetails.checkInDate,
       checkOutDate: bookingDetails.checkOutDate,
       guests: bookingDetails.guests,
-      pricePerNight: stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0,
+      pricePerNight: Math.round((stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0) * 100) / 100,
       numberOfNights,
       totalAmount: stateData?.bookingDetails?.totalAmount ?? ((stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0) * numberOfNights),
       whatsIncluded: bookingDetails.whatsIncluded,
