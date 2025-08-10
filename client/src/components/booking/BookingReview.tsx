@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import styles from './bookingreview.module.css';
 
 // Define the props for the component based on the Figma design
@@ -7,8 +6,7 @@ interface BookingReviewProps {
   checkInDate: string;
   checkOutDate: string;
   guests: string;
-  pricePerNight: number;
-  whatsIncluded: string[];
+  hotelAddress: string;
   imageUrl: string;
 }
 
@@ -17,20 +15,9 @@ export default function BookingReview({
   checkInDate,
   checkOutDate,
   guests,
-  pricePerNight,
-  whatsIncluded,
+  hotelAddress,
   imageUrl,
 }: BookingReviewProps) {
-  const [showAllAmenities, setShowAllAmenities] = useState(false);
-  
-  // Show only first 3 amenities initially, or all if there are 3 or fewer
-  const displayedAmenities = showAllAmenities ? whatsIncluded : whatsIncluded.slice(0, 3);
-  const hasMoreAmenities = whatsIncluded.length > 3;
-
-  const handleViewMore = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setShowAllAmenities(!showAllAmenities);
-  };
 
   return (
     <div className={styles.container}>
@@ -57,20 +44,7 @@ export default function BookingReview({
         </div>
         <h3>{hotelName}</h3>
         <div className={styles.price}>
-          SGD {pricePerNight} / night
-        </div>
-        <div className={styles.whatsIncluded}>
-          <h4>WHAT'S INCLUDED</h4>
-          <ul>
-            {displayedAmenities.map((item, index) => (
-              <li key={index}>{item}</li>
-            ))}
-          </ul>
-          {hasMoreAmenities && (
-            <a href="#" onClick={handleViewMore}>
-              {showAllAmenities ? 'VIEW LESS <' : 'VIEW MORE >'}
-            </a>
-          )}
+          {hotelAddress}
         </div>
       </div>
     </div>
