@@ -10,7 +10,7 @@ import type { DestinationState } from '../components/listing/SearchBar/Destinati
 import type { OccupancyState } from '../components/listing/SearchBar/GuestInput/GuestInput';
 import SearchBar from '../components/listing/SearchBar/SearchBar';
 import styles from './bookingpage.module.css';
-
+  
 export default function BookingPage() {
   const navigate = useNavigate();
   const location = useLocation();

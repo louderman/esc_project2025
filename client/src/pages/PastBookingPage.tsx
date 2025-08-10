@@ -64,9 +64,28 @@ export default function PastBookingPage() {
     return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
   };
 
-  const handleCardClick = (bookingId: string) => {
-    navigate('/booking/confirmation', { state: { bookingId } });
+  const handleCardClick = (booking: Booking) => {
+    navigate('/booking/confirmation', { 
+      state: { 
+        hotel: {
+          id: booking.id,
+          name: booking.hotelName,
+          address: "Location unavailable", // Replace if you have real data
+          price: 0, // Replace with actual price if you have it
+          imageCount: booking.imageUrl ? 1 : 0,
+          image_details: {
+            prefix: booking.imageUrl ?? '/listing/hotel_img_placeholder.png',
+            suffix: '', // Only needed if you have numbered image URLs
+          }
+        },
+        stayDates: {
+          checkinDate: new Date(booking.checkInDate),
+          checkoutDate: new Date(booking.checkOutDate),
+        }
+      } 
+    });
   };
+
 
   if (loading) {
     return (
@@ -109,10 +128,10 @@ export default function PastBookingPage() {
                 <div
                   key={id}
                   className={styles.bookingCard}
-                  onClick={() => handleCardClick(id)}
+                  onClick={() => handleCardClick({ id, hotelName, checkInDate, checkOutDate, status, imageUrl, userId: '', createdAt: '' })}
                   style={{ cursor: 'pointer' }}
                   tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCardClick(id); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCardClick({ id, hotelName, checkInDate, checkOutDate, status, imageUrl, userId: '', createdAt: '' }); }}
                   role="button"
                   aria-label={`View details for booking at ${hotelName}`}
                 >
