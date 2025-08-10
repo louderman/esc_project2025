@@ -31,27 +31,30 @@ export default function BookingPage() {
       checkoutDate: string;
       totalAmount: number;
       pricePerNight: number;
+      hotelImage?: string;
     };
     hotel?: {
       id: string;
       name: string;
+      address?: string;
       rating: number;
       reviewCount: number;
       price: number;
+      image?: string;
     };
     totalAmount?: number;
   } | undefined;
 
   // Use state data if available, otherwise fall back to mock data
   const hotel: Hotel & Price = stateData?.hotel ? {
-    // Hotel properties
-    id: stateData.hotel.id,
-    name: stateData.hotel.name,
-    rating: stateData.hotel.rating,
+    // Hotel properties - use actual data from navigation state
+    id: stateData.hotel.id || 'mock-oasia-1',
+    name: stateData.hotel.name || 'Oasia Resort Sentosa By Far East Hospitality',
+    rating: stateData.hotel.rating || 4.5,
     imageCount: 5,
     latitude: 1.2588,
     longitude: 103.823,
-    address: '23 Beach View, Sentosa Island',
+    address: stateData.hotel.address || '23 Beach View, Sentosa Island',
     address1: 'Singapore, 098679',
     distance: 5.4,
     trustyou: {
@@ -71,34 +74,34 @@ export default function BookingPage() {
       'A luxurious resort on Sentosa island, perfect for a relaxing getaway.',
     amenities: { outdoorPool: true, roomService: true },
     image_details: {
-      prefix: '/listing/hotel_img_placeholder.png?id=',
-      count: 5,
+      prefix: stateData.hotel.image || 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85',
+      count: 1,
       suffix: '',
     },
     hires_image_index: '',
-    number_of_images: 5,
+    number_of_images: 1,
     default_image_index: 0,
     imgix_url: '',
     cloudflare_image_url: '',
     checkin_time: '15:00',
-    // Price properties
-    price: stateData.hotel.price,
+    // Price properties - use actual data from navigation state
+    price: Math.round((stateData.hotel.price || 311) * 100) / 100,
     searchRank: 1,
     price_type: 'per_night',
     free_cancellation: true,
     rooms_available: 5,
-    max_cash_payment: stateData.hotel.price,
-    coverted_max_cash_payment: stateData.hotel.price,
+    max_cash_payment: Math.round((stateData.hotel.price || 311) * 100) / 100,
+    coverted_max_cash_payment: Math.round((stateData.hotel.price || 311) * 100) / 100,
     points: 5000,
     bonuses: 0,
     bonus_programs: [],
     bonus_tiers: [],
-    lowest_price: stateData.hotel.price,
-    converted_price: stateData.hotel.price,
-    lowest_converted_price: stateData.hotel.price,
-    market_rates: [{ supplier: 'supplier-a', rate: stateData.hotel.price }],
+    lowest_price: Math.round((stateData.hotel.price || 311) * 100) / 100,
+    converted_price: Math.round((stateData.hotel.price || 311) * 100) / 100,
+    lowest_converted_price: Math.round((stateData.hotel.price || 311) * 100) / 100,
+    market_rates: [{ supplier: 'supplier-a', rate: Math.round((stateData.hotel.price || 320) * 100) / 100 }],
   } : {
-    // Hotel properties
+    // Hotel properties - fallback mock data
     id: 'mock-oasia-1',
     name: 'Oasia Resort Sentosa By Far East Hospitality',
     rating: 4.5,
@@ -125,12 +128,12 @@ export default function BookingPage() {
       'A luxurious resort on Sentosa island, perfect for a relaxing getaway.',
     amenities: { outdoorPool: true, roomService: true },
     image_details: {
-      prefix: '/listing/hotel_img_placeholder.png?id=',
-      count: 5,
+      prefix: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85',
+      count: 1,
       suffix: '',
     },
     hires_image_index: '',
-    number_of_images: 5,
+    number_of_images: 1,
     default_image_index: 0,
     imgix_url: '',
     cloudflare_image_url: '',
@@ -199,7 +202,12 @@ export default function BookingPage() {
     whatsIncluded: stateData?.bookingDetails?.selectedRoom?.amenities ?? Object.entries(hotel.amenities)
       .filter(([_, value]) => value)
       .map(([key]) => key.replace(/([A-Z])/g, ' $1').trim()),
-    imageUrl: '/listing/hotel_img_placeholder.png',
+    imageUrl:
+      stateData?.bookingDetails?.hotelImage || 
+      stateData?.hotel?.image || 
+      (hotel.imageCount > 0
+        ? `${hotel.image_details.prefix}0${hotel.image_details.suffix}`
+        : 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85'),
   };
 
   const handlePaymentSuccess = () => {
