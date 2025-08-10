@@ -34,7 +34,7 @@ export default function NavBar() {
       <div className={styles.box}>
         <Link to='/'>
           <div className={styles.brandSection}>
-            <img src='/navbar/C4T2.svg' className={styles.logo} />
+            <img src='/navbar/C4T2_Vac.svg' className={styles.logo} />
           </div>
         </Link>
 
