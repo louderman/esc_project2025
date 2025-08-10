@@ -22,7 +22,7 @@ const SelectedRoomCard: React.FC<SelectedRoomCardProps> = ({
   numberOfNights,
   numberOfRooms,
 }) => {
-  const totalRoomPrice = selectedRoom.price * numberOfNights * numberOfRooms;
+  const totalRoomPrice = Math.round(selectedRoom.price * numberOfNights * numberOfRooms * 100) / 100;
 
   return (
     <div className={styles.selectedRoomCard}>
@@ -93,7 +93,7 @@ const SelectedRoomCard: React.FC<SelectedRoomCardProps> = ({
           <div className={styles.priceSection}>
             <div className={styles.priceDetails}>
               <div className={styles.pricePerNight}>
-                <span className={styles.price}>${selectedRoom.price}</span>
+                <span className={styles.price}>${Math.round(selectedRoom.price * 100) / 100}</span>
                 <span className={styles.perNight}>per night</span>
               </div>
               <div className={styles.totalPrice}>

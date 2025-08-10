@@ -4,6 +4,7 @@ import type { Hotel } from '../../../types/Hotel';
 import type { Price } from '../../../types/Price';
 import BookingForm from '../components/booking/BookingForm';
 import BookingReview from '../components/booking/BookingReview';
+import SelectedRoomCard from '../components/booking/SelectedRoomCard';
 import { useAuth } from '../components/common/authcontext';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
 import type { DestinationState } from '../components/listing/SearchBar/DestinationInput/DestinationInput';
@@ -163,16 +164,13 @@ export default function BookingPage() {
     guests: `${occupancy.rooms} room${occupancy.rooms > 1 ? 's' : ''} · ${
       occupancy.adults + occupancy.children
     } guest${occupancy.adults + occupancy.children > 1 ? 's' : ''}`,
-    pricePerNight: Math.round((stateData.bookingDetails?.pricePerNight ?? hotel.price) * 100) / 100,
-    whatsIncluded: stateData.bookingDetails?.selectedRoom?.amenities ?? Object.entries(hotel.amenities)
-      .filter(([_, value]) => value)
-      .map(([key]) => key.replace(/([A-Z])/g, ' $1').trim()),
+    hotelAddress: [hotel.address, hotel.address1].filter(Boolean).join(', ') || 'Address not available',
     imageUrl:
       stateData.bookingDetails?.hotelImage || 
       stateData.hotel.image || 
       (hotel.imageCount > 0
         ? `${hotel.image_details.prefix}0${hotel.image_details.suffix}`
-        : ''),
+        : '/listing/hotel_img_placeholder.png'),
   };
 
   const handlePaymentSuccess = () => {
@@ -209,7 +207,9 @@ export default function BookingPage() {
       pricePerNight: Math.round((stateData.bookingDetails?.pricePerNight ?? hotel.price) * 100) / 100,
       numberOfNights,
       totalAmount: stateData.bookingDetails?.totalAmount ?? ((stateData.bookingDetails?.pricePerNight ?? hotel.price) * numberOfNights),
-      whatsIncluded: bookingDetails.whatsIncluded,
+      whatsIncluded: stateData.bookingDetails?.selectedRoom?.amenities ?? Object.entries(hotel.amenities)
+        .filter(([_, value]) => value)
+        .map(([key]) => key.replace(/([A-Z])/g, ' $1').trim()),
       imageUrl: bookingDetails.imageUrl,
       bookingAddress: [hotel.address, hotel.address1].filter(Boolean).join(', '),
     },
@@ -233,6 +233,13 @@ export default function BookingPage() {
       <div className={styles.mainSection}>
         <div className={styles.mainBox}>
           <BookingReview {...bookingDetails} />
+          {stateData.bookingDetails?.selectedRoom && (
+            <SelectedRoomCard
+              selectedRoom={stateData.bookingDetails.selectedRoom}
+              numberOfNights={numberOfNights}
+              numberOfRooms={stateData.bookingDetails.numberOfRooms}
+            />
+          )}
           <BookingForm {...policyDetails} />
         </div>
       </div>
