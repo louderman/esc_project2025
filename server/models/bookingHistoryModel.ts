@@ -5,7 +5,7 @@ const tableName = 'bookings';
 //Filter by userId
 async function getBookingHistory(userId?: string) {
   try {
-    let query = `SELECT id, userId, hotelName, checkInDate, checkOutDate, status, imageUrl, createdAt FROM ${tableName}`;
+    let query = `SELECT id, userId, hotelName, checkInDate, checkOutDate, status, imageUrl, createdAt, bookingAddress FROM ${tableName}`;
     let params: any[] = [];
     
     if (userId) {

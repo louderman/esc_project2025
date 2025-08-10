@@ -11,6 +11,7 @@ interface Booking {
   status: string;
   imageUrl?: string;
   createdAt: string;
+  bookingAddress?: string;
 }
 
 export default function PastBookingPage() {
@@ -22,7 +23,7 @@ export default function PastBookingPage() {
 
   useEffect(() => {
     async function fetchBookings() {
-      //using storedUser from local storage
+      //using storedUser from localStorage
       const storedUser = localStorage.getItem('user');
       console.log('Stored user from localStorage:', storedUser);
       
@@ -105,7 +106,7 @@ export default function PastBookingPage() {
             {bookings.length === 0 ? (
               <p>No past bookings found for your account.</p>
             ) : (
-              bookings.map(({ id, hotelName, checkInDate, checkOutDate, status, imageUrl }) => (
+              bookings.map(({ id, hotelName, checkInDate, checkOutDate, status, imageUrl, bookingAddress }) => (
                 <div
                   key={id}
                   className={styles.bookingCard}
@@ -124,7 +125,7 @@ export default function PastBookingPage() {
                   <div className={styles.cardRight}>
                     <div className={styles.hotelName}>{hotelName ?? 'Unknown hotel'}</div>
                     <div className={styles.hotelAddress}>
-                      <span className={styles.icon}>📍</span> Location unavailable
+                      <span className={styles.icon}>📍</span> { bookingAddress ?? 'Location unavailable'}
                     </div>
                     <div className={styles.detailsCol}>
                       <div>
