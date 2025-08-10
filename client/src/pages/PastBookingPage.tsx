@@ -98,8 +98,8 @@ export default function PastBookingPage() {
       <section className={styles.mainSection}>
         <div className={styles.mainBox}>
           <div className={styles.titleCard}>
-            <h1 className={styles.pageTitle}>Past Bookings</h1>
-            <p className={styles.subtitle}>View and manage your previous hotel reservations</p>
+            <h1 className={styles.pageTitle}>Booking History</h1>
+            <p className={styles.subtitle}>Track your past and upcoming hotel stays</p>
           </div>
 
           <div className={styles.cardsContainer}>
