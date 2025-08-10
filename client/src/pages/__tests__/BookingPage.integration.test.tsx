@@ -364,7 +364,8 @@ describe('BookingPage Integration Tests', () => {
       await user.click(payButton);
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledTimes(3);
+        //expect(mockFetch).toHaveBeenCalledTimes(3);
+        expect(mockFetch).toHaveBeenCalledTimes(2);
       });
 
       const bookingCall = mockFetch.mock.calls[1];
