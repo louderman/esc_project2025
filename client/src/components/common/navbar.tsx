@@ -41,7 +41,7 @@ export default function NavBar() {
         <div className={styles.navigationSection}>
           {user && (
             <Link to='/past_booking' className={styles.navLink}>
-              Past Bookings
+              Booking History
             </Link>
           )}
         </div>
