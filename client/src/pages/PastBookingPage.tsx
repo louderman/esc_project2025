@@ -104,7 +104,25 @@ export default function PastBookingPage() {
 
           <div className={styles.cardsContainer}>
             {bookings.length === 0 ? (
-              <p>No past bookings found for your account.</p>
+                <div className={styles.emptyState}>
+                  <div className={styles.emptyStateIcon}>
+                    <img
+                      src="/common/luggage_person.png"
+                      alt="🧳"
+                      style={{ width: '150px', height: '225px' }}
+                    />
+                  </div>
+                  <h3 className={styles.emptyStateTitle}>Ready for your next adventure?</h3>
+                  <p className={styles.emptyStateText}>
+                    You haven't made any hotel bookings yet. Discover amazing hotels and create unforgettable memories!
+                  </p>
+                  <button 
+                    className={styles.browseButton}
+                    onClick={() => navigate('/listing')}
+                  >
+                    Start Searching
+                  </button>
+                </div>
             ) : (
               bookings.map(({ id, hotelName, checkInDate, checkOutDate, status, imageUrl, bookingAddress }) => (
                 <div
