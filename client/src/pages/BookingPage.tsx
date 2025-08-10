@@ -45,36 +45,55 @@ export default function BookingPage() {
     totalAmount?: number;
   } | undefined;
 
-  // Use state data if available, otherwise fall back to mock data
-  const hotel: Hotel & Price = stateData?.hotel ? {
+  // Check if hotel is selected - if not, show message
+  if (!stateData?.hotel) {
+    return (
+      <main>
+        <div className={styles.mainSection}>
+          <div className={styles.mainBox}>
+            <div style={{ 
+              textAlign: 'center', 
+              padding: '2rem', 
+              fontSize: '1.2rem', 
+              color: '#666' 
+            }}>
+              No hotel selected, please return to listing page.
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // Use hotel data from navigation state
+  const hotel: Hotel & Price = {
     // Hotel properties - use actual data from navigation state
-    id: stateData.hotel.id || 'mock-oasia-1',
-    name: stateData.hotel.name || 'Oasia Resort Sentosa By Far East Hospitality',
-    rating: stateData.hotel.rating || 4.5,
-    imageCount: 5,
-    latitude: 1.2588,
-    longitude: 103.823,
-    address: stateData.hotel.address || '23 Beach View, Sentosa Island',
-    address1: 'Singapore, 098679',
-    distance: 5.4,
+    id: stateData.hotel.id,
+    name: stateData.hotel.name,
+    rating: stateData.hotel.rating,
+    imageCount: 1,
+    latitude: 0,
+    longitude: 0,
+    address: stateData.hotel.address || '',
+    address1: '',
+    distance: 0,
     trustyou: {
-      id: 'ty-1',
+      id: '',
       score: {
-        overall: 9,
-        kaligo_overall: 9,
-        solo: 8,
-        couple: 9,
-        family: 9,
-        business: 8,
+        overall: 0,
+        kaligo_overall: 0,
+        solo: 0,
+        couple: 0,
+        family: 0,
+        business: 0,
       },
     },
     categories: {},
     amenities_ratings: [],
-    description:
-      'A luxurious resort on Sentosa island, perfect for a relaxing getaway.',
-    amenities: { outdoorPool: true, roomService: true },
+    description: '',
+    amenities: {},
     image_details: {
-      prefix: stateData.hotel.image || 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85',
+      prefix: stateData.hotel.image || '',
       count: 1,
       suffix: '',
     },
@@ -85,86 +104,32 @@ export default function BookingPage() {
     cloudflare_image_url: '',
     checkin_time: '15:00',
     // Price properties - use actual data from navigation state
-    price: Math.round((stateData.hotel.price || 311) * 100) / 100,
+    price: Math.round(stateData.hotel.price * 100) / 100,
     searchRank: 1,
     price_type: 'per_night',
     free_cancellation: true,
-    rooms_available: 5,
-    max_cash_payment: Math.round((stateData.hotel.price || 311) * 100) / 100,
-    coverted_max_cash_payment: Math.round((stateData.hotel.price || 311) * 100) / 100,
-    points: 5000,
+    rooms_available: 1,
+    max_cash_payment: Math.round(stateData.hotel.price * 100) / 100,
+    coverted_max_cash_payment: Math.round(stateData.hotel.price * 100) / 100,
+    points: 0,
     bonuses: 0,
     bonus_programs: [],
     bonus_tiers: [],
-    lowest_price: Math.round((stateData.hotel.price || 311) * 100) / 100,
-    converted_price: Math.round((stateData.hotel.price || 311) * 100) / 100,
-    lowest_converted_price: Math.round((stateData.hotel.price || 311) * 100) / 100,
-    market_rates: [{ supplier: 'supplier-a', rate: Math.round((stateData.hotel.price || 320) * 100) / 100 }],
-  } : {
-    // Hotel properties - fallback mock data
-    id: 'mock-oasia-1',
-    name: 'Oasia Resort Sentosa By Far East Hospitality',
-    rating: 4.5,
-    imageCount: 5,
-    latitude: 1.2588,
-    longitude: 103.823,
-    address: '23 Beach View, Sentosa Island',
-    address1: 'Singapore, 098679',
-    distance: 5.4,
-    trustyou: {
-      id: 'ty-1',
-      score: {
-        overall: 9,
-        kaligo_overall: 9,
-        solo: 8,
-        couple: 9,
-        family: 9,
-        business: 8,
-      },
-    },
-    categories: {},
-    amenities_ratings: [],
-    description:
-      'A luxurious resort on Sentosa island, perfect for a relaxing getaway.',
-    amenities: { outdoorPool: true, roomService: true },
-    image_details: {
-      prefix: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85',
-      count: 1,
-      suffix: '',
-    },
-    hires_image_index: '',
-    number_of_images: 1,
-    default_image_index: 0,
-    imgix_url: '',
-    cloudflare_image_url: '',
-    checkin_time: '15:00',
-    // Price properties
-    price: 311,
-    searchRank: 1,
-    price_type: 'per_night',
-    free_cancellation: true,
-    rooms_available: 5,
-    max_cash_payment: 311,
-    coverted_max_cash_payment: 311,
-    points: 5000,
-    bonuses: 0,
-    bonus_programs: [],
-    bonus_tiers: [],
-    lowest_price: 311,
-    converted_price: 311,
-    lowest_converted_price: 311,
-    market_rates: [{ supplier: 'supplier-a', rate: 320 }],
+    lowest_price: Math.round(stateData.hotel.price * 100) / 100,
+    converted_price: Math.round(stateData.hotel.price * 100) / 100,
+    lowest_converted_price: Math.round(stateData.hotel.price * 100) / 100,
+    market_rates: [{ supplier: 'supplier-a', rate: Math.round(stateData.hotel.price * 100) / 100 }],
   };
 
   // Initialize states with passed booking details if available
   const [stayDates, setStayDates] = useState<StayDatesState>({
-    checkinDate: stateData?.bookingDetails?.checkinDate ? new Date(stateData.bookingDetails.checkinDate) : null,
-    checkoutDate: stateData?.bookingDetails?.checkoutDate ? new Date(stateData.bookingDetails.checkoutDate) : null,
+    checkinDate: stateData.bookingDetails?.checkinDate ? new Date(stateData.bookingDetails.checkinDate) : null,
+    checkoutDate: stateData.bookingDetails?.checkoutDate ? new Date(stateData.bookingDetails.checkoutDate) : null,
   });
   const [occupancy, setOccupancy] = useState<OccupancyState>({
-    adults: stateData?.bookingDetails?.numberOfGuests?.adults ?? 2,
-    children: stateData?.bookingDetails?.numberOfGuests?.children ?? 0,
-    rooms: stateData?.bookingDetails?.numberOfRooms ?? 1,
+    adults: stateData.bookingDetails?.numberOfGuests?.adults ?? 2,
+    children: stateData.bookingDetails?.numberOfGuests?.children ?? 0,
+    rooms: stateData.bookingDetails?.numberOfRooms ?? 1,
   });
   const [destination, setDestination] = useState<DestinationState>({
     id: '',
@@ -172,7 +137,7 @@ export default function BookingPage() {
   });
 
   // Use passed booking details for calculations
-  const numberOfNights = stateData?.bookingDetails?.numberOfNights ?? (
+  const numberOfNights = stateData.bookingDetails?.numberOfNights ?? (
     stayDates.checkinDate && stayDates.checkoutDate
       ? Math.ceil(
           (stayDates.checkoutDate.getTime() - stayDates.checkinDate.getTime()) /
@@ -198,16 +163,16 @@ export default function BookingPage() {
     guests: `${occupancy.rooms} room${occupancy.rooms > 1 ? 's' : ''} · ${
       occupancy.adults + occupancy.children
     } guest${occupancy.adults + occupancy.children > 1 ? 's' : ''}`,
-    pricePerNight: Math.round((stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0) * 100) / 100,
-    whatsIncluded: stateData?.bookingDetails?.selectedRoom?.amenities ?? Object.entries(hotel.amenities)
+    pricePerNight: Math.round((stateData.bookingDetails?.pricePerNight ?? hotel.price) * 100) / 100,
+    whatsIncluded: stateData.bookingDetails?.selectedRoom?.amenities ?? Object.entries(hotel.amenities)
       .filter(([_, value]) => value)
       .map(([key]) => key.replace(/([A-Z])/g, ' $1').trim()),
     imageUrl:
-      stateData?.bookingDetails?.hotelImage || 
-      stateData?.hotel?.image || 
+      stateData.bookingDetails?.hotelImage || 
+      stateData.hotel.image || 
       (hotel.imageCount > 0
         ? `${hotel.image_details.prefix}0${hotel.image_details.suffix}`
-        : 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85'),
+        : ''),
   };
 
   const handlePaymentSuccess = () => {
@@ -216,7 +181,7 @@ export default function BookingPage() {
       state: {
         bookingDetails,
         hotel,
-        totalAmount: stateData?.bookingDetails?.totalAmount ?? ((stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0) * numberOfNights),
+        totalAmount: stateData.bookingDetails?.totalAmount ?? ((stateData.bookingDetails?.pricePerNight ?? hotel.price) * numberOfNights),
       },
     });
   };
@@ -231,7 +196,7 @@ export default function BookingPage() {
     guaranteePolicy: 'Credit Card is required at the time of booking.',
     cancelPolicy:
       'Reservation must be cancelled by 3pm local time 1 day before arrival to avoid penalty of 1 night room and tax.',
-    costPerNight: Math.round((stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0) * 100) / 100,
+    costPerNight: Math.round((stateData.bookingDetails?.pricePerNight ?? hotel.price) * 100) / 100,
     numberOfNights,
     bookingData: {
       userId: user ? String(user.id) : '',
@@ -241,9 +206,9 @@ export default function BookingPage() {
       checkInDate: bookingDetails.checkInDate,
       checkOutDate: bookingDetails.checkOutDate,
       guests: bookingDetails.guests,
-      pricePerNight: Math.round((stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0) * 100) / 100,
+      pricePerNight: Math.round((stateData.bookingDetails?.pricePerNight ?? hotel.price) * 100) / 100,
       numberOfNights,
-      totalAmount: stateData?.bookingDetails?.totalAmount ?? ((stateData?.bookingDetails?.pricePerNight ?? hotel.price ?? 0) * numberOfNights),
+      totalAmount: stateData.bookingDetails?.totalAmount ?? ((stateData.bookingDetails?.pricePerNight ?? hotel.price) * numberOfNights),
       whatsIncluded: bookingDetails.whatsIncluded,
       imageUrl: bookingDetails.imageUrl,
       bookingAddress: [hotel.address, hotel.address1].filter(Boolean).join(', '),
