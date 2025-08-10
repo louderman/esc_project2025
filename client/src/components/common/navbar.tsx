@@ -32,41 +32,35 @@ export default function NavBar() {
   return (
     <div className={styles.container}>
       <div className={styles.box}>
-        <Link to="/">
+        <Link to='/'>
           <div className={styles.brandSection}>
-            <img className={styles.logoImg} src='/navbar/logo.svg' alt='logo' />
-            <div className={styles.appNameText}>
-              <span className={styles.appNameText1}>C4T2</span>{' '}
-              <span className={styles.appNameText2}>Amazing Hotel</span>
-            </div>
+            <img src='/navbar/C4T2.svg' className={styles.logo} />
           </div>
         </Link>
 
-        {user && (
-          <div className={styles.navigationSection}>
-            <Link to="/listing" className={styles.navLink}>
-              Listings
-            </Link>
-            <Link to="/past_booking" className={styles.navLink}>
+        <div className={styles.navigationSection}>
+          {user && (
+            <Link to='/past_booking' className={styles.navLink}>
               Past Bookings
             </Link>
-          </div>
-        )}
+          )}
+        </div>
 
         <div className={styles.userSection}>
-          <div className={styles.currencySection}>SGD En</div>
-
           {user ? (
             <div className={styles.dropdown}>
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 className={styles.dropdownButton}
               >
-                {user.name}
+                <div className={styles.profileIcon}>{user.name[0]}</div>
               </button>
               {dropdownOpen && (
                 <div className={styles.dropdownContent}>
-                  <button onClick={handleLogout} className={styles.logoutOption}>
+                  <button
+                    onClick={handleLogout}
+                    className={styles.logoutOption}
+                  >
                     Logout
                   </button>
                 </div>
@@ -76,16 +70,18 @@ export default function NavBar() {
             <>
               <button
                 className={`${styles.accountButton} ${styles.loginButton}`}
-                onClick={() => navigate('/login', { state: { from: location.pathname } })}
+                onClick={() =>
+                  navigate('/login', { state: { from: location.pathname } })
+                }
               >
-                <img src="/navbar/user.svg" alt="login" />
                 <span>Login</span>
               </button>
               <button
                 className={`${styles.accountButton} ${styles.registerButton}`}
-                onClick={() => navigate('/register', { state: { from: location.pathname } })}
+                onClick={() =>
+                  navigate('/register', { state: { from: location.pathname } })
+                }
               >
-                <img src="/navbar/user.svg" alt="register" />
                 <span>Register</span>
               </button>
             </>
