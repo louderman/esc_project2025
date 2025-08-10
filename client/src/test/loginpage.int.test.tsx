@@ -1,12 +1,9 @@
-// client/src/test/loginpage.test.tsx
 import React from 'react';
 import { describe, it, beforeEach, vi, expect } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import LoginPage from '../pages/LoginPage';
-import { mockFetch, resetUsers } from './auth.mock';
 
 // Router + Auth mocks
 const navigateMock = vi.fn();
@@ -25,6 +22,15 @@ vi.mock('../components/common/authcontext', () => ({
   useAuth: () => ({ user: null, setUser: setUserMock }),
 }));
 
+// Import the component AFTER mocks
+import LoginPage from '../pages/LoginPage';
+
+// Network + alert mocks
+const fetchMock = vi.fn();
+const alertMock = vi.fn();
+Object.defineProperty(global, 'fetch', { value: fetchMock, writable: true });
+Object.defineProperty(window, 'alert', { value: alertMock, writable: true });
+
 // Render helper
 const setup = () =>
   render(
@@ -33,43 +39,71 @@ const setup = () =>
     </MemoryRouter>
   );
 
-// DOM helpers (fits the markup in LoginPage.tsx)
+// DOM helpers
 const getEmailInput = (ui: ReturnType<typeof setup>) => {
-  // Label then sibling input
-  const label = ui.getAllByText(/^Email$/i)[0] as HTMLElement;
-  const el = label.nextElementSibling as HTMLInputElement | null;
-  if (!el || el.tagName !== 'INPUT') throw new Error('Email input not found');
-  return el;
+  // Try label → sibling input pattern first
+  const labels = ui.queryAllByText(/^Email$/i);
+  if (labels.length) {
+    const first = labels[0] as HTMLElement;
+    const sib = first.nextElementSibling as HTMLInputElement | null;
+    if (sib && sib.tagName === 'INPUT') return sib;
+  }
+  // Fallback: first text input inside the form
+  const form = ui.container.querySelector('form');
+  const byType = form?.querySelector('input[type="text"]') as HTMLInputElement | null;
+  if (byType) return byType;
+
+  // Last resort: first textbox role
+  const byRole = ui.getAllByRole('textbox')[0] as HTMLInputElement;
+  return byRole;
 };
 
 const getPasswordInput = (ui: ReturnType<typeof setup>) => {
-  const label = ui.getAllByText(/^Password$/i)[0] as HTMLElement;
-  const wrapper = label.nextElementSibling as HTMLElement | null;
-  const input = wrapper?.querySelector('input') as HTMLInputElement | null;
-  if (!input) throw new Error('Password input not found');
-  return input;
+  // Try label → wrapper → input pattern first
+  const labels = ui.queryAllByText(/^Password$/i);
+  if (labels.length) {
+    const first = labels[0] as HTMLElement;
+    const wrapper = first.nextElementSibling as HTMLElement | null;
+    const inp = wrapper?.querySelector('input') as HTMLInputElement | null;
+    if (inp) return inp;
+  }
+  // Fallbacks
+  const form = ui.container.querySelector('form');
+  const byTypePwd = form?.querySelector('input[type="password"]') as HTMLInputElement | null;
+  if (byTypePwd) return byTypePwd;
+
+  const anyPwd = form?.querySelector('input') as HTMLInputElement | null;
+  if (anyPwd) return anyPwd;
+
+  // Last resort: second textbox
+  return ui.getAllByRole('textbox')[1] as HTMLInputElement;
 };
 
+// Be tolerant of duplicate renders (pick the first matching button)
 const getLoginButton = (ui: ReturnType<typeof setup>) =>
-  ui.getByRole('button', { name: /log in/i });
+  ui.getAllByRole('button', { name: /log in/i })[0];
 
-let fetchSpy: any;
 
-beforeEach(() => {
-  resetUsers();
-  fetchSpy = vi.fn(mockFetch as any);
-  vi.stubGlobal('fetch', fetchSpy);
+// Tests
+describe('ITC_LOGIN_1 – Log in button (integration)', () => {
+  beforeEach(() => {
+    fetchMock.mockReset();
+    alertMock.mockReset();
+    navigateMock.mockReset();
+    setUserMock.mockReset();
+    localStorage.clear();
+  });
 
-  navigateMock.mockReset();
-  setUserMock.mockReset();
-  localStorage.clear();
-});
-
-describe('ITC_LOGIN_1 – Log in button', () => {
   const fill = async (ui: ReturnType<typeof setup>, email?: string, password?: string) => {
     const user = userEvent.setup();
-    if (email) await user.type(getEmailInput(ui), email);
-    if (password) await user.type(getPasswordInput(ui), password);
+    if (typeof email === 'string') {
+      await user.clear(getEmailInput(ui));
+      if (email.length) await user.type(getEmailInput(ui), email);
+    }
+    if (typeof password === 'string') {
+      await user.clear(getPasswordInput(ui));
+      if (password.length) await user.type(getPasswordInput(ui), password);
+    }
     return user;
   };
 
@@ -81,7 +115,7 @@ describe('ITC_LOGIN_1 – Log in button', () => {
     expect(ui.getByText(/Email must be valid and contain no spaces\./i)).toBeVisible();
     expect(ui.getByText(/Password must be at least 8 characters with no spaces\./i)).toBeVisible();
     expect(navigateMock).not.toHaveBeenCalled();
-    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('invalid email, valid password → email error only', async () => {
@@ -92,7 +126,7 @@ describe('ITC_LOGIN_1 – Log in button', () => {
     expect(ui.getByText(/Email must be valid and contain no spaces\./i)).toBeVisible();
     expect(ui.queryByText(/Password must be at least 8 characters/i)).toBeNull();
     expect(navigateMock).not.toHaveBeenCalled();
-    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('invalid password, valid email → password error only', async () => {
@@ -103,37 +137,41 @@ describe('ITC_LOGIN_1 – Log in button', () => {
     expect(ui.getByText(/Password must be at least 8 characters with no spaces\./i)).toBeVisible();
     expect(ui.queryByText(/Email must be valid and contain no spaces\./i)).toBeNull();
     expect(navigateMock).not.toHaveBeenCalled();
-    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('all inputs valid → alert + navigate back', async () => {
-    // Pre-create a user via our mock register so login can succeed
-    const reg = await mockFetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'Alice', email: 'alice@gmail.com', password: 'StrongPass1' }),
-    });
-    expect(reg.ok).toBe(true);
-
+  it('all inputs valid → posts, sets user, navigates back', async () => {
     const ui = setup();
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ userId: 123, name: 'Alice' }),
+    } as any);
+
     const user = await fill(ui, 'alice@gmail.com', 'StrongPass1');
     await user.click(getLoginButton(ui));
 
+    // fetch invoked
     await waitFor(() =>
-      expect(fetchSpy).toHaveBeenCalledWith(
+      expect(fetchMock).toHaveBeenCalledWith(
         '/api/auth/login',
         expect.objectContaining({ method: 'POST' })
       )
     );
 
+    // setUser invoked with expected fields
     await waitFor(() => {
       expect(setUserMock).toHaveBeenCalled();
-      const payload = setUserMock.mock.calls[0][0];
-      expect(payload).toEqual(
-        expect.objectContaining({ id: expect.any(Number), name: 'Alice', email: 'alice@gmail.com' })
+      const lastArg = setUserMock.mock.calls[0][0];
+      expect(lastArg).toEqual(
+        expect.objectContaining({
+          id: 123,
+          name: 'Alice',
+          email: 'alice@gmail.com',
+        })
       );
     });
 
+    // navigated to "from" location
     await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/from-here'));
   });
 });

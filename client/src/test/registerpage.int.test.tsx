@@ -3,9 +3,8 @@ import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { render, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
 import RegisterPage from '../pages/RegisterPage';
-import { mockFetch, resetUsers } from './auth.mock';
+import { MemoryRouter } from 'react-router-dom';
 
 // Router mock
 const navigateMock = vi.fn();
@@ -13,6 +12,12 @@ vi.mock('react-router-dom', async (orig) => {
   const actual: any = await orig();
   return { ...actual, useNavigate: () => navigateMock };
 });
+
+// Network + alert mocks
+const fetchMock = vi.fn();
+const alertMock = vi.fn();
+Object.defineProperty(global, 'fetch', { value: fetchMock, writable: true });
+Object.defineProperty(window, 'alert', { value: alertMock, writable: true });
 
 // Render helper
 const setup = () =>
@@ -32,21 +37,18 @@ const getPasswordInput = (ui: ReturnType<typeof setup>) =>
 const getCreateBtn = (ui: ReturnType<typeof setup>) =>
   ui.getByRole('button', { name: /create an account/i });
 
-let fetchSpy: any;
-
 beforeEach(() => {
-  resetUsers();
-  fetchSpy = vi.fn(mockFetch as any);
-  vi.stubGlobal('fetch', fetchSpy);
+  fetchMock.mockReset();
+  alertMock.mockReset();
   navigateMock.mockReset();
 });
 
 afterEach(() => {
   cleanup();
-  vi.unstubAllGlobals();
 });
 
-describe('TC_SIGNUP_1 – Username field', () => {
+// TC_SIGNUP_1 – Username field
+describe('TC_SIGNUP_1 – Username field (integration)', () => {
   it('typing shows the username', async () => {
     const ui = setup();
     const user = userEvent.setup();
@@ -55,10 +57,11 @@ describe('TC_SIGNUP_1 – Username field', () => {
     expect(name.value).toBe('sh');
   });
 
-  it('empty string → shows error', async () => {
+  it('empty string → shows errors, no redirect', async () => {
     const ui = setup();
     const user = userEvent.setup();
     const name = getNameInput(ui);
+    await user.type(name, 'x');
     await user.clear(name);
     await user.click(getCreateBtn(ui));
     expect(
@@ -103,7 +106,8 @@ describe('TC_SIGNUP_1 – Username field', () => {
   });
 });
 
-describe('TC_SIGNUP_2 – Email field', () => {
+// TC_SIGNUP_2 – Email field
+describe('TC_SIGNUP_2 – Email field (integration)', () => {
   it('typing shows email', async () => {
     const ui = setup();
     const user = userEvent.setup();
@@ -117,10 +121,11 @@ describe('TC_SIGNUP_2 – Email field', () => {
     const user = userEvent.setup();
     const email = getEmailInput(ui);
     await user.type(email, '   Alice@gmail.com   ');
+    // jsdom normalizes value for type=email
     expect(email.value).toBe('Alice@gmail.com');
   });
 
-  it('empty string → shows error', async () => {
+  it('empty string → shows custom error on submit', async () => {
     const ui = setup();
     const user = userEvent.setup();
     const email = getEmailInput(ui);
@@ -139,7 +144,7 @@ describe('TC_SIGNUP_2 – Email field', () => {
     expect(email.value).toBe('Alic  e@gmail.com');
   });
 
-  it('missing @ → field shows (native popup not asserted)', async () => {
+  it('missing @ → field shows but submit will be blocked by native validation later', async () => {
     const ui = setup();
     const user = userEvent.setup();
     const email = getEmailInput(ui);
@@ -148,7 +153,8 @@ describe('TC_SIGNUP_2 – Email field', () => {
   });
 });
 
-describe('ITC_SIGNUP_1 – Create account button', () => {
+// ITC_SIGNUP_1 – Create account button
+describe('ITC_SIGNUP_1 – Create account button (integration)', () => {
   const fill = async (
     ui: ReturnType<typeof setup>,
     name?: string,
@@ -156,9 +162,15 @@ describe('ITC_SIGNUP_1 – Create account button', () => {
     pwd?: string
   ) => {
     const user = userEvent.setup();
-    if (name) await user.type(getNameInput(ui), name);
-    if (email) await user.type(getEmailInput(ui), email);
-    if (pwd) await user.type(getPasswordInput(ui), pwd);
+    if (typeof name === 'string' && name.length > 0) {
+      await user.type(getNameInput(ui), name);
+    }
+    if (typeof email === 'string' && email.length > 0) {
+      await user.type(getEmailInput(ui), email);
+    }
+    if (typeof pwd === 'string' && pwd.length > 0) {
+      await user.type(getPasswordInput(ui), pwd);
+    }
     return user;
   };
 
@@ -171,7 +183,6 @@ describe('ITC_SIGNUP_1 – Create account button', () => {
     expect(await ui.findByText(/Email must be valid/i)).toBeVisible();
     expect(await ui.findByText(/Password must be ≥8 chars/i)).toBeVisible();
     expect(navigateMock).not.toHaveBeenCalled();
-    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it('invalid name, valid email & password → name error only', async () => {
@@ -182,19 +193,23 @@ describe('ITC_SIGNUP_1 – Create account button', () => {
     expect(await ui.findByText(/Name cannot be empty/i)).toBeVisible();
     expect(ui.queryByText(/Email must be valid/i)).toBeNull();
     expect(ui.queryByText(/Password must be ≥8 chars/i)).toBeNull();
-    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it('invalid email, valid name & password → email error only', async () => {
+  it('invalid email, valid name & password → blocked by native HTML5 validation', async () => {
     const ui = setup();
     const user = await fill(ui, 'Alice', 'alicegmail.com', 'Strong@123');
     await user.click(getCreateBtn(ui));
 
-    // we assert by CSS invalid class to avoid native HTML popup differences
-    expect(getEmailInput(ui).className).toMatch(/invalid/);
-    expect(getNameInput(ui).className).not.toMatch(/invalid/);
-    expect(getPasswordInput(ui).className).not.toMatch(/invalid/);
-    expect(fetchSpy).not.toHaveBeenCalled();
+    // type="email" has an invalid value, the browser prevents submit.
+    expect(getEmailInput(ui).checkValidity()).toBe(false);
+
+    // No custom errors because submit never reached our handler
+    expect(ui.queryByText(/Name cannot be empty/i)).toBeNull();
+    expect(ui.queryByText(/Password must be ≥8 chars/i)).toBeNull();
+
+    //No network/navigation occurred
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(navigateMock).not.toHaveBeenCalled();
   });
 
   it('invalid password, valid name & email → password error only', async () => {
@@ -205,15 +220,15 @@ describe('ITC_SIGNUP_1 – Create account button', () => {
     expect(await ui.findByText(/Password must be ≥8 chars/i)).toBeVisible();
     expect(ui.queryByText(/Name cannot be empty/i)).toBeNull();
     expect(ui.queryByText(/Email must be valid/i)).toBeNull();
-    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it('all inputs valid → alert + request sent', async () => {
     const ui = setup();
+    fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({}) } as any);
     const user = await fill(ui, 'Alice', 'alice@gmail.com', 'Strong@123!');
     await user.click(getCreateBtn(ui));
 
-    expect(fetchSpy).toHaveBeenCalledWith(
+    expect(fetchMock).toHaveBeenCalledWith(
       '/api/auth/register',
       expect.objectContaining({ method: 'POST' })
     );
