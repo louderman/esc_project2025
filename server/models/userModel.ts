@@ -15,19 +15,36 @@ function sync() {
 }
 
 function insertUser(name: string, email: string, password: string) {
+  // Trim and validate inputs
+  const trimmedName = name?.trim();
+  const trimmedEmail = email?.trim();
+  const trimmedPassword = password?.trim();
+
+  if (!trimmedName || !trimmedEmail || !trimmedPassword) {
+    throw new Error("All fields (name, email, password) must be non-empty and trimmed.");
+  }
+
   return pool.query(
     `INSERT INTO ${tableName} (name, email, password) VALUES (?, ?, ?)`,
-    [name, email, password]
+    [trimmedName, trimmedEmail, trimmedPassword]
   );
 }
 
+
 function findByEmail(email: string) {
+  const trimmedEmail = email?.trim();
+
+  if (!trimmedEmail) {
+    return Promise.resolve(null); // Return null for empty input
+  }
+
   return pool
-    .query(`SELECT * FROM ${tableName} WHERE email = ? LIMIT 1`, [email])
+    .query(`SELECT * FROM ${tableName} WHERE email = ? LIMIT 1`, [trimmedEmail])
     .then(([rows]: any) => {
       if (rows.length > 0) return rows[0];
       return null;
     });
 }
+
 
 export { sync, insertUser, findByEmail };

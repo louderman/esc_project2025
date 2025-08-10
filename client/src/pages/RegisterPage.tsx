@@ -30,10 +30,11 @@ export default function RegisterPage() {
     const lengthOK = pwd.length >= 8;
     const hasLetter = /[a-zA-Z]/.test(pwd);
     const hasNumber = /\d/.test(pwd);
-    const hasSymbol = /[^a-zA-Z0-9]/.test(pwd);
-    const noWhitespaceEdges = pwd === pwd.trim();
-    return lengthOK && hasLetter && hasNumber && hasSymbol && noWhitespaceEdges;
+    const hasSymbol = /[^a-zA-Z0-9\s]/.test(pwd);
+    const hasNoSpaces = !/\s/.test(pwd);
+    return lengthOK && hasLetter && hasNumber && hasSymbol && hasNoSpaces;
   };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +73,7 @@ export default function RegisterPage() {
         body: JSON.stringify({
           name: name.trim(),
           email: email.trim(),
-          password: password.trim(),
+          password: password,
         }),
       });
 
