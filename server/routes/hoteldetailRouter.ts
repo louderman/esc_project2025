@@ -1,5 +1,7 @@
 import express, { Request, Response } from 'express';
 import { PriceResponse } from '../../types/Price';
+import fs from 'fs';
+import path from 'path';
 
 const router = express.Router();
 
@@ -54,7 +56,7 @@ router.get('/hotel/:hotelId', async (req, res) => {
   }
 });
 
-// Route to get hotel prices by ID
+// Route to get hotel prices by ID - using the working destination-based API
 router.get('/hotel/:hotelId/prices', async (req, res) => {
   const { hotelId } = req.params;
   const { 
@@ -64,8 +66,7 @@ router.get('/hotel/:hotelId/prices', async (req, res) => {
     lang = 'en_US', 
     currency = 'SGD', 
     country_code = 'SG', 
-    guests = '2', 
-    partner_id = '1' 
+    guests = '2'
   } = req.query;
 
   if (!hotelId?.trim()) {
@@ -80,18 +81,10 @@ router.get('/hotel/:hotelId/prices', async (req, res) => {
     });
   }
 
-  const queryParams = new URLSearchParams({
-    destination_id: destination_id as string,
-    checkin: checkin as string,
-    checkout: checkout as string,
-    lang: lang as string,
-    currency: currency as string,
-    country_code: country_code as string,
-    guests: guests as string,
-    partner_id: partner_id as string,
-  });
-
-  const url = `https://hotelapi.loyalty.dev/api/hotels/${hotelId}/prices?${queryParams.toString()}`;
+  // Use the individual hotel price endpoint that returns detailed room data
+  const url = `https://hotelapi.loyalty.dev/api/hotels/${hotelId}/price?destination_id=${destination_id}&checkin=${checkin}&checkout=${checkout}&lang=${lang}&currency=${currency}&country_code=${country_code}&guests=${guests}&partner_id=1089&landing_page=wl-acme-earn&product_type=earn`;
+  
+  console.log('Calling external API URL:', url);
 
   try {
     const response = await fetch(url, {
@@ -107,9 +100,37 @@ router.get('/hotel/:hotelId/prices', async (req, res) => {
         error: `Upstream error: ${response.status}`
       });
     }
+    
+    console.log(`External API response status: ${response.status}`);
 
-    const data = await response.json();
-    return res.json(data);
+            const data = await response.json();
+        console.log('External API response:', JSON.stringify(data, null, 2));
+        
+        // The individual hotel price endpoint returns data with rooms array directly
+        // Transform it to match the expected format
+        if (data.rooms && Array.isArray(data.rooms)) {
+          console.log(`Found ${data.rooms.length} rooms for hotel ${hotelId}`);
+          return res.json({
+            searchCompleted: data.searchCompleted,
+            completed: data.completed,
+            status: data.status,
+            currency: data.currency,
+            hotels: [{
+              id: hotelId,
+              rooms: data.rooms
+            }]
+          });
+        }
+        
+        // If no rooms array, return the data as is (this should not happen with the correct endpoint)
+        console.log('No rooms found in API response, returning data as is:', data);
+        return res.json({
+          searchCompleted: data.searchCompleted,
+          completed: data.completed,
+          status: data.status,
+          currency: data.currency,
+          hotels: [data] // Return the entire response as a hotel object
+        });
   } catch (err) {
     console.error('[Hotel Price API Fetch Error]', err);
     return res.status(500).json({
@@ -139,37 +160,15 @@ router.get('/combined/:hotelId', async (req, res) => {
   }
 
   try {
-    // Fetch hotel details and prices in parallel
-    const [hotelResponse, pricesResponse] = await Promise.all([
-      fetch(`https://hotelapi.loyalty.dev/api/hotels/${hotelId}`, {
-        headers: { Accept: 'application/json' }
-      }),
-      fetch(`https://hotelapi.loyalty.dev/api/hotels/${hotelId}/prices?${new URLSearchParams({
-        destination_id: destination_id as string,
-        checkin: checkin as string,
-        checkout: checkout as string,
-        lang: lang as string,
-        currency: currency as string,
-        country_code: country_code as string,
-        guests: guests as string,
-        partner_id: partner_id as string,
-      })}`, {
-        headers: { Accept: 'application/json' }
-      })
-    ]);
+    // Fetch hotel details (like hotel router)
+    const hotelUrl = `https://hotelapi.loyalty.dev/api/hotels/${hotelId}`;
+    const hotelResponse = await fetch(hotelUrl);
+    const hotelData = await hotelResponse.json();
 
-    if (!hotelResponse.ok) {
-      throw new Error(`Hotel details API error: ${hotelResponse.status}`);
-    }
-
-    if (!pricesResponse.ok) {
-      throw new Error(`Hotel prices API error: ${pricesResponse.status}`);
-    }
-
-    const [hotelData, pricesData] = await Promise.all([
-      hotelResponse.json(),
-      pricesResponse.json()
-    ]);
+    // Fetch prices (like hotel price router)
+    const priceUrl = `https://hotelapi.loyalty.dev/api/hotels/prices?destination_id=${destination_id}&checkin=${checkin}&checkout=${checkout}&lang=${lang}&currency=${currency}&country_code=${country_code}&guests=${guests}&partner_id=1089&landing_page=wl-acme-earn&product_type=earn`;
+    const priceResponse = await fetch(priceUrl);
+    const pricesData = await priceResponse.json();
 
     return res.json({
       hotel: hotelData,

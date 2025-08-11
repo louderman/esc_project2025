@@ -4,16 +4,22 @@ import styles from './destinationinput.module.css';
 import { type Destination } from '../../../../../../types/Destination';
 import { useDebounceAsync } from '../../../../hooks/useDebounceAsync';
 import { useSearchParams } from 'react-router-dom';
+import type { SearchbarErrorState } from '../SearchBar';
+import ErrorMsgBox from '../ErrorMsgBox';
 
 export type DestinationState = {
-  id: string; 
+  id: string;
   name: string;
 };
 
 export default function DestinationInput({
+  errorMsg,
+  setErrorMsg,
   destination,
   setDestination,
 }: {
+  errorMsg: SearchbarErrorState;
+  setErrorMsg: React.Dispatch<React.SetStateAction<SearchbarErrorState>>;
   destination: DestinationState;
   setDestination: React.Dispatch<React.SetStateAction<DestinationState>>;
 }) {
@@ -22,6 +28,7 @@ export default function DestinationInput({
   const [searchParams] = useSearchParams();
 
   function handleOnFocus() {
+    setErrorMsg((prev) => ({ ...prev, destination: '' }));
     setShowSuggestions(true);
   }
 
@@ -35,14 +42,12 @@ export default function DestinationInput({
       const urlDestName = searchParams.get('destName');
       let url;
       if (urlDestName && urlDestName.length > 0) {
-        url = `/api/destination/query/${urlDestName}?count=10`;
+        url = `/api/destination/query/name/${urlDestName}?count=10`;
       } else {
         url = `/api/destination/random?count=5`;
       }
 
-      const res = await fetch(url, {
-        method: 'GET',
-      });
+      const res = await fetch(url);
       const dests: Destination[] = await res.json();
       setSuggestedDests(dests);
     }
@@ -53,7 +58,14 @@ export default function DestinationInput({
     const controller = new AbortController();
 
     try {
-      const res = await fetch(`/api/destination/query/${userInput}?count=10`, {
+      let url;
+      if (userInput.length > 0) {
+        url = `/api/destination/query/name/${userInput}?count=10`;
+      } else {
+        url = `/api/destination/random?count=5`;
+      }
+
+      const res = await fetch(url, {
         signal: controller.signal,
       });
       const dests: Destination[] = await res.json();
@@ -79,6 +91,7 @@ export default function DestinationInput({
 
   return (
     <div className={inputStyles.inputWrapper}>
+      {errorMsg.destination && <ErrorMsgBox errorMsg={errorMsg.destination} />}
       <img src='/listing/destination_red.svg' />
       <input
         onFocus={handleOnFocus}

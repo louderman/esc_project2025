@@ -1,5 +1,7 @@
 export interface BookingData {
   id: string;
+  userId: string;
+  email: string;
   hotelId: string;
   hotelName: string;
   checkInDate: string;
@@ -10,12 +12,15 @@ export interface BookingData {
   totalAmount: number;
   whatsIncluded: string[];
   imageUrl: string;
+  bookingAddress: string;
   paymentIntentId?: string;
   status: 'pending' | 'confirmed' | 'cancelled';
   createdAt: Date;
 }
 
 export interface CreateBookingRequest {
+  userId: string;
+  email: string;
   hotelId: string;
   hotelName: string;
   checkInDate: string;
@@ -26,4 +31,5 @@ export interface CreateBookingRequest {
   totalAmount: number;
   whatsIncluded: string[];
   imageUrl: string;
+  bookingAddress: string;
 }

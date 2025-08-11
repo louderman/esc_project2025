@@ -2,7 +2,10 @@ import { describe } from 'node:test';
 import type { Hotel } from '../../../../types/Hotel';
 import type { Price } from '../../../../types/Price';
 import { expect, it } from 'vitest';
-import type { FilterByOptions } from '../../reducers/listingReducer';
+import {
+  FILTER_OPTIONS,
+  type FilterByOptions,
+} from '../../reducers/listingReducer';
 import { renderHook } from '@testing-library/react';
 import { useFilteredHotels } from './useFilteredHotels';
 import type { AmenityKey } from '../../constants/amenities';
@@ -15,6 +18,8 @@ const mockHotelsWithPrice = [
     amenities: { kitchen: true, tVInRoom: true },
     categories: { overall: { score: 95 } },
     price: 250,
+    latitude: 1.5,
+    longitude: 1.5,
   },
   {
     id: '2',
@@ -23,6 +28,8 @@ const mockHotelsWithPrice = [
     amenities: { outdoorPool: true },
     categories: { overall: { score: 60 } },
     price: 80,
+    latitude: 1.5,
+    longitude: 1.5,
   },
   {
     id: '3',
@@ -31,6 +38,8 @@ const mockHotelsWithPrice = [
     amenities: { kitchen: true, hairDryer: true },
     categories: { overall: { score: 85 } },
     price: 150,
+    latitude: 1.5,
+    longitude: 1.5,
   },
   {
     id: '4',
@@ -39,6 +48,8 @@ const mockHotelsWithPrice = [
     amenities: { continentalBreakfast: true },
     categories: { overall: { score: 70 } },
     price: 300,
+    latitude: 1.5,
+    longitude: 1.5,
   },
 ] as (Price & Hotel)[];
 
@@ -47,6 +58,12 @@ const baseFilters: FilterByOptions = {
   amenities: [],
   stars: [],
   guestRating: 0,
+  latLngBounds: {
+    minLat: -90,
+    maxLat: 90,
+    minLng: -180,
+    maxLng: 180,
+  },
 };
 
 describe('useFilteredHotels', () => {
@@ -140,6 +157,7 @@ describe('useFilteredHotels', () => {
         guestRating: 9.5,
         priceRange: [250, 250],
         stars: [5],
+        latLngBounds: baseFilters[FILTER_OPTIONS.latLngBounds],
       };
       const { result } = setupHook(filters);
       expect(result.current.map((h) => h.id)).toEqual(['1']);

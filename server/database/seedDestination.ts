@@ -1,12 +1,11 @@
 import { readFileSync } from 'fs';
 import { pool } from './db';
-import { type Destination } from '../../types/Destination';
 import { sync, tableName } from '../models/destinationModel';
 
 const DESTINATION_JSON_PATH = './public/destinations.json';
 
 const raw = readFileSync(DESTINATION_JSON_PATH, 'utf-8');
-const obj: Destination[] = JSON.parse(raw);
+const obj = JSON.parse(raw);
 console.log(obj.length);
 
 async function seed() {
@@ -22,7 +21,7 @@ async function seed() {
       `
         INSERT INTO ${tableName} (dest_id, term, lat, lng, type, state) VALUES (?, ?, ?, ?, ?, ?)
         `,
-      [o.dest_id, o.term, o.lat, o.lng, o.type, o.state]
+      [o.uid, o.term, o.lat, o.lng, o.type, o.state]
     );
   }
 

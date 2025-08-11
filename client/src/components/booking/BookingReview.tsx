@@ -6,8 +6,7 @@ interface BookingReviewProps {
   checkInDate: string;
   checkOutDate: string;
   guests: string;
-  pricePerNight: number;
-  whatsIncluded: string[];
+  hotelAddress: string;
   imageUrl: string;
 }
 
@@ -16,10 +15,10 @@ export default function BookingReview({
   checkInDate,
   checkOutDate,
   guests,
-  pricePerNight,
-  whatsIncluded,
+  hotelAddress,
   imageUrl,
 }: BookingReviewProps) {
+
   return (
     <div className={styles.container}>
       <div className={styles.imageContainer}>
@@ -45,16 +44,7 @@ export default function BookingReview({
         </div>
         <h3>{hotelName}</h3>
         <div className={styles.price}>
-          SGD {pricePerNight} / night
-        </div>
-        <div className={styles.whatsIncluded}>
-          <h4>WHAT'S INCLUDED</h4>
-          <ul>
-            {whatsIncluded.map((item, index) => (
-              <li key={index}>{item}</li>
-            ))}
-          </ul>
-          <a href="#">VIEW MORE {'>'}</a>
+          {hotelAddress}
         </div>
       </div>
     </div>

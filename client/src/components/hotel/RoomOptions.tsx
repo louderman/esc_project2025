@@ -1,7 +1,9 @@
 import { Card, CardContent } from "@/components/hotel/ui/card";
 import { Button } from "@/components/hotel/ui/button";
 import { Badge } from "@/components/hotel/ui/badge";
-import { Users, Bed, Check } from "lucide-react";
+import { Users, Bed, Check, ImageOff } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState } from "react";
 
 interface Room {
   id: string;
@@ -16,12 +18,68 @@ interface Room {
 
 interface RoomOptionsProps {
   rooms: Room[];
+  hotelId: string;
+  hotelName: string;
+  hotelRating: number;
+  hotelReviewCount: number;
+  onSelectRoom?: (room: Room) => void;
+  totalAvailableRooms?: number;
 }
 
-const RoomOptions = ({ rooms }: RoomOptionsProps) => {
+const RoomOptions = ({ rooms, hotelId, hotelName, hotelRating, hotelReviewCount, onSelectRoom, totalAvailableRooms }: RoomOptionsProps) => {
+  // Helper function to check if image is valid
+  const isValidImage = (imageUrl: string): boolean => {
+    return Boolean(imageUrl && imageUrl.trim() !== '' && imageUrl !== 'undefined' && imageUrl !== 'null');
+  };
+
+  // Component for "No image available" card
+  const NoImageCard = ({ roomType }: { roomType: string }) => (
+    <div className="w-full h-48 md:h-full bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300 flex flex-col items-center justify-center p-4 text-center">
+      <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center mb-3">
+        <ImageOff size={24} className="text-gray-500" />
+      </div>
+      <h4 className="text-sm font-medium text-gray-700 mb-1">
+        No Image Available
+      </h4>
+      <p className="text-xs text-gray-500">
+        {roomType}
+      </p>
+    </div>
+  );
+
+  // Component for room image with error handling
+  const RoomImage = ({ room }: { room: Room }) => {
+    const [imageError, setImageError] = useState(false);
+
+    if (!isValidImage(room.image) || imageError) {
+      return <NoImageCard roomType={room.room_type} />;
+    }
+
+    return (
+      <img 
+        src={room.image} 
+        alt={room.room_type}
+        className="w-full h-48 md:h-full object-cover"
+        onError={() => setImageError(true)}
+      />
+    );
+  };
+
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold">Available Rooms</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-bold">Available Rooms</h2>
+        {totalAvailableRooms && (
+          <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-2">
+            <div className="flex items-center space-x-2">
+              <Check size={16} className="text-green-600" />
+              <span className="text-green-800 font-semibold">
+                {totalAvailableRooms} Total Rooms Available
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
       
       <div className="space-y-4">
         {rooms.map((room) => (
@@ -29,11 +87,7 @@ const RoomOptions = ({ rooms }: RoomOptionsProps) => {
             <CardContent className="p-0">
               <div className="flex flex-col md:flex-row">
                 <div className="md:w-1/3">
-                  <img 
-                    src={room.image} 
-                    alt={room.room_type}
-                    className="w-full h-48 md:h-full object-cover"
-                  />
+                  <RoomImage room={room} />
                 </div>
                 
                 <div className="flex-1 p-6">
@@ -64,8 +118,11 @@ const RoomOptions = ({ rooms }: RoomOptionsProps) => {
                     
                     <div className="text-right">
                       <div className="text-2xl font-bold mb-1">${room.price}</div>
-                      <div className="text-sm text-hotel-text-secondary mb-3">per night</div>
-                      <Button className="bg-primary hover:bg-primary/90">
+                      <div className="text-sm text-hotel-text-secondary mb-3">total</div>
+                      <Button 
+                        className="bg-primary hover:bg-primary/90"
+                        onClick={() => onSelectRoom?.(room)}
+                      >
                         Select Room
                       </Button>
                     </div>

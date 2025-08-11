@@ -1,0 +1,116 @@
+{
+  "hotels": [
+    {
+      "id": "A6Dz",
+      "name": "Grand Paradise Hotel",
+      "rating": 4.5,
+      "address1": "123 Beachfront Ave",
+      "description": "Luxury beachfront resort with amazing views",
+      "amenities": {
+        "airConditioning": true,
+        "pool": true,
+        "wifi": true
+      }
+    },
+    {
+      "id": "B7Ea",
+      "name": "City Center Hotel",
+      "rating": 4.2,
+      "address1": "456 Downtown St",
+      "description": "Modern hotel in the heart of the city",
+      "amenities": {
+        "airConditioning": true,
+        "wifi": true,
+        "gym": true
+      }
+    },
+    {
+      "id": "0XgL",
+      "name": "Hotel 0XgL",
+      "rating": 4.0,
+      "address1": "123 Main Street",
+      "description": "A luxury hotel with modern amenities and excellent service.",
+      "amenities": {
+        "businessCenter": true,
+        "continentalBreakfast": true,
+        "dryCleaning": true,
+        "indoorPool": true,
+        "parkingGarage": true,
+        "wifi": true
+      }
+    }
+  ],
+  "prices": {
+    "hotels": [
+      {
+        "id": "A6Dz",
+        "searchRank": 1,
+        "price_type": "Deluxe King",
+        "free_cancellation": true,
+        "rooms_available": 5,
+        "max_cash_payment": 299.99,
+        "coverted_max_cash_payment": 299.99,
+        "points": 0,
+        "bonuses": 0,
+        "bonus_programs": [],
+        "bonus_tiers": [],
+        "lowest_price": 199.99,
+        "price": 299.99,
+        "converted_price": 299.99,
+        "lowest_converted_price": 199.99,
+        "market_rates": [
+          {
+            "supplier": "Direct",
+            "rate": 299.99
+          }
+        ]
+      },
+      {
+        "id": "B7Ea",
+        "searchRank": 2,
+        "price_type": "Executive Suite",
+        "free_cancellation": true,
+        "rooms_available": 3,
+        "max_cash_payment": 399.99,
+        "coverted_max_cash_payment": 399.99,
+        "points": 0,
+        "bonuses": 0,
+        "bonus_programs": [],
+        "bonus_tiers": [],
+        "lowest_price": 399.99,
+        "price": 399.99,
+        "converted_price": 399.99,
+        "lowest_converted_price": 399.99,
+        "market_rates": [
+          {
+            "supplier": "Direct",
+            "rate": 399.99
+          }
+        ]
+      },
+      {
+        "id": "0XgL",
+        "searchRank": 3,
+        "price_type": "Standard Room",
+        "free_cancellation": true,
+        "rooms_available": 10,
+        "max_cash_payment": 1771.63,
+        "coverted_max_cash_payment": 1771.63,
+        "points": 0,
+        "bonuses": 0,
+        "bonus_programs": [],
+        "bonus_tiers": [],
+        "lowest_price": 1771.63,
+        "price": 1771.63,
+        "converted_price": 1771.63,
+        "lowest_converted_price": 1771.63,
+        "market_rates": [
+          {
+            "supplier": "Direct",
+            "rate": 1771.63
+          }
+        ]
+      }
+    ]
+  }
+} 

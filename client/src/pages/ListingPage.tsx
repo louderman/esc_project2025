@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import SearchBar from '../components/listing/SearchBar/SearchBar';
 import styles from './listingpage.module.css';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
@@ -9,9 +9,6 @@ import {
   initialListingState,
   listingReducer,
 } from '../reducers/listingReducer';
-import type { Hotel } from '../../../types/Hotel';
-import type { Price, PriceResponse } from '../../../types/Price';
-import { usePollingAsync } from '../hooks/usePollingAsync';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePricedHotels } from '../hooks/hotels/usePricedHotels';
 import { useFilteredHotels } from '../hooks/hotels/useFilteredHotels';
@@ -21,6 +18,9 @@ import { useControlPanelUrlSync } from '../hooks/url/useControlPanelUrlSync';
 import type { DestinationState } from '../components/listing/SearchBar/DestinationInput/DestinationInput';
 import { useSearchBarUrlSync } from '../hooks/url/useSearchBarUrlSync';
 import Map from '../components/listing/ListingMap/ListingMap';
+import { useFetchHotels } from '@/hooks/hotels/useFetchHotels';
+import { useFetchHotelPrices } from '@/hooks/hotels/useFetchHotelPrices';
+import type { Destination } from '../../../types/Destination';
 
 export default function ListingPage() {
   const navigate = useNavigate();
@@ -30,25 +30,43 @@ export default function ListingPage() {
     id: '',
     name: '',
   });
-  const [stayDates, setStayDates] = useState<StayDatesState>({
+
+  // currentStayDates & currentOccupancy: states used for searchbar only
+  // submittedStayDates & submittedOccupancy: used for states fetched (and synced) from url on mount
+  //
+  // These states are split into two separate states to prevent real-time updates
+  // of the room count and number of nights in the hotel listing card when the user modifies it in the search bar
+  const [currentStayDates, setCurrentStayDates] = useState<StayDatesState>({
     checkinDate: null,
     checkoutDate: null,
   });
-  const [occupancy, setOccupancy] = useState<OccupancyState>({
+  const [submittedStayDates, setSubmittedStayDates] = useState<StayDatesState>({
+    checkinDate: null,
+    checkoutDate: null,
+  });
+  useEffect(() => {
+    // Sync submittedStayDates with stay dates from url
+    setCurrentStayDates(submittedStayDates);
+  }, [submittedStayDates]);
+
+  const [currentOccupancy, setCurrentOccupancy] = useState<OccupancyState>({
     adults: 1,
     children: 0,
     rooms: 1,
   });
-  const [hotels, setHotels] = useState<Hotel[]>([]);
-  const [prices, setPrices] = useState<Price[]>([]);
+  const [submittedOccupancy, setSubmittedOccupancy] =
+    useState<OccupancyState>(currentOccupancy);
+
+  useEffect(() => {
+    // Sync submittedOccupancy with occupancy from url
+    setCurrentOccupancy(submittedOccupancy);
+  }, [submittedOccupancy]);
+
   const [listingState, listingDispatch] = useReducer(
     listingReducer,
     initialListingState
   );
-  const [loading, setLoading] = useState({
-    price: true,
-    hotel: true,
-  });
+
   const [page, setPage] = useState(1);
   const [showMap, setShowMap] = useState(false);
 
@@ -63,95 +81,37 @@ export default function ListingPage() {
     destination,
     setDestination,
     navigate,
-    occupancy,
-    setOccupancy,
-    setStayDates,
-    stayDates,
+    occupancy: submittedOccupancy,
+    setOccupancy: setSubmittedOccupancy,
+    stayDates: submittedStayDates,
+    setStayDates: setSubmittedStayDates,
   });
 
+  // Fetch destination, hotels and prices
   const destIdRaw = searchParams.get('destId');
-  const destId = destIdRaw ? JSON.parse(destIdRaw) : '';
-  const startPolling = !!stayDates.checkinDate && !!stayDates.checkoutDate;
+  const destId: string = destIdRaw ? JSON.parse(destIdRaw) : '';
 
-  const fetchPrice = useCallback(async () => {
-    if (!stayDates.checkinDate || !stayDates.checkoutDate) {
-      return false;
-    }
-
-    const formatDate = (date: Date) => {
-      const year = date.getFullYear();
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const day = date.getDate().toString().padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    };
-    console.log('fetching price');
-
-    const controller = new AbortController();
-    const signal = controller.signal;
-    try {
-      const response = await fetch(
-        `/api/hotel-price/query?dest_id=${destId}&checkin=${formatDate(
-          stayDates.checkinDate
-        )}&checkout=${formatDate(stayDates.checkoutDate)}&guests=${
-          occupancy.adults
-        }`,
-        {
-          signal,
-        }
-      );
-
-      if (!response.ok) {
-        setLoading((prev) => ({ ...prev, price: false }));
-        return true;
-      }
-
-      const data: PriceResponse = await response.json();
-
-      if (data.completed) {
-        setPrices(data.hotels);
-      }
-      setLoading((prev) => ({ ...prev, price: !data.completed }));
-
-      return data.completed;
-    } catch (err) {
-      if (err instanceof Error && err.name !== 'AbortError') {
-        console.error('Fetch hotel error: ', err);
-      }
-      setLoading((prev) => ({ ...prev, price: false }));
-      return true; // stop polling if there is error
-    }
-  }, [stayDates, occupancy, destId]);
-  usePollingAsync(fetchPrice, 2000, startPolling, true);
-
+  const { prices, loading: priceLoading } = useFetchHotelPrices(
+    [destId],
+    submittedStayDates,
+    submittedOccupancy,
+    2000
+  );
+  const { hotels, loading: hotelLoading } = useFetchHotels([destId]);
+  const [destinationObj, setDestinationObj] = useState<Destination | null>(
+    null
+  );
   useEffect(() => {
-    const fetchHotel = async () => {
-      console.log('fetching hotel');
-      // setHotels(INIT_HOTELS);
-      // return;
-      const controller = new AbortController();
-      const signal = controller.signal;
-
-      try {
-        const response = await fetch(`/api/hotel/query?dest_id=${destId}`, {
-          signal,
-        });
-        if (!response.ok) {
-          setLoading((prev) => ({ ...prev, hotel: false }));
-          return true;
-        }
-        const data: Hotel[] = await response.json();
-
-        setHotels(data);
-      } catch (err) {
-        if (err instanceof Error && err.name !== 'AbortError') {
-          console.error('Fetch hotel error: ', err);
-        }
-      } finally {
-        setLoading((prev) => ({ ...prev, hotel: false }));
-      }
+    const fetchDestination = async () => {
+      const res = await fetch(`/api/destination/query/destId/${destId}`);
+      const destObjs: Destination[] = await res.json();
+      setDestinationObj(destObjs[0]);
     };
-    fetchHotel();
-  }, []);
+
+    if (destId) {
+      fetchDestination();
+    }
+  }, [destId]);
 
   // Stitch, filter, and sort the hotels here
   const hotelsWithPrice = usePricedHotels(hotels, prices);
@@ -183,23 +143,29 @@ export default function ListingPage() {
   return (
     <div className={styles.container}>
       {showMap && (
-        <></>
-        // <Map
-        //   stayDates={stayDates}
-        //   occupancy={occupancy}
-        //   initDest={destination}
-        // />
+        <Map
+          stayDates={submittedStayDates}
+          occupancy={submittedOccupancy}
+          setShowMap={setShowMap}
+          latLng={{
+            lat: destinationObj?.lat ?? 0,
+            lng: destinationObj?.lng ?? 0,
+          }}
+        />
       )}
       <div className={styles.searchbarSection}>
         <SearchBar
           destination={destination}
           setDestination={setDestination}
-          stayDates={stayDates}
-          setStayDates={setStayDates}
-          occupancy={occupancy}
-          setOccupancy={setOccupancy}
+          stayDates={currentStayDates}
+          setStayDates={setCurrentStayDates}
+          occupancy={currentOccupancy}
+          setOccupancy={setCurrentOccupancy}
           onSubmit={() => {
-            syncSearchBarToURL();
+            syncSearchBarToURL(undefined, {
+              occupancy: currentOccupancy,
+              stayDates: currentStayDates,
+            });
           }}
         />
       </div>
@@ -235,11 +201,11 @@ export default function ListingPage() {
             </div>
             <Listings
               hotels={sortedHotels}
-              loading={loading}
+              loading={hotelLoading || priceLoading}
               page={page}
               setPage={setPage}
-              stayDates={stayDates}
-              occupancy={occupancy}
+              stayDates={submittedStayDates}
+              occupancy={submittedOccupancy}
             />
           </div>
         </div>

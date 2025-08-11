@@ -71,7 +71,7 @@ export function useSearchBarUrlSync({
     if (destinationName) {
       setDestination((prev) => ({
         ...prev,
-        name: destinationName.replace(/\"/g, '') ?? prev.name,
+        name: destinationName.replace(/"/g, '') ?? prev.name,
       }));
     }
     setStayDates((prev) => ({
@@ -87,9 +87,21 @@ export function useSearchBarUrlSync({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /** Reflect search bar state changes to URL */
-  const syncSearchBarToURL = (targetPath?: string) => {
+  /**
+   * Reflect search bar state changes to URL
+   * @param targetPath  the page url to redirect to. If empty, no redirection occurs and only url is updated
+   * @param override  we can provide values in override to prevent using stale react states
+   */
+  const syncSearchBarToURL = (
+    targetPath?: string,
+    override?: {
+      occupancy?: OccupancyState;
+      stayDates?: StayDatesState;
+    }
+  ) => {
     const urlParams = new URLSearchParams(location.search);
+    const finalOccupancy = override?.occupancy ?? occupancy;
+    const finalStayDates = override?.stayDates ?? stayDates;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const syncParam = (key: string, value: any) => {
@@ -105,19 +117,19 @@ export function useSearchBarUrlSync({
 
     syncParam(
       'checkin',
-      stayDates.checkinDate
-        ? stayDates.checkinDate.toLocaleDateString('en-CA')
+      finalStayDates.checkinDate
+        ? finalStayDates.checkinDate.toLocaleDateString('en-CA')
         : null
     );
     syncParam(
       'checkout',
-      stayDates.checkoutDate
-        ? stayDates.checkoutDate.toLocaleDateString('en-CA')
+      finalStayDates.checkoutDate
+        ? finalStayDates.checkoutDate.toLocaleDateString('en-CA')
         : null
     );
-    syncParam('adult', occupancy.adults);
-    syncParam('child', occupancy.children);
-    syncParam('room', occupancy.rooms);
+    syncParam('adult', finalOccupancy.adults);
+    syncParam('child', finalOccupancy.children);
+    syncParam('room', finalOccupancy.rooms);
 
     navigate(
       {

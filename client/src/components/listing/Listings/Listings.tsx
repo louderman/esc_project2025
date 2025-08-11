@@ -20,19 +20,15 @@ export default function Listings({
   page: number;
   setPage: React.Dispatch<SetStateAction<number>>;
   hotels: (Hotel & Price)[];
-  loading: { hotel: boolean; price: boolean };
+  loading: boolean;
   stayDates: StayDatesState;
   occupancy: OccupancyState;
 }) {
-  const isLoading = Object.values(loading).some((l) => l);
   const hasHotel = hotels.length > 0;
 
   useEffect(() => {
     function handleScroll() {
-      if (
-        Object.values(loading).some(Boolean) ||
-        page * ITEMS_PER_PAGE > hotels.length
-      ) {
+      if (loading || page * ITEMS_PER_PAGE > hotels.length) {
         return;
       }
       if (
@@ -50,12 +46,12 @@ export default function Listings({
 
   return (
     <div className={styles.container}>
-      {isLoading &&
+      {loading &&
         Array.from({ length: 3 }).map((_, i) => (
           <ListingCardSkeleton key={`skeleton-${i}`} />
         ))}
 
-      {!isLoading &&
+      {!loading &&
         hasHotel &&
         hotels
           .slice(0, page * ITEMS_PER_PAGE)
@@ -68,7 +64,7 @@ export default function Listings({
             />
           ))}
 
-      {!isLoading && !hasHotel && (
+      {!loading && !hasHotel && (
         <div>
           <span className={styles.noHotelText}>No Hotel Found</span>
           <span className={styles.noHotelSubtext}>

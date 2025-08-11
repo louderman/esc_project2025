@@ -100,21 +100,30 @@ export default function PriceRange({
   }
 
   function handleSetPrice() {
-    if (priceRange[0] > priceRange[1]) {
+    let [min, max] = priceRange;
+    if (min > max) {
       setPriceRange(lastValidRange);
-    } else if (priceRange[0] < rangeMin) {
-      setPriceRange((prev) => [rangeBoundary[0], prev[1]]);
-    } else if (priceRange[1] > rangeMax) {
-      setPriceRange((prev) => [prev[0], rangeBoundary[1]]);
-    } else {
-      listingDispatch({
-        type: 'SET_FILTER',
-        payload: {
-          priceRange: priceRange,
-        },
-      });
-      setLastValidRange(priceRange);
+      return;
     }
+
+    const clampedMin = Math.max(min, rangeMin);
+    const clampedMax = Math.min(max, rangeMax);
+
+    const isMinAdjusted = min !== clampedMin;
+    const isMaxAdjusted = max !== clampedMax;
+
+    const newRange: [number, number] = [clampedMin, clampedMax];
+
+    if (isMinAdjusted || isMaxAdjusted) {
+      setPriceRange(newRange);
+    }
+
+    listingDispatch({
+      type: 'SET_FILTER',
+      payload: { priceRange: newRange },
+    });
+
+    setLastValidRange(newRange);
   }
 
   return (
@@ -132,7 +141,8 @@ export default function PriceRange({
         <label
           className={`${styles.inputbox} ${
             hoverCloserTo === 'left' ? styles.highlight : ''
-          }`}>
+          }`}
+        >
           <span>Min price</span>
           <div className={styles.inputGroup}>
             <span>$</span>
@@ -148,7 +158,8 @@ export default function PriceRange({
         <label
           className={`${styles.inputbox} ${
             hoverCloserTo === 'right' ? styles.highlight : ''
-          }`}>
+          }`}
+        >
           <span>Max price</span>
           <div className={styles.inputGroup}>
             <span>$</span>

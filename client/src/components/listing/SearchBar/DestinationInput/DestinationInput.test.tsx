@@ -1,14 +1,14 @@
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { describe } from 'vitest';
-import DestinationInput from './DestinationInput';
+import { afterEach, beforeEach, expect, it, vi, describe } from 'vitest';
+import DestinationInput, { type DestinationState } from './DestinationInput';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom/vitest';
+import { useState } from 'react';
+import type { SearchbarErrorState } from '../SearchBar';
 
 beforeEach(() => {
   global.fetch = vi.fn().mockImplementation((url) => {
-    console.log(url);
     if (url.includes('/api/destination/random')) {
       return Promise.resolve({
         ok: true,
@@ -22,8 +22,7 @@ beforeEach(() => {
       });
     }
 
-    if (url.includes('/api/destination/query/Par')) {
-      console.log('called');
+    if (url.includes('/api/destination/query/name/Par')) {
       return Promise.resolve({
         ok: true,
         json: async () => [
@@ -37,22 +36,42 @@ beforeEach(() => {
       json: async () => [],
     });
   });
-
-  const setState = vi.fn();
-  const state = { id: '', name: '' };
-  render(
-    <MemoryRouter>
-      <DestinationInput destination={state} setDestination={setState} />
-    </MemoryRouter>
-  );
 });
 
 afterEach(() => {
   cleanup();
 });
 
+function DestinationInputWrapper({
+  defaultErrorMsg = '',
+}: {
+  defaultErrorMsg?: string;
+}) {
+  const [destination, setDestination] = useState<DestinationState>({
+    id: '',
+    name: '',
+  });
+  const [errorMsg, setErrorMsg] = useState<SearchbarErrorState>({
+    destination: defaultErrorMsg,
+    stayDate: '',
+  });
+
+  return (
+    <MemoryRouter>
+      <DestinationInput
+        errorMsg={errorMsg}
+        setErrorMsg={setErrorMsg}
+        destination={destination}
+        setDestination={setDestination}
+      />
+    </MemoryRouter>
+  );
+}
+
 describe('DestinationInput', () => {
   it('Test random suggestions when input is focused for the first time', async () => {
+    render(<DestinationInputWrapper />);
+
     const input = screen.getByPlaceholderText(/Destination/);
 
     await userEvent.click(input);
@@ -62,28 +81,52 @@ describe('DestinationInput', () => {
     });
   });
 
-  //   it('Test shows suggestions for partial input "Par"', async () => {
-  //     vi.useFakeTimers();
-  //     const input = screen.getByPlaceholderText(/Destination/);
+  it('Test shows suggestions for partial input "Par"', async () => {
+    // I tried to use vi fake timer, but it get stucked at userEvent.click(input)
+    render(<DestinationInputWrapper />);
+    const input = screen.getByPlaceholderText(/Destination/);
 
-  // await userEvent.type(input, 'Par');
-  // vi.advanceTimersByTime(500);
-  // await Promise.resolve();
-  // await Promise.resolve();
+    await userEvent.click(input);
+    await userEvent.type(input, 'Par');
 
-  // expect(screen.queryAllByRole('listitem')).toHaveLength(5);
+    // Still waiting for debounce, should show random destinations
+    expect(screen.queryAllByRole('listitem')).toHaveLength(5);
 
-  // vi.advanceTimersByTime(500);
+    // After debounce, should show the fuzzy matched destination
+    await waitFor(() => {
+      const items = screen.getAllByRole('listitem');
+      expect(items).toHaveLength(1);
+      expect(items[0]).toHaveTextContent(/Paris/);
+    });
 
-  // await Promise.resolve();
-  // await Promise.resolve();
+    // Check if destination input is updated with selected suggested destination value
+    const items = screen.getAllByRole('listitem');
+    userEvent.click(items[0]);
+    await waitFor(() => {
+      expect(input).toHaveValue('Paris');
+    });
 
-  // await waitFor(() => {
-  //   const items = screen.getAllByRole('listitem');
-  //   expect(items).toHaveLength(1);
-  //   expect(items[0]).toHaveTextContent(/Paris/);
-  // });
+    // Destination dropdown should be closed
+    expect(screen.queryAllByRole('listitem')).toHaveLength(0);
 
-  // vi.useRealTimers();
-  //   });
+    // After clearing input, 5 random destinations are displayed again
+    await userEvent.clear(input);
+    await waitFor(() => {
+      expect(screen.getAllByRole('listitem')).toHaveLength(5);
+    });
+  });
+
+  it('Test destination input error message is rendered', async () => {
+    render(<DestinationInputWrapper defaultErrorMsg='destination error msg' />);
+
+    let errorMsg = screen.queryByText(/destination error msg/);
+    expect(errorMsg).toBeInTheDocument();
+
+    // When user clicks on destination input, error msg should be dismissed
+    const input = screen.getByPlaceholderText(/Destination/);
+    await userEvent.click(input);
+
+    errorMsg = screen.queryByText(/destination error msg/);
+    expect(errorMsg).not.toBeInTheDocument();
+  });
 });
