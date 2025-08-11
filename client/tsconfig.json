@@ -7,8 +7,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@types/*": ["../types/*"]
+      "@types/*": ["../types/*", "cypress"]
     },
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "module": "esnext"
   }
 }

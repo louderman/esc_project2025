@@ -20,22 +20,27 @@ export default function ListingCard({
   const handleView = () => {
     // Build URL parameters for hotel detail page
     const params = new URLSearchParams();
-    
+
     if (stayDates.checkinDate) {
       params.set('checkin', stayDates.checkinDate.toISOString().split('T')[0]);
     }
     if (stayDates.checkoutDate) {
-      params.set('checkout', stayDates.checkoutDate.toISOString().split('T')[0]);
+      params.set(
+        'checkout',
+        stayDates.checkoutDate.toISOString().split('T')[0]
+      );
     }
     params.set('adults', occupancy.adults.toString());
     params.set('children', occupancy.children.toString());
     params.set('rooms', occupancy.rooms.toString());
     // Get the destination ID from the current URL (should be passed down from parent)
-    const currentDestId = new URLSearchParams(window.location.search).get('destId');
+    const currentDestId = new URLSearchParams(window.location.search).get(
+      'destId'
+    );
     if (currentDestId) {
       params.set('destination_id', JSON.parse(currentDestId));
     }
-    
+
     navigate(`/hotel/${hotel.id}?${params.toString()}`);
   };
 
@@ -50,7 +55,11 @@ export default function ListingCard({
       : 0;
 
   return (
-    <div data-testid='hotel-listing-card' className={styles.container}>
+    <div
+      data-testid='hotel-listing-card'
+      data-cy='hotel-listing-card'
+      className={styles.container}
+    >
       {hotel.imageCount > 0 ? (
         <img
           className={styles.image}
@@ -127,7 +136,11 @@ export default function ListingCard({
               </div>
             </div>
           </div>
-          <button className={styles.viewButton} onClick={handleView}>
+          <button
+            data-cy='card-view-btn'
+            className={styles.viewButton}
+            onClick={handleView}
+          >
             View
           </button>
         </div>
