@@ -105,6 +105,338 @@ describe('Unit Test - Room Selection', () => {
     vi.clearAllMocks();
   });
 
+  describe('TC_HOTELDETAIL_7: User views room options and details', () => {
+    describe('Room Information Display Accuracy', () => {
+      it('should display room images correctly when valid images are provided', () => {
+        render(
+          <RoomOptions
+            rooms={mockRooms}
+            hotelId={mockHotelId}
+            hotelName={mockHotelName}
+            hotelRating={mockHotelRating}
+            hotelReviewCount={mockHotelReviewCount}
+          />
+        );
+
+        // Should display room images with correct alt text
+        const roomImages = screen.getAllByAltText(/Deluxe King Room|Executive Suite|Standard Twin Room/);
+        expect(roomImages).toHaveLength(3);
+        
+        // Check image sources are correct
+        expect(roomImages[0]).toHaveAttribute('src', 'https://example.com/room1.jpg');
+        expect(roomImages[1]).toHaveAttribute('src', 'https://example.com/room2.jpg');
+        expect(roomImages[2]).toHaveAttribute('src', 'https://example.com/room3.jpg');
+        
+        // Check image styling
+        roomImages.forEach(image => {
+          expect(image).toHaveClass('w-full', 'h-48', 'md:h-full', 'object-cover');
+        });
+      });
+
+      it('should display placeholder images when room data has missing or invalid images', () => {
+        const roomsWithInvalidImages = [
+          {
+            id: 'room-no-image',
+            room_type: 'Room Without Image',
+            price: 100,
+            free_cancellation: false,
+            image: '',
+            occupancy: 2,
+            bed_type: 'Queen bed',
+            size: '25'
+          },
+          {
+            id: 'room-undefined-image',
+            room_type: 'Room With Undefined Image',
+            price: 120,
+            free_cancellation: true,
+            image: 'undefined',
+            occupancy: 2,
+            bed_type: 'Queen bed',
+            size: '25'
+          },
+          {
+            id: 'room-null-image',
+            room_type: 'Room With Null Image',
+            price: 130,
+            free_cancellation: false,
+            image: 'null',
+            occupancy: 2,
+            bed_type: 'Queen bed',
+            size: '25'
+          }
+        ];
+
+        render(
+          <RoomOptions
+            rooms={roomsWithInvalidImages}
+            hotelId={mockHotelId}
+            hotelName={mockHotelName}
+            hotelRating={mockHotelRating}
+            hotelReviewCount={mockHotelReviewCount}
+          />
+        );
+
+        // Should display "No Image Available" cards for all invalid images
+        const noImageCards = screen.getAllByText('No Image Available');
+        expect(noImageCards).toHaveLength(3);
+        
+        // Should display ImageOff icons
+        const imageOffIcons = screen.getAllByTestId('image-off-icon');
+        expect(imageOffIcons).toHaveLength(3);
+        
+        // Should display room types in placeholder cards (use getAllByText since they appear multiple times)
+        expect(screen.getAllByText('Room Without Image')).toHaveLength(2); // Header + placeholder
+        expect(screen.getAllByText('Room With Undefined Image')).toHaveLength(2); // Header + placeholder
+        expect(screen.getAllByText('Room With Null Image')).toHaveLength(2); // Header + placeholder
+        
+        // Check placeholder styling
+        const placeholderCards = screen.getAllByText('No Image Available');
+        placeholderCards.forEach(card => {
+          const container = card.closest('div');
+          expect(container).toHaveClass('bg-gradient-to-br', 'from-gray-100', 'to-gray-200');
+        });
+      });
+
+      it('should display room amenities information with appropriate icons', () => {
+        render(
+          <RoomOptions
+            rooms={mockRooms}
+            hotelId={mockHotelId}
+            hotelName={mockHotelName}
+            hotelRating={mockHotelRating}
+            hotelReviewCount={mockHotelReviewCount}
+          />
+        );
+
+        // Should display occupancy information with Users icon
+        const usersIcons = screen.getAllByTestId('users-icon');
+        expect(usersIcons).toHaveLength(3);
+        
+        // Should display bed type information with Bed icon
+        const bedIcons = screen.getAllByTestId('bed-icon');
+        expect(bedIcons).toHaveLength(3);
+        
+        // Should display occupancy text
+        expect(screen.getAllByText(/2 guests/)).toHaveLength(2); // Deluxe King Room and Standard Twin Room
+        expect(screen.getByText(/4 guests/)).toBeInTheDocument(); // Executive Suite
+        
+        // Should display bed type text
+        expect(screen.getAllByText(/King bed/)).toHaveLength(2); // "King bed" and "2 King beds"
+        expect(screen.getByText(/2 Twin beds/)).toBeInTheDocument();
+        
+        // Should display room size when available
+        expect(screen.getByText(/35 m²/)).toBeInTheDocument();
+        expect(screen.getByText(/50 m²/)).toBeInTheDocument();
+        expect(screen.getByText(/28 m²/)).toBeInTheDocument();
+        
+        // Should display included amenities text
+        const amenitiesText = screen.getAllByText('Includes: Free WiFi, Air conditioning, Private bathroom');
+        expect(amenitiesText).toHaveLength(3); // One for each room
+      });
+
+      it('should display room pricing information with proper formatting', () => {
+        render(
+          <RoomOptions
+            rooms={mockRooms}
+            hotelId={mockHotelId}
+            hotelName={mockHotelName}
+            hotelRating={mockHotelRating}
+            hotelReviewCount={mockHotelReviewCount}
+          />
+        );
+
+        // Should display prices with dollar sign and proper formatting
+        expect(screen.getByText('$200')).toBeInTheDocument();
+        expect(screen.getByText('$350')).toBeInTheDocument();
+        expect(screen.getByText('$150')).toBeInTheDocument();
+        
+        // Should display "total" label for each price
+        const totalLabels = screen.getAllByText('total');
+        expect(totalLabels).toHaveLength(3);
+        
+        // Check price styling
+        const priceElements = screen.getAllByText(/\$200|\$350|\$150/);
+        priceElements.forEach(price => {
+          expect(price).toHaveClass('text-2xl', 'font-bold');
+        });
+        
+        // Check total label styling
+        totalLabels.forEach(label => {
+          expect(label).toHaveClass('text-sm', 'text-hotel-text-secondary');
+        });
+      });
+
+      it('should display cancellation policy clearly for each room', () => {
+        render(
+          <RoomOptions
+            rooms={mockRooms}
+            hotelId={mockHotelId}
+            hotelName={mockHotelName}
+            hotelRating={mockHotelRating}
+            hotelReviewCount={mockHotelReviewCount}
+          />
+        );
+
+        // Should display "Free Cancellation" badge for rooms with free cancellation
+        const freeCancellationBadges = screen.getAllByText('Free Cancellation');
+        expect(freeCancellationBadges).toHaveLength(2); // Deluxe King Room and Standard Twin Room
+        
+        // Should display Check icon in free cancellation badges
+        const checkIcons = screen.getAllByTestId('check-icon');
+        expect(checkIcons).toHaveLength(2); // 2 for free cancellation badges
+        
+        // Check badge styling
+        freeCancellationBadges.forEach(badge => {
+          expect(badge).toHaveClass('bg-green-50', 'text-green-700');
+        });
+        
+        // Rooms without free cancellation should not display the badge
+        // Executive Suite doesn't have free cancellation
+        expect(screen.getAllByText('Free Cancellation')).toHaveLength(2); // Only rooms with free cancellation show it
+      });
+
+      it('should display all room information accurately with proper fallbacks', () => {
+        const roomsWithMissingData = [
+          {
+            id: 'room-minimal',
+            room_type: 'Minimal Room',
+            price: 80,
+            free_cancellation: false,
+            image: 'https://example.com/minimal.jpg',
+            // Missing occupancy, bed_type, and size
+          },
+          {
+            id: 'room-complete',
+            room_type: 'Complete Room',
+            price: 200,
+            free_cancellation: true,
+            image: 'https://example.com/complete.jpg',
+            occupancy: 3,
+            bed_type: 'Queen bed',
+            size: '40'
+          }
+        ];
+
+        render(
+          <RoomOptions
+            rooms={roomsWithMissingData}
+            hotelId={mockHotelId}
+            hotelName={mockHotelName}
+            hotelRating={mockHotelRating}
+            hotelReviewCount={mockHotelReviewCount}
+          />
+        );
+
+        // Should display room types
+        expect(screen.getByText('Minimal Room')).toBeInTheDocument();
+        expect(screen.getByText('Complete Room')).toBeInTheDocument();
+        
+        // Should display prices
+        expect(screen.getByText('$80')).toBeInTheDocument();
+        expect(screen.getByText('$200')).toBeInTheDocument();
+        
+        // Should display default values for missing data
+        expect(screen.getAllByText(/2 guests/)).toHaveLength(1); // Default occupancy for minimal room
+        expect(screen.getByText(/3 guests/)).toBeInTheDocument(); // Actual occupancy for complete room
+        
+        expect(screen.getAllByText(/King bed/)).toHaveLength(1); // Default bed type for minimal room
+        expect(screen.getByText(/Queen bed/)).toBeInTheDocument(); // Actual bed type for complete room
+        
+        // Should display size only when available
+        expect(screen.queryByText(/40 m²/)).toBeInTheDocument(); // Size for complete room
+        
+        // Should display cancellation policy correctly
+        expect(screen.getAllByText('Free Cancellation')).toHaveLength(1); // Only complete room has it
+        
+        // Should display images correctly
+        const roomImages = screen.getAllByAltText(/Minimal Room|Complete Room/);
+        expect(roomImages).toHaveLength(2);
+      });
+    });
+
+    describe('Room Data Validation and Fallbacks', () => {
+      it('should handle rooms with completely missing optional properties', () => {
+        const roomWithNoOptionalData = [
+          {
+            id: 'room-basic',
+            room_type: 'Basic Room',
+            price: 50,
+            free_cancellation: false,
+            image: 'https://example.com/basic.jpg'
+            // No occupancy, bed_type, or size
+          }
+        ];
+
+        render(
+          <RoomOptions
+            rooms={roomWithNoOptionalData}
+            hotelId={mockHotelId}
+            hotelName={mockHotelName}
+            hotelRating={mockHotelRating}
+            hotelReviewCount={mockHotelReviewCount}
+          />
+        );
+
+        // Should display basic room information
+        expect(screen.getByText('Basic Room')).toBeInTheDocument();
+        expect(screen.getByText('$50')).toBeInTheDocument();
+        
+        // Should use default values for missing properties
+        expect(screen.getByText(/2 guests/)).toBeInTheDocument(); // Default occupancy
+        expect(screen.getByText(/King bed/)).toBeInTheDocument(); // Default bed type
+        expect(screen.queryByText(/m²/)).not.toBeInTheDocument(); // No size display
+        
+        // Should not display free cancellation badge
+        expect(screen.queryByText('Free Cancellation')).not.toBeInTheDocument();
+      });
+
+      it('should handle rooms with edge case image scenarios', () => {
+        const roomsWithEdgeCaseImages = [
+          {
+            id: 'room-whitespace',
+            room_type: 'Room With Whitespace',
+            price: 100,
+            free_cancellation: false,
+            image: '   ', // Whitespace only
+            occupancy: 2,
+            bed_type: 'Queen bed',
+            size: '25'
+          },
+          {
+            id: 'room-long-url',
+            room_type: 'Room With Long URL',
+            price: 120,
+            free_cancellation: true,
+            image: 'https://example.com/very/long/image/url/that/might/cause/issues/with/very/long/paths/image.jpg',
+            occupancy: 2,
+            bed_type: 'Queen bed',
+            size: '25'
+          }
+        ];
+
+        render(
+          <RoomOptions
+            rooms={roomsWithEdgeCaseImages}
+            hotelId={mockHotelId}
+            hotelName={mockHotelName}
+            hotelRating={mockHotelRating}
+            hotelReviewCount={mockHotelReviewCount}
+          />
+        );
+
+        // Room with whitespace image should show placeholder
+        expect(screen.getByText('No Image Available')).toBeInTheDocument();
+        expect(screen.getAllByText('Room With Whitespace')).toHaveLength(2); // Header + placeholder
+        
+        // Room with long URL should display image
+        const roomImages = screen.getAllByAltText(/Room With Long URL/);
+        expect(roomImages).toHaveLength(1);
+        expect(roomImages[0]).toHaveAttribute('src', 'https://example.com/very/long/image/url/that/might/cause/issues/with/very/long/paths/image.jpg');
+      });
+    });
+  });
+
   describe('TC_HOTELDETAIL_3: User selects a room', () => {
     describe('Basic Room Display', () => {
       it('should render room options with available rooms', () => {
