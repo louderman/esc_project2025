@@ -56,7 +56,7 @@ export default function SortPanel({
   }, []);
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} data-cy='sort-panel'>
       <div
         className={styles.selectBox}
         ref={selectBoxRef}

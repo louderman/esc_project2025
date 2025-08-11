@@ -61,11 +61,15 @@ export default function FilterPanel({
   });
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} data-cy='filter-panel'>
       <div className={styles.section}>
         <div className={styles.filterHeader}>
           <span>Filter by</span>
-          <button className={styles.resetButton} onClick={onResetFilters}>
+          <button
+            data-testid='reset-filter-btn'
+            className={styles.resetButton}
+            onClick={onResetFilters}
+          >
             <img src='/listing/reset.svg' /> Reset filter
           </button>
         </div>
