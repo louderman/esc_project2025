@@ -96,6 +96,19 @@ const HotelDetail = () => {
         const checkin = getDateFromParams('checkin', '2025-08-12');
         const checkout = getDateFromParams('checkout', '2025-08-30');
   
+        // Parse adults and children from URL (note: 'adult' and 'child' not 'adults' and 'children')
+        const adults = searchParams.get('adults') || searchParams.get('adult') || '2';
+        const children = searchParams.get('children') || searchParams.get('child') || '0';
+        const roomCount = searchParams.get('rooms') || searchParams.get('room') || '1';
+        
+        // Log URL parameters for testing
+        console.log('destination_id:', destinationId);
+        console.log('checkin:', checkin);
+        console.log('checkout:', checkout);
+        console.log('adults:', adults);
+        console.log('children:', children);
+        console.log('rooms:', roomCount);
+  
   console.log('Debug - URL Parameters:', {
     destinationId,
     checkin,
@@ -108,11 +121,6 @@ const HotelDetail = () => {
   console.log('Debug - destinationId:', destinationId);
   console.log('Debug - checkin:', checkin);
   console.log('Debug - checkout:', checkout);
-        
-        // Parse adults and children from URL (note: 'adult' and 'child' not 'adults' and 'children')
-        const adults = searchParams.get('adults') || searchParams.get('adult') || '2';
-        const children = searchParams.get('children') || searchParams.get('child') || '0';
-        const roomCount = searchParams.get('rooms') || searchParams.get('room') || '1';
         const lang = searchParams.get('lang') || 'en_US';
         const currency = searchParams.get('currency') || 'SGD';
         const countryCode = searchParams.get('country_code') || 'SG';
@@ -266,6 +274,7 @@ const HotelDetail = () => {
 
         // Use the hooks data instead of manual fetching
         if (!specificHotel) {
+          console.log(`Hotel with ID ${hotelId} not found in destination ${destinationId}. Available hotels: ${hotels.length}`);
           throw new Error(`Hotel with ID ${hotelId} not found in destination ${destinationId}. Available hotels: ${hotels.length}`);
         }
 
@@ -293,9 +302,14 @@ const HotelDetail = () => {
         }
 
         // Add a 3-second delay to ensure all room data is fully loaded
-        console.log('All data loaded, waiting 3 seconds for room data to fully load...');
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        console.log('3-second delay completed, proceeding with data processing...');
+        // Skip delay in test environment to make tests faster
+        if (process.env.NODE_ENV !== 'test') {
+          console.log('All data loaded, waiting 3 seconds for room data to fully load...');
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          console.log('3-second delay completed, proceeding with data processing...');
+        } else {
+          console.log('Test environment detected, skipping 3-second delay');
+        }
 
         // Extract amenities from hotel description if amenities object is empty
         const extractAmenitiesFromDescription = (description: string) => {
