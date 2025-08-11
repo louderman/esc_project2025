@@ -1,4 +1,14 @@
-# ESC 50.003 Element of Software Construction - Hotel Booking Website
+<h1 align="center">
+  <br>
+  <img src="./client/public/navbar/C4T2_Vac.svg" alt="C4T2" width="300">
+  <br>
+  Vacation
+  <br>
+  <br/>
+   <p align="center" >
+   ESC 50.003 ESC - Hotel Booking Website - Team C4T2
+   </p>
+</h1>
 
 ## Tech Stack
 

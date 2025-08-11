@@ -1,86 +1,171 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
 import styles from './pastbookingpage.module.css';
+
+interface Booking {
+  id: string;
+  userId: string;
+  hotelName: string;
+  checkInDate: string;
+  checkOutDate: string;
+  status: string;
+  imageUrl?: string;
+  createdAt: string;
+  bookingAddress?: string;
+}
 
 export default function PastBookingPage() {
   const navigate = useNavigate();
   
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-const bookings = {
-  //Put static details here currently
-  id: 1211,
-  hotel_name: "Oasia Resort Sentosa By Far East Hospitality",
-    hotel_address: "23 Beach View Rd, Palawan Ridge, Sentosa Island",
-    check_in: "28th July 2025",
-    check_out: "30th July 2025",
-    status: "Confirmed",
-    //image_url: '/listing/hotel_img_placeholder.png
-    imageCount: 0, 
-    image_details: {
-      prefix: '/listing/hotel_img_placeholder.png?id=',
-      suffix: '',
-    },
+  useEffect(() => {
+    async function fetchBookings() {
+      //using storedUser from localStorage
+      const storedUser = localStorage.getItem('user');
+      console.log('Stored user from localStorage:', storedUser);
+      
+      if (!storedUser) {
+        setError('Please log in to view your booking history');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const user = JSON.parse(storedUser);
+        console.log('Parsed user:', user);
+        console.log('User ID:', user.id);
+        
+        setLoading(true);
+        
+        //using userId
+        const res = await fetch(`/api/booking-history/history/${user.id}`); //fetch bookings
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const data: Booking[] = await res.json();
+        console.log('Fetched bookings:', data);
+        setBookings(data);
+      } catch (err: any) {
+        console.error('Fetch error:', err);
+        setError(err.message || 'Failed to fetch bookings');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchBookings();
+  }, []);
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr || dateStr === 'N/A') return 'N/A';
+    const date = new Date(dateStr);
+    return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
   };
 
-  const handleCardClick = () => {
-    navigate('/booking/confirmation');
+  const handleCardClick = (bookingId: string) => {
+    navigate('/booking/confirmation', { state: { bookingId } });
   };
+
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <section className={styles.mainSection}>
+          <div className={styles.mainBox}>
+            <p>Loading your booking history...</p>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <section className={styles.mainSection}>
+          <div className={styles.mainBox}>
+            <p>Error: {error}</p>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
-
-      {/* Main content section */}
       <section className={styles.mainSection}>
         <div className={styles.mainBox}>
-          {/* Past Bookings Card */}
           <div className={styles.titleCard}>
-            <h1 className={styles.pageTitle}>Past Bookings</h1>
-            <p className={styles.subtitle}>View and manage your previous hotel reservations</p>
+            <h1 className={styles.pageTitle}>Booking History</h1>
+            <p className={styles.subtitle}>Track your past and upcoming hotel stays</p>
           </div>
 
-<div className={styles.cardsContainer}>
-            {/* Past Booking Hotel Card */}
-            <div className={styles.bookingCard}
-            onClick={handleCardClick}
-              style={{ cursor: 'pointer' }} 
-              tabIndex={0}
-              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleCardClick(); }}
-              role="button"
-              aria-label={`View details for booking at ${bookings.hotel_name}`}
-            >
-              <img
-  className={styles.bookingImg}
-  src={
-    bookings.imageCount > 0
-      ? `${bookings.image_details.prefix}0${bookings.image_details.suffix}`
-      : '/listing/hotel_img_placeholder.png'
-  }
-  alt={bookings.hotel_name}
-/>
-              <div className={styles.cardRight}>
-                <div className={styles.hotelName}>{bookings.hotel_name}</div>
-                <div className={styles.hotelAddress}>
-                  <span className={styles.icon}>📍</span> {bookings.hotel_address}
+          <div className={styles.cardsContainer}>
+            {bookings.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <div className={styles.emptyStateIcon}>
+                    <img
+                      src="/common/luggage_person.png"
+                      alt="🧳"
+                      style={{ width: '150px', height: '225px' }}
+                    />
+                  </div>
+                  <h3 className={styles.emptyStateTitle}>Ready for your next adventure?</h3>
+                  <p className={styles.emptyStateText}>
+                    You haven't made any hotel bookings yet. Discover amazing hotels and create unforgettable memories!
+                  </p>
+                  <button 
+                    className={styles.browseButton}
+                    onClick={() => navigate('/listing')}
+                  >
+                    Start Searching
+                  </button>
                 </div>
-                <div className={styles.detailsCol}>
-                  <div>
-                    <span className={styles.detailsLabel}>Booking ID</span> {bookings.id}
-                  </div>
-                  <div>
-                    <span className={styles.detailsLabel}>Check-in Date</span> {bookings.check_in}
-                  </div>
-                  <div>
-                    <span className={styles.detailsLabel}>Check-out Date</span> {bookings.check_out}
-                  </div>
-                  <div>
-                    <span className={styles.detailsLabel}>Status</span>
-                    <span className={styles.statusConfirmed}>{bookings.status}</span>
+            ) : (
+              bookings.map(({ id, hotelName, checkInDate, checkOutDate, status, imageUrl, bookingAddress }) => (
+                <div
+                  key={id}
+                  className={styles.bookingCard}
+                  onClick={() => handleCardClick(id)}
+                  style={{ cursor: 'pointer' }}
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCardClick(id); }}
+                  role="button"
+                  aria-label={`View details for booking at ${hotelName}`}
+                >
+                  <img
+                    className={styles.bookingImg}
+                    src={imageUrl ?? '/listing/hotel_img_placeholder.png'}
+                    alt={hotelName}
+                  />
+                  <div className={styles.cardRight}>
+                    <div className={styles.hotelName}>{hotelName ?? 'Unknown hotel'}</div>
+                    <div className={styles.hotelAddress}>
+                      <span className={styles.icon}>📍</span> { bookingAddress ?? 'Location unavailable'}
+                    </div>
+                    <div className={styles.detailsCol}>
+                      <div>
+                        <span className={styles.detailsLabel}>Booking ID</span> {id}
+                      </div>
+                      <div>
+                        <span className={styles.detailsLabel}>Check-in Date</span>{' '}
+                        {formatDate(checkInDate)}
+                      </div>
+                      <div>
+                        <span className={styles.detailsLabel}>Check-out Date</span>{' '}
+                        {formatDate(checkOutDate)}
+                      </div>
+                      <div>
+                        <span className={styles.detailsLabel}>Status</span>{' '}
+                        <span className={styles.statusConfirmed}>{status}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-            {/* End Past Booking Card */}
+              ))
+            )}
           </div>
         </div>
       </section>
