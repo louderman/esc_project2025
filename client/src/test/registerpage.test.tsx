@@ -6,20 +6,17 @@ import userEvent from '@testing-library/user-event';
 import RegisterPage from '../pages/RegisterPage';
 import { MemoryRouter } from 'react-router-dom';
 
-// Router mock
 const navigateMock = vi.fn();
 vi.mock('react-router-dom', async (orig) => {
   const actual: any = await orig();
   return { ...actual, useNavigate: () => navigateMock };
 });
 
-// Network + alert mocks
 const fetchMock = vi.fn();
 const alertMock = vi.fn();
 Object.defineProperty(global, 'fetch', { value: fetchMock, writable: true });
 Object.defineProperty(window, 'alert', { value: alertMock, writable: true });
 
-// Render helper
 const setup = () =>
   render(
     <MemoryRouter initialEntries={['/register']}>
@@ -27,7 +24,6 @@ const setup = () =>
     </MemoryRouter>
   );
 
-// DOM helpers (tolerate dupes by index 0)
 const getNameInput = (ui: ReturnType<typeof setup>) =>
   ui.getAllByPlaceholderText('Enter your profile name')[0] as HTMLInputElement;
 const getEmailInput = (ui: ReturnType<typeof setup>) =>
@@ -44,7 +40,6 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  // Important so typed values from one test don't leak into the next
   cleanup();
 });
 

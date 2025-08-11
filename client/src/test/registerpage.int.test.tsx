@@ -6,20 +6,17 @@ import userEvent from '@testing-library/user-event';
 import RegisterPage from '../pages/RegisterPage';
 import { MemoryRouter } from 'react-router-dom';
 
-// Router mock
 const navigateMock = vi.fn();
 vi.mock('react-router-dom', async (orig) => {
   const actual: any = await orig();
   return { ...actual, useNavigate: () => navigateMock };
 });
 
-// Network + alert mocks
 const fetchMock = vi.fn();
 const alertMock = vi.fn();
 Object.defineProperty(global, 'fetch', { value: fetchMock, writable: true });
 Object.defineProperty(window, 'alert', { value: alertMock, writable: true });
 
-// Render helper
 const setup = () =>
   render(
     <MemoryRouter initialEntries={['/register']}>
@@ -27,7 +24,6 @@ const setup = () =>
     </MemoryRouter>
   );
 
-// DOM helpers
 const getNameInput = (ui: ReturnType<typeof setup>) =>
   ui.getAllByPlaceholderText('Enter your profile name')[0] as HTMLInputElement;
 const getEmailInput = (ui: ReturnType<typeof setup>) =>
@@ -121,7 +117,6 @@ describe('TC_SIGNUP_2 – Email field (integration)', () => {
     const user = userEvent.setup();
     const email = getEmailInput(ui);
     await user.type(email, '   Alice@gmail.com   ');
-    // jsdom normalizes value for type=email
     expect(email.value).toBe('Alice@gmail.com');
   });
 
@@ -199,15 +194,9 @@ describe('ITC_SIGNUP_1 – Create account button (integration)', () => {
     const ui = setup();
     const user = await fill(ui, 'Alice', 'alicegmail.com', 'Strong@123');
     await user.click(getCreateBtn(ui));
-
-    // type="email" has an invalid value, the browser prevents submit.
     expect(getEmailInput(ui).checkValidity()).toBe(false);
-
-    // No custom errors because submit never reached our handler
     expect(ui.queryByText(/Name cannot be empty/i)).toBeNull();
     expect(ui.queryByText(/Password must be ≥8 chars/i)).toBeNull();
-
-    //No network/navigation occurred
     expect(fetchMock).not.toHaveBeenCalled();
     expect(navigateMock).not.toHaveBeenCalled();
   });

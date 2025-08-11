@@ -5,7 +5,6 @@ import { render, cleanup, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 
-// Router + Auth mocks (MUST be before component import)
 const navigateMock = vi.fn();
 const setUserMock = vi.fn();
 
@@ -22,16 +21,13 @@ vi.mock('../components/common/authcontext', () => ({
   useAuth: () => ({ user: null, setUser: setUserMock }),
 }));
 
-// Import component AFTER mocks
 import LoginPage from '../pages/LoginPage';
 
-// Network + alert mocks
 const fetchMock = vi.fn();
 const alertMock = vi.fn();
 Object.defineProperty(global, 'fetch', { value: fetchMock, writable: true });
 Object.defineProperty(window, 'alert', { value: alertMock, writable: true });
 
-// Render helper
 const setup = () =>
   render(
     <MemoryRouter initialEntries={['/login']}>
@@ -39,14 +35,11 @@ const setup = () =>
     </MemoryRouter>
   );
 
-// DOM helpers
 const getEmailInput = (ui: ReturnType<typeof setup>) => {
-  // Prefer label → next sibling pattern
   const labels = ui.getAllByText(/^Email$/i);
   const label = labels[0] as HTMLElement;
   let el = label.nextElementSibling as HTMLInputElement | null;
 
-  // Fallback: find first text input inside the same form
   if (!el || el.tagName !== 'INPUT') {
     const form = label.closest('form');
     if (!form) throw new Error('Form not found for Email label');
@@ -79,7 +72,6 @@ const getPasswordInput = (ui: ReturnType<typeof setup>) => {
 const getLoginButton = (ui: ReturnType<typeof setup>) =>
   ui.getByRole('button', { name: /log in/i });
 
-// Reset per test (no HTML5 validation bypass here)
 beforeEach(() => {
   fetchMock.mockReset();
   alertMock.mockReset();
@@ -89,7 +81,6 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  // Important so typed values from one test don't leak into the next
   cleanup();
 });
 

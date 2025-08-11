@@ -5,7 +5,6 @@ import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 
-// Router + Auth mocks
 const navigateMock = vi.fn();
 const setUserMock = vi.fn();
 
@@ -22,16 +21,13 @@ vi.mock('../components/common/authcontext', () => ({
   useAuth: () => ({ user: null, setUser: setUserMock }),
 }));
 
-// Import the component AFTER mocks
 import LoginPage from '../pages/LoginPage';
 
-// Network + alert mocks
 const fetchMock = vi.fn();
 const alertMock = vi.fn();
 Object.defineProperty(global, 'fetch', { value: fetchMock, writable: true });
 Object.defineProperty(window, 'alert', { value: alertMock, writable: true });
 
-// Render helper
 const setup = () =>
   render(
     <MemoryRouter initialEntries={['/login']}>
@@ -39,16 +35,14 @@ const setup = () =>
     </MemoryRouter>
   );
 
-// DOM helpers
 const getEmailInput = (ui: ReturnType<typeof setup>) => {
-  // Try label → sibling input pattern first
   const labels = ui.queryAllByText(/^Email$/i);
   if (labels.length) {
     const first = labels[0] as HTMLElement;
     const sib = first.nextElementSibling as HTMLInputElement | null;
     if (sib && sib.tagName === 'INPUT') return sib;
   }
-  // Fallback: first text input inside the form
+
   const form = ui.container.querySelector('form');
   const byType = form?.querySelector('input[type="text"]') as HTMLInputElement | null;
   if (byType) return byType;
@@ -59,7 +53,6 @@ const getEmailInput = (ui: ReturnType<typeof setup>) => {
 };
 
 const getPasswordInput = (ui: ReturnType<typeof setup>) => {
-  // Try label → wrapper → input pattern first
   const labels = ui.queryAllByText(/^Password$/i);
   if (labels.length) {
     const first = labels[0] as HTMLElement;
@@ -67,7 +60,7 @@ const getPasswordInput = (ui: ReturnType<typeof setup>) => {
     const inp = wrapper?.querySelector('input') as HTMLInputElement | null;
     if (inp) return inp;
   }
-  // Fallbacks
+
   const form = ui.container.querySelector('form');
   const byTypePwd = form?.querySelector('input[type="password"]') as HTMLInputElement | null;
   if (byTypePwd) return byTypePwd;
@@ -75,11 +68,9 @@ const getPasswordInput = (ui: ReturnType<typeof setup>) => {
   const anyPwd = form?.querySelector('input') as HTMLInputElement | null;
   if (anyPwd) return anyPwd;
 
-  // Last resort: second textbox
   return ui.getAllByRole('textbox')[1] as HTMLInputElement;
 };
 
-// Be tolerant of duplicate renders (pick the first matching button)
 const getLoginButton = (ui: ReturnType<typeof setup>) =>
   ui.getAllByRole('button', { name: /log in/i })[0];
 
