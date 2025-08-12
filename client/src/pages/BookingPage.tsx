@@ -199,24 +199,8 @@ export default function BookingPage() {
   };
 
   const handlePaymentSuccess = () => {
-    // Navigate to booking confirmation page on successful payment
-    navigate('/booking/confirmation', {
-      state: {
-        hotel,
-        stayDates,
-        bookingDetails: {
-          selectedRoom: bookingDetails.selectedRoom,
-          numberOfGuests: stateData.bookingDetails?.numberOfGuests,
-          numberOfNights: bookingDetails.numberOfNights,
-          numberOfRooms: bookingDetails.numberOfRooms,
-          checkinDate: stateData.bookingDetails?.checkinDate,
-          checkoutDate: stateData.bookingDetails?.checkoutDate,
-          totalAmount: bookingDetails.totalAmount,
-          pricePerNight: bookingDetails.pricePerNight,
-          hotelImage: bookingDetails.imageUrl,
-        },
-      },
-    });
+    // PaymentForm will handle navigation to confirmation page
+    console.log('Payment successful - navigation handled by PaymentForm');
   };
 
   const handlePaymentError = (error: string) => {
@@ -244,6 +228,7 @@ export default function BookingPage() {
       imageUrl: bookingDetails.imageUrl,
       bookingAddress: bookingDetails.hotelAddress,
     },
+    selectedRoom: bookingDetails.selectedRoom,
     onPaymentSuccess: handlePaymentSuccess,
     onPaymentError: handlePaymentError,
   };
