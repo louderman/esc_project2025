@@ -78,16 +78,14 @@ export default function DateInput({
         className={`${inputStyles.inputBox} ${styles.button} ${
           stayDates.checkinDate ? styles.hasDate : ''
         }`}
+        data-testid="date-input"
       >
         {!stayDates.checkinDate && (
           <>select check in &nbsp;&nbsp;&mdash;&nbsp;&nbsp; check out date</>
         )}
         {stayDates.checkinDate && (
-          <span>
-            {formatDate(stayDates.checkinDate)}
-            &nbsp;&nbsp;&mdash;&nbsp;&nbsp;
-            {formatDate(stayDates.checkoutDate)}
-            &nbsp;&nbsp;({nightCount} night{nightCount > 1 ? 's' : ''})
+          <span data-testid='check-in-out-dates'>
+            {`${formatDate(stayDates.checkinDate)}  -  ${formatDate(stayDates.checkoutDate)}  (${nightCount} night${nightCount > 1 ? 's' : ''})`}
           </span>
         )}
       </button>

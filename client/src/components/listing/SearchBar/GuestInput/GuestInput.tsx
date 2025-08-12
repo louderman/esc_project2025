@@ -46,6 +46,7 @@ export default function GuestInput({
         ref={inputButtonRef}
         className={`${inputStyles.inputBox} ${styles.button}`}
         onClick={() => setShowPanel((prev) => !prev)}
+        data-testid='occupancy'
       >
         {occupancy.adults} adult{occupancy.adults > 1 && 's'} ·{' '}
         {occupancy.children} child{occupancy.children > 1 && 'ren'} ·{' '}
