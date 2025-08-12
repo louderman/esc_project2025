@@ -3,7 +3,7 @@ import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { render, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import RegisterPage from '../pages/RegisterPage';
+import RegisterPage from '../../pages/RegisterPage';
 import { MemoryRouter } from 'react-router-dom';
 
 const navigateMock = vi.fn();
@@ -44,7 +44,7 @@ afterEach(() => {
 });
 
 // TC_SIGNUP_1 – Username field
-describe('TC_SIGNUP_1 – Username field', () => {
+describe('TC_SIGNUP_1 – Username field (integration)', () => {
   it('typing shows the username', async () => {
     const ui = setup();
     const user = userEvent.setup();
@@ -103,7 +103,7 @@ describe('TC_SIGNUP_1 – Username field', () => {
 });
 
 // TC_SIGNUP_2 – Email field
-describe('TC_SIGNUP_2 – Email field', () => {
+describe('TC_SIGNUP_2 – Email field (integration)', () => {
   it('typing shows email', async () => {
     const ui = setup();
     const user = userEvent.setup();
@@ -120,7 +120,7 @@ describe('TC_SIGNUP_2 – Email field', () => {
     expect(email.value).toBe('Alice@gmail.com');
   });
 
-  it('empty string → shows error', async () => {
+  it('empty string → shows custom error on submit', async () => {
     const ui = setup();
     const user = userEvent.setup();
     const email = getEmailInput(ui);
@@ -139,7 +139,7 @@ describe('TC_SIGNUP_2 – Email field', () => {
     expect(email.value).toBe('Alic  e@gmail.com');
   });
 
-  it('missing @ → field shows (native popup not asserted)', async () => {
+  it('missing @ → field shows but submit will be blocked by native validation later', async () => {
     const ui = setup();
     const user = userEvent.setup();
     const email = getEmailInput(ui);
@@ -149,7 +149,7 @@ describe('TC_SIGNUP_2 – Email field', () => {
 });
 
 // ITC_SIGNUP_1 – Create account button
-describe('ITC_SIGNUP_1 – Create account button', () => {
+describe('ITC_SIGNUP_1 – Create account button (integration)', () => {
   const fill = async (
     ui: ReturnType<typeof setup>,
     name?: string,
@@ -190,20 +190,15 @@ describe('ITC_SIGNUP_1 – Create account button', () => {
     expect(ui.queryByText(/Password must be ≥8 chars/i)).toBeNull();
   });
 
-  it('invalid email, valid name & password → prevented by native validation', async () => {
+  it('invalid email, valid name & password → blocked by native HTML5 validation', async () => {
     const ui = setup();
     const user = await fill(ui, 'Alice', 'alicegmail.com', 'Strong@123');
     await user.click(getCreateBtn(ui));
-
-    // Native validation blocks submission; our custom email error won't show.
-    // Assert the input itself is invalid and no network/nav occurred.
     expect(getEmailInput(ui).checkValidity()).toBe(false);
-    expect(fetchMock).not.toHaveBeenCalled();
-    expect(navigateMock).not.toHaveBeenCalled();
-
-    // Ensure no name/password custom errors appeared (submit never ran)
     expect(ui.queryByText(/Name cannot be empty/i)).toBeNull();
     expect(ui.queryByText(/Password must be ≥8 chars/i)).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(navigateMock).not.toHaveBeenCalled();
   });
 
   it('invalid password, valid name & email → password error only', async () => {
