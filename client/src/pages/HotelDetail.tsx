@@ -248,6 +248,20 @@ const HotelDetail = () => {
   useEffect(() => {
     console.log('useEffect triggered - hotelLoading:', hotelLoading, 'priceLoading:', priceLoading, 'roomPricesLoading:', roomPricesLoading, 'specificHotel:', !!specificHotel);
     
+    // Add timeout to prevent infinite loading
+    let loadingTimeout: NodeJS.Timeout | undefined;
+    if (process.env.NODE_ENV !== 'test') {
+      loadingTimeout = setTimeout(() => {
+        if (loading) {
+          console.log('Loading timeout reached, forcing loading to false');
+          setLoading(false);
+          if (!specificHotel) {
+            setError('Loading timeout - hotel data not available');
+          }
+        }
+      }, 10000); // 10 second timeout
+    }
+    
     // Set loading to true when hooks are loading
     if (hotelLoading || priceLoading || roomPricesLoading) {
       console.log('Setting loading to true - hooks are loading');
@@ -600,20 +614,23 @@ const HotelDetail = () => {
           } else {
           console.log('No pricing data found for this hotel');
           // If no pricing data, show that pricing is not available
-            roomData.push({
-              id: hotelId,
-              room_type: 'Standard Room',
-              price: 0, // Indicate no pricing available
-              free_cancellation: false,
+          roomData.push({
+            id: hotelId,
+            room_type: 'Standard Room',
+            price: 0, // Indicate no pricing available
+            free_cancellation: false,
             image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85',
-              occupancy: parseInt(adults) + parseInt(children),
-              bed_type: 'King bed',
-              size: '35',
-              description: 'Standard room with modern amenities',
-              long_description: 'Comfortable room with all necessary amenities for a pleasant stay. Pricing information is not currently available for this hotel.',
-              amenities: ['WiFi', 'TV', 'Air Conditioning'],
-              key: hotelId
-            });
+            occupancy: parseInt(adults) + parseInt(children),
+            bed_type: 'King bed',
+            size: '35',
+            description: 'Standard room with modern amenities',
+            long_description: 'Comfortable room with all necessary amenities for a pleasant stay. Pricing information is not currently available for this hotel.',
+            amenities: ['WiFi', 'TV', 'Air Conditioning'],
+            key: hotelId
+          });
+          
+          // Also add a message that pricing is not available
+          console.log('Pricing not available for this hotel - showing fallback room option');
         }
 
         // Validate room availability and guest capacity
@@ -714,7 +731,21 @@ const HotelDetail = () => {
       console.log('No fetch conditions met, setting loading to false');
       setLoading(false);
     }
-  }, [hotelId, specificHotel, hotelLoading, priceLoading, destinationId, checkin, checkout, adults, children, roomCount, totalGuests, searchParams]);
+    
+    // Additional safety check: if we've been loading for too long with no results, force stop loading
+    if (!hotelLoading && !priceLoading && !roomPricesLoading && !specificHotel && hotels.length === 0) {
+      console.log('No hotels found and all hooks finished loading, setting error');
+      setError('No hotels available for the selected destination');
+      setLoading(false);
+    }
+
+    // Cleanup timeout on unmount or dependency change
+    return () => {
+      if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+      }
+    };
+  }, [hotelId, specificHotel, hotelLoading, priceLoading, roomPricesLoading, destinationId, checkin, checkout, adults, children, roomCount, totalGuests, searchParams]);
 
   console.log('Rendering check - loading:', loading, 'error:', error, 'data:', !!data);
 

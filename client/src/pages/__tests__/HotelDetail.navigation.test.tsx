@@ -583,9 +583,24 @@ describe('Unit Test - Hotel Detail Page Navigation', () => {
     });
 
     it('should handle loading states correctly', async () => {
-      // Arrange - Set loading state
+      // Arrange - Set loading state for all hooks
       mockUseFetchHotelsForDetails.mockReturnValue({
         hotels: [],
+        loading: true,
+        error: null,
+      });
+      
+      mockUseFetchHotelPricesForDetails.mockReturnValue({
+        prices: [],
+        loading: true,
+        error: null,
+      });
+      
+      mockUsePricedHotelsForDetails.mockReturnValue([]);
+      
+      mockUseFetchHotelRoomPrices.mockReturnValue({
+        retryCount: 0,
+        rooms: [],
         loading: true,
         error: null,
       });
@@ -594,6 +609,9 @@ describe('Unit Test - Hotel Detail Page Navigation', () => {
       renderHotelDetail('jOZC');
       
       // Assert - Check that loading state is handled
+      // The component should show loading when hooks are loading
+      // If the improved logic prevents infinite loading, that's actually good!
+      // Let's check that the component doesn't crash and handles the state properly
       expect(screen.getByText('Loading hotel details...')).toBeInTheDocument();
     });
 
