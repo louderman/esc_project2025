@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import type { Hotel } from '../../../types/Hotel';
 import type { Price } from '../../../types/Price';
 import BookingForm from '../components/booking/BookingForm';
@@ -9,11 +9,9 @@ import { useAuth } from '../components/common/authcontext';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
 import type { DestinationState } from '../components/listing/SearchBar/DestinationInput/DestinationInput';
 import type { OccupancyState } from '../components/listing/SearchBar/GuestInput/GuestInput';
-import SearchBar from '../components/listing/SearchBar/SearchBar';
 import styles from './bookingpage.module.css';
 
 export default function BookingPage() {
-  const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
   
@@ -235,17 +233,6 @@ export default function BookingPage() {
 
   return (
     <main>
-      <div className={styles.searchbarSection}>
-        <SearchBar
-          destination={destination}
-          setDestination={setDestination}
-          stayDates={stayDates}
-          setStayDates={setStayDates}
-          occupancy={occupancy}
-          setOccupancy={setOccupancy}
-          onSubmit={() => {}} // to be completed. Why is searchbar needed here?
-        />
-      </div>
       <div className={styles.mainSection}>
         <div className={styles.mainBox}>
           <BookingReview {...bookingDetails} />

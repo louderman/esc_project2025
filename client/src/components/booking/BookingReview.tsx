@@ -23,8 +23,6 @@ export default function BookingReview({
     <div className={styles.container}>
       <div className={styles.imageContainer}>
         <img src={imageUrl} alt={hotelName} className={styles.hotelImage} />
-        <div className={styles.imageCounter}>1 / 5</div>
-        <div className={styles.view360}>360°</div>
       </div>
       <div className={styles.detailsContainer}>
         <h2>REVIEW BOOKING</h2>
