@@ -11,6 +11,7 @@ interface BookingFormProps {
   numberOfNights: number;
   bookingData?: CreateBookingRequest; // Booking data to pass to payment
   selectedRoom?: any; // Selected room data for confirmation page
+  hotelImages?: string[]; // Hotel images array for confirmation page
   onPaymentSuccess?: () => void;
   onPaymentError?: (error: string) => void;
 }
@@ -22,6 +23,7 @@ export default function BookingForm({
   numberOfNights,
   bookingData,
   selectedRoom,
+  hotelImages,
   onPaymentSuccess,
   onPaymentError,
 }: BookingFormProps) {
@@ -73,6 +75,7 @@ export default function BookingForm({
         amount={totalCost * 100} // Convert to cents for Stripe
         bookingData={bookingData}
         selectedRoom={selectedRoom}
+        hotelImages={hotelImages}
         onPaymentSuccess={handlePaymentSuccess}
         onPaymentError={handlePaymentError}
       />

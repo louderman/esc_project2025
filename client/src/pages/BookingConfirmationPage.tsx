@@ -1,9 +1,9 @@
-import styles from './bookingconfirmationpage.module.css';
-import { useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import type { Hotel } from '../../../types/Hotel';
 import type { Price } from '../../../types/Price';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
+import styles from './bookingconfirmationpage.module.css';
 ///SearchBar/DateInput/DateInput
 function formatDate(date: Date | null): string {
   if (!date) return "N/A";
@@ -35,9 +35,36 @@ export default function BookingConfirmation() {
     return <div>No hotel selected. Please go back to the listing page.</div>;
   }
 
-  const imageCount = hotel.imageCount;
-  const prefix = hotel.image_details.prefix;
-  const suffix = hotel.image_details.suffix;
+  // Get hotel images - prioritize from booking details, then from hotel data, then fallback
+  const getHotelImages = (): string[] => {
+    // Check if images are passed through booking details
+    if (bookingDetails?.hotelImages && Array.isArray(bookingDetails.hotelImages) && bookingDetails.hotelImages.length > 0) {
+      return bookingDetails.hotelImages;
+    }
+    
+    // Check if images are passed through hotel object
+    if ((hotel as any)?.hotelImages && Array.isArray((hotel as any).hotelImages) && (hotel as any).hotelImages.length > 0) {
+      return (hotel as any).hotelImages;
+    }
+    
+    // Check if hotel has image_details for multiple images (backward compatibility)
+    if (hotel.imageCount > 0 && hotel.image_details.prefix && hotel.image_details.suffix) {
+      return Array.from({ length: Math.min(hotel.imageCount, 10) }, (_, i) => 
+        `${hotel.image_details.prefix}${i}${hotel.image_details.suffix}`
+      );
+    }
+    
+    // Check for single image from hotel data
+    if (hotel.image_details.prefix && hotel.image_details.prefix !== '') {
+      return [hotel.image_details.prefix];
+    }
+    
+    // Fallback to placeholder
+    return ['/listing/hotel_img_placeholder.png'];
+  };
+
+  const hotelImages = getHotelImages();
+  const imageCount = hotelImages.length;
 
   const goPrev = () => {
     setCurrentIndex((prev) => (prev === 0 ? imageCount - 1 : prev - 1));
@@ -47,10 +74,11 @@ export default function BookingConfirmation() {
     setCurrentIndex((prev) => (prev === imageCount - 1 ? 0 : prev + 1));
   };
 
-  const imageUrl =
-    imageCount > 0
-      ? `${prefix}${currentIndex}${suffix}`
-      : '/listing/hotel_img_placeholder.png';
+  const imageUrl = hotelImages[currentIndex];
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    e.currentTarget.src = '/listing/hotel_img_placeholder.png';
+  };
 
   //const bookingDetails = {
   //  hotelName: hotel.name,
@@ -108,6 +136,7 @@ export default function BookingConfirmation() {
               src={imageUrl}
               alt={`Hotel image ${currentIndex + 1}`}
               className={styles.hotelimage}
+              onError={handleImageError}
             />
             {imageCount > 1 && (
               <>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import type { Hotel } from '../../../types/Hotel';
 import type { Price } from '../../../types/Price';
@@ -135,6 +135,28 @@ export default function BookingPage() {
     name: '',
   });
 
+  // Fetch destination data when component mounts (for consistency with other pages)
+  useEffect(() => {
+    const fetchDestination = async () => {
+      try {
+        const response = await fetch('/api/destination/random?count=1');
+        if (response.ok) {
+          const destinations = await response.json();
+          if (destinations && destinations.length > 0) {
+            setDestination({
+              id: destinations[0].dest_id,
+              name: destinations[0].term,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch destination:', error);
+      }
+    };
+
+    fetchDestination();
+  }, []);
+
   // Use passed booking details for calculations
   const numberOfNights = stateData.bookingDetails?.numberOfNights ?? (
     stayDates.checkinDate && stayDates.checkoutDate
@@ -145,18 +167,46 @@ export default function BookingPage() {
       : 1
   );
 
+  // Get hotel images - prioritize from booking details, then from hotel data, then fallback
+  const getHotelImages = (): string[] => {
+    // Check if images are passed through booking details (from BookingCard)
+    if (stateData?.bookingDetails && 'hotelImages' in stateData.bookingDetails) {
+      const hotelImages = (stateData.bookingDetails as any).hotelImages;
+      if (Array.isArray(hotelImages) && hotelImages.length > 0) {
+        return hotelImages;
+      }
+    }
+    
+    // Check if hotel has image_details for multiple images
+    if (hotel.imageCount > 0 && hotel.image_details.prefix && hotel.image_details.suffix) {
+      return Array.from({ length: Math.min(hotel.imageCount, 10) }, (_, i) => 
+        `${hotel.image_details.prefix}${i}${hotel.image_details.suffix}`
+      );
+    }
+    
+    // Check for single image from various sources
+    const singleImage = stateData?.bookingDetails?.hotelImage || 
+                       stateData?.hotel?.image || 
+                       hotel.image_details.prefix;
+    
+    if (singleImage && singleImage !== '') {
+      return [singleImage];
+    }
+    
+    // Fallback to placeholder
+    return ['/listing/hotel_img_placeholder.png'];
+  };
+
+  const hotelImages = getHotelImages();
+
   // Consolidated bookingDetails object that serves both BookingReview and PaymentForm
   const bookingDetails = {
     // Hotel information
     hotelId: hotel.id,
     hotelName: hotel.name,
     hotelAddress: [hotel.address, hotel.address1].filter(Boolean).join(', ') || 'Address not available',
-    imageUrl:
-      stateData.bookingDetails?.hotelImage || 
-      stateData.hotel.image || 
-      (hotel.imageCount > 0
-        ? `${hotel.image_details.prefix}0${hotel.image_details.suffix}`
-        : '/listing/hotel_img_placeholder.png'),
+    images: hotelImages,
+    imageUrl: hotelImages[0], // Keep for backward compatibility with PaymentForm
     
     // Date information
     checkInDate: stayDates.checkinDate
@@ -227,6 +277,7 @@ export default function BookingPage() {
       bookingAddress: bookingDetails.hotelAddress,
     },
     selectedRoom: bookingDetails.selectedRoom,
+    hotelImages: hotelImages, // Add hotel images array
     onPaymentSuccess: handlePaymentSuccess,
     onPaymentError: handlePaymentError,
   };

@@ -9,6 +9,7 @@ interface PaymentFormProps {
   amount: number;
   bookingData?: CreateBookingRequest; // Booking data to send with payment
   selectedRoom?: any; // Additional room data for confirmation page
+  hotelImages?: string[]; // Hotel images array for confirmation page
   onPaymentSuccess: () => void;
   onPaymentError: (error: string) => void;
 }
@@ -27,7 +28,7 @@ interface BillingAddress {
   };
 }
 
-const PaymentForm = ({ amount, bookingData, selectedRoom, onPaymentSuccess, onPaymentError }: PaymentFormProps) => {
+const PaymentForm = ({ amount, bookingData, selectedRoom, hotelImages, onPaymentSuccess, onPaymentError }: PaymentFormProps) => {
   // State for handling errors and processing status
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
@@ -209,11 +210,12 @@ const PaymentForm = ({ amount, bookingData, selectedRoom, onPaymentSuccess, onPa
                         name: bookingData.hotelName,
                         price: bookingData.pricePerNight,
                         address: bookingData.bookingAddress,
-                        imageCount: 5,
+                        imageCount: hotelImages ? hotelImages.length : 1,
                         image_details: {
-                            prefix: '/listing/hotel_img_placeholder.png?id=',
+                            prefix: hotelImages && hotelImages.length > 0 ? hotelImages[0] : '/listing/hotel_img_placeholder.png',
                             suffix: '',
-                        }
+                        },
+                        hotelImages: hotelImages, // Add images directly to hotel object as well
                     } : null,
                     stayDates: bookingData ? {
                         checkinDate: bookingData.checkInDate && bookingData.checkInDate !== 'N/A' ? new Date(bookingData.checkInDate) : null,
@@ -230,6 +232,7 @@ const PaymentForm = ({ amount, bookingData, selectedRoom, onPaymentSuccess, onPa
                         checkoutDate: bookingData?.checkOutDate,
                         pricePerNight: bookingData?.pricePerNight,
                         hotelImage: bookingData?.imageUrl,
+                        hotelImages: hotelImages, // Add hotel images array
                     }
                 }
             });
