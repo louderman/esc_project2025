@@ -326,7 +326,7 @@ describe('Integration Test - Search Bar Integration', () => {
 
     // Verify navigation to listing page with updated search criteria
     expect(mockNavigate).toHaveBeenCalledWith(
-      expect.stringContaining('/listing?destination_id=WD0M&checkin=2025-08-12&checkout=2025-08-30&adults=2&children=0&rooms=1')
+      expect.stringContaining('/listing?destId="WD0M"&destName="Singapore"&checkin=2025-08-12&checkout=2025-08-30&adult=2&child=0&room=1')
     );
 
     // Verify search bar maintains state during the process
@@ -501,12 +501,12 @@ describe('Integration Test - Search Bar Integration', () => {
 
     // Mock useSearchParams with different search parameters
     const mockSearchParams = new URLSearchParams();
-    mockSearchParams.set('destination_id', 'NYC1');
+    mockSearchParams.set('destId', 'WD0M');
     mockSearchParams.set('checkin', '2025-09-15');
     mockSearchParams.set('checkout', '2025-09-22');
-    mockSearchParams.set('adults', '3');
-    mockSearchParams.set('children', '1');
-    mockSearchParams.set('rooms', '2');
+    mockSearchParams.set('adult', '3');
+    mockSearchParams.set('child', '1');
+    mockSearchParams.set('room', '2');
     
     vi.mocked(useSearchParams).mockReturnValue([mockSearchParams, vi.fn()]);
 
@@ -521,9 +521,9 @@ describe('Integration Test - Search Bar Integration', () => {
     // Verify search bar reflects the new URL parameters
     expect(screen.getByText(/Mon, Sep 15/)).toBeInTheDocument(); // New checkin date
     expect(screen.getByText(/Mon, Sep 22/)).toBeInTheDocument(); // New checkout date
-    expect(screen.getByText(/3.*adults/)).toBeInTheDocument(); // New adults count
+    expect(screen.getByText(/3.*adult/)).toBeInTheDocument(); // New adults count (singular form)
     expect(screen.getByText(/1.*child/)).toBeInTheDocument(); // New children count
-    expect(screen.getAllByText(/2.*rooms/)).toHaveLength(2); // New rooms count (search bar + hotel info)
+    expect(screen.getAllByText(/2.*room/)).toHaveLength(2); // New rooms count (singular form) (search bar + hotel info)
 
     // Verify search bar maintains state and allows navigation
     const findHotelsButton = screen.getByText('Find Hotels');
@@ -533,7 +533,7 @@ describe('Integration Test - Search Bar Integration', () => {
     fireEvent.click(findHotelsButton);
     
     expect(mockNavigate).toHaveBeenCalledWith(
-      expect.stringContaining('/listing?destination_id=NYC1&checkin=2025-09-15&checkout=2025-09-22&adults=3&children=1&rooms=2')
+      expect.stringContaining('/listing?destId="WD0M"&destName="Singapore"&checkin=2025-09-15&checkout=2025-09-22&adult=3&child=1&room=2')
     );
   });
 });

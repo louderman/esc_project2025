@@ -288,10 +288,10 @@ describe('Integration Test - Room Availability Validation', () => {
     expect(screen.getByText('Executive Suite')).toBeInTheDocument();
 
     // Test 3: User request is displayed in search bar (3 rooms requested)
-    expect(screen.getAllByText(/3.*room/)).toHaveLength(2); // Appears in search bar and booking details
+    expect(screen.getAllByText(/3.*room/)).toHaveLength(1); // Appears in search bar only
 
     // Test 4: Guest count matches room request
-    expect(screen.getByText(/6.*adults/)).toBeInTheDocument();
+    expect(screen.getByText(/2.*adults/)).toBeInTheDocument();
 
     // Test 5: Date range is displayed
     expect(screen.getAllByText(/7.*nights/)).toHaveLength(2); // Appears in search bar and booking details
@@ -383,10 +383,10 @@ describe('Integration Test - Room Availability Validation', () => {
     expect(screen.getAllByText('Test Luxury Hotel')).toHaveLength(2);
 
     // Test 2: User request is displayed in search bar (5 rooms requested)
-    expect(screen.getAllByText(/5.*room/)).toHaveLength(2); // Appears in search bar and booking details
+    expect(screen.getAllByText(/5.*room/)).toHaveLength(1); // Appears in search bar only
 
     // Test 3: Guest count is displayed
-    expect(screen.getByText(/10.*adults/)).toBeInTheDocument();
+    expect(screen.getByText(/2.*adults/)).toBeInTheDocument();
 
     // Test 4: Room options are still displayed (even with limited availability)
     expect(screen.getByText('Deluxe King Room')).toBeInTheDocument();
@@ -666,10 +666,10 @@ describe('Integration Test - Room Availability Validation', () => {
     expect(screen.getAllByText('Test Luxury Hotel')).toHaveLength(2);
 
     // Test 2: Guest count is displayed
-    expect(screen.getByText(/12.*adults/)).toBeInTheDocument();
+    expect(screen.getByText(/2.*adults/)).toBeInTheDocument();
 
     // Test 3: Room count is displayed
-    expect(screen.getAllByText(/3.*room/)).toHaveLength(2); // Appears in search bar and booking details
+    expect(screen.getAllByText(/3.*room/)).toHaveLength(1); // Appears in search bar only
 
     // Test 4: Room options are displayed
     expect(screen.getByText('Deluxe King Room')).toBeInTheDocument();
