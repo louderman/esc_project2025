@@ -71,7 +71,7 @@ const HotelHeader = () => {
     }
     
     // JSON encode the values to match what ListingPage expects (similar to useSearchBarUrlSync)
-    const listingUrl = `/listing?destId=${JSON.stringify(destination.id)}&destName=${JSON.stringify(destination.name)}&checkin=${stayDates.checkinDate.toISOString().split('T')[0]}&checkout=${stayDates.checkoutDate.toISOString().split('T')[0]}&adult=${JSON.stringify(occupancy.adults)}&child=${JSON.stringify(occupancy.children)}&room=${JSON.stringify(occupancy.rooms)}`;
+    const listingUrl = `/listing?destId=${JSON.stringify(destination.id)}&destName=${JSON.stringify(destination.name)}&checkin=${JSON.stringify(stayDates.checkinDate.toLocaleDateString('en-CA'))}&checkout=${JSON.stringify(stayDates.checkoutDate.toLocaleDateString('en-CA'))}&adult=${JSON.stringify(occupancy.adults)}&child=${JSON.stringify(occupancy.children)}&room=${JSON.stringify(occupancy.rooms)}`;
     navigate(listingUrl);
   };
 
