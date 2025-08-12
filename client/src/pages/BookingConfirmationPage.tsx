@@ -1,9 +1,9 @@
-import styles from './bookingconfirmationpage.module.css';
-import { useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import type { Hotel } from '../../../types/Hotel';
 import type { Price } from '../../../types/Price';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
+import styles from './bookingconfirmationpage.module.css';
 ///SearchBar/DateInput/DateInput
 function formatDate(date: Date | null): string {
   if (!date) return "N/A";
@@ -17,19 +17,54 @@ function formatDate(date: Date | null): string {
 
 export default function BookingConfirmation() {
   const location = useLocation();
+  //console.log("location.state", location.state);
+  //console.log("selectedRoom", location.state?.bookingDetails?.selectedRoom?.room_type);
   const navigate = useNavigate();
   const hotel = location.state?.hotel as (Hotel & Price) | undefined;
   const stayDates = location.state?.stayDates as StayDatesState | undefined;
+  const selectedRoom = location.state?.bookingDetails?.selectedRoom;
+  const room_type = selectedRoom?.room_type || "Standard Single Room";
+  const bookingDetails = location.state?.bookingDetails || {};
+  const totalAmount = location.state?.totalAmount || 0;
 
   const [currentIndex, setCurrentIndex] = useState(0);
+  console.log('bookingDetails', bookingDetails);
+  console.log("selectedroom", bookingDetails.selectedRoom);
 
   if (!hotel) {
     return <div>No hotel selected. Please go back to the listing page.</div>;
   }
 
-  const imageCount = hotel.imageCount;
-  const prefix = hotel.image_details.prefix;
-  const suffix = hotel.image_details.suffix;
+  // Get hotel images - prioritize from booking details, then from hotel data, then fallback
+  const getHotelImages = (): string[] => {
+    // Check if images are passed through booking details
+    if (bookingDetails?.hotelImages && Array.isArray(bookingDetails.hotelImages) && bookingDetails.hotelImages.length > 0) {
+      return bookingDetails.hotelImages;
+    }
+    
+    // Check if images are passed through hotel object
+    if ((hotel as any)?.hotelImages && Array.isArray((hotel as any).hotelImages) && (hotel as any).hotelImages.length > 0) {
+      return (hotel as any).hotelImages;
+    }
+    
+    // Check if hotel has image_details for multiple images (backward compatibility)
+    if (hotel.imageCount > 0 && hotel.image_details.prefix && hotel.image_details.suffix) {
+      return Array.from({ length: Math.min(hotel.imageCount, 10) }, (_, i) => 
+        `${hotel.image_details.prefix}${i}${hotel.image_details.suffix}`
+      );
+    }
+    
+    // Check for single image from hotel data
+    if (hotel.image_details.prefix && hotel.image_details.prefix !== '') {
+      return [hotel.image_details.prefix];
+    }
+    
+    // Fallback to placeholder
+    return ['/listing/hotel_img_placeholder.png'];
+  };
+
+  const hotelImages = getHotelImages();
+  const imageCount = hotelImages.length;
 
   const goPrev = () => {
     setCurrentIndex((prev) => (prev === 0 ? imageCount - 1 : prev - 1));
@@ -39,17 +74,18 @@ export default function BookingConfirmation() {
     setCurrentIndex((prev) => (prev === imageCount - 1 ? 0 : prev + 1));
   };
 
-  const imageUrl =
-    imageCount > 0
-      ? `${prefix}${currentIndex}${suffix}`
-      : '/listing/hotel_img_placeholder.png';
+  const imageUrl = hotelImages[currentIndex];
 
-  const bookingDetails = {
-    hotelName: hotel.name,
-    pricePerNight: hotel.price ?? 0,
-    hotelAddress: hotel.address,
-    hotelID: hotel.id,
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    e.currentTarget.src = '/listing/hotel_img_placeholder.png';
   };
+
+  //const bookingDetails = {
+  //  hotelName: hotel.name,
+  //  pricePerNight: hotel.price ?? 0,
+  //  hotelAddress: hotel.address,
+  //  hotelID: hotel.id,
+  //};
 
   return (
     <div className={styles.bookingpage}>
@@ -79,7 +115,7 @@ export default function BookingConfirmation() {
           </div>
           <div className={styles.detailitem}>
             <div className={styles.label}>Total</div>
-            <div className={styles.value}>${hotel.price}</div>
+            <div className={styles.value}>${totalAmount}</div>
           </div>
           <div className={styles.detailitem}>
             <div className={styles.label}>Status</div>
@@ -89,7 +125,7 @@ export default function BookingConfirmation() {
 
         <div className={styles.roomdetail}>
           <p className={styles.label} style={{ marginBottom: '1rem', marginTop: '2.5rem' }}>Details:</p>
-          <p className={`${styles.value} ${styles.bold}`}>Standard Single Room</p>
+          <p className={`${styles.value} ${styles.bold}`}>{room_type}</p>
         </div>
       </div>
 
@@ -100,6 +136,7 @@ export default function BookingConfirmation() {
               src={imageUrl}
               alt={`Hotel image ${currentIndex + 1}`}
               className={styles.hotelimage}
+              onError={handleImageError}
             />
             {imageCount > 1 && (
               <>

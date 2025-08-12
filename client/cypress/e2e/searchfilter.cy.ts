@@ -60,6 +60,7 @@ describe('UC 3,4 - Search, filter and sort hotels', () => {
       .should('be.checked');
 
     // Interact with price range
+    cy.get('[data-testid="reset-filter-btn"]').click();
     setRangeValue(
       '[data-testid="slider-container"] input[type="range"]',
       0,
@@ -68,16 +69,16 @@ describe('UC 3,4 - Search, filter and sort hotels', () => {
     setRangeValue(
       '[data-testid="slider-container"] input[type="range"]',
       1,
-      500
+      1500
     );
     cy.get('[data-testid="slider-container"] input[type="range"]')
       .eq(0)
       .should('have.value', '200');
     cy.get('[data-testid="slider-container"] input[type="range"]')
       .eq(1)
-      .should('have.value', '500');
+      .should('have.value', '1500');
     cy.get('input[name="min"]').should('have.value', '200');
-    cy.get('input[name="max"]').should('have.value', '500');
+    cy.get('input[name="max"]').should('have.value', '1500');
 
     // Interact with price inputs
     cy.get('input[name="min"]').clear().type('250').blur();

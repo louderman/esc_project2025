@@ -6,7 +6,7 @@
   "type": "commonjs",
   "scripts": {
     "test": "cross-env NODE_ENV=test jest --detectOpenHandles",
-    "test:fuzz": "ts-node test/fuzz/fuzzDestinationRouter.ts",
+    "test:fuzz": "ts-node test/fuzz/fuzzAuthRouter.ts",
     "build": "npx tsc",
     "start": "tsc -w & node dist/server.js",
     "dev": "ts-node-dev ./server.ts",

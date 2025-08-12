@@ -96,6 +96,19 @@ const HotelDetail = () => {
         const checkin = getDateFromParams('checkin', '2025-08-12');
         const checkout = getDateFromParams('checkout', '2025-08-30');
   
+        // Parse adults and children from URL (note: 'adult' and 'child' not 'adults' and 'children')
+        const adults = searchParams.get('adults') || searchParams.get('adult') || '2';
+        const children = searchParams.get('children') || searchParams.get('child') || '0';
+        const roomCount = searchParams.get('rooms') || searchParams.get('room') || '1';
+        
+        // Log URL parameters for testing
+        console.log('destination_id:', destinationId);
+        console.log('checkin:', checkin);
+        console.log('checkout:', checkout);
+        console.log('adults:', adults);
+        console.log('children:', children);
+        console.log('rooms:', roomCount);
+  
   console.log('Debug - URL Parameters:', {
     destinationId,
     checkin,
@@ -108,11 +121,6 @@ const HotelDetail = () => {
   console.log('Debug - destinationId:', destinationId);
   console.log('Debug - checkin:', checkin);
   console.log('Debug - checkout:', checkout);
-        
-        // Parse adults and children from URL (note: 'adult' and 'child' not 'adults' and 'children')
-        const adults = searchParams.get('adults') || searchParams.get('adult') || '2';
-        const children = searchParams.get('children') || searchParams.get('child') || '0';
-        const roomCount = searchParams.get('rooms') || searchParams.get('room') || '1';
         const lang = searchParams.get('lang') || 'en_US';
         const currency = searchParams.get('currency') || 'SGD';
         const countryCode = searchParams.get('country_code') || 'SG';
@@ -240,6 +248,20 @@ const HotelDetail = () => {
   useEffect(() => {
     console.log('useEffect triggered - hotelLoading:', hotelLoading, 'priceLoading:', priceLoading, 'roomPricesLoading:', roomPricesLoading, 'specificHotel:', !!specificHotel);
     
+    // Add timeout to prevent infinite loading
+    let loadingTimeout: NodeJS.Timeout | undefined;
+    if (process.env.NODE_ENV !== 'test') {
+      loadingTimeout = setTimeout(() => {
+        if (loading) {
+          console.log('Loading timeout reached, forcing loading to false');
+          setLoading(false);
+          if (!specificHotel) {
+            setError('Loading timeout - hotel data not available');
+          }
+        }
+      }, 10000); // 10 second timeout
+    }
+    
     // Set loading to true when hooks are loading
     if (hotelLoading || priceLoading || roomPricesLoading) {
       console.log('Setting loading to true - hooks are loading');
@@ -266,6 +288,7 @@ const HotelDetail = () => {
 
         // Use the hooks data instead of manual fetching
         if (!specificHotel) {
+          console.log(`Hotel with ID ${hotelId} not found in destination ${destinationId}. Available hotels: ${hotels.length}`);
           throw new Error(`Hotel with ID ${hotelId} not found in destination ${destinationId}. Available hotels: ${hotels.length}`);
         }
 
@@ -293,9 +316,14 @@ const HotelDetail = () => {
         }
 
         // Add a 3-second delay to ensure all room data is fully loaded
-        console.log('All data loaded, waiting 3 seconds for room data to fully load...');
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        console.log('3-second delay completed, proceeding with data processing...');
+        // Skip delay in test environment to make tests faster
+        if (process.env.NODE_ENV !== 'test') {
+          console.log('All data loaded, waiting 3 seconds for room data to fully load...');
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          console.log('3-second delay completed, proceeding with data processing...');
+        } else {
+          console.log('Test environment detected, skipping 3-second delay');
+        }
 
         // Extract amenities from hotel description if amenities object is empty
         const extractAmenitiesFromDescription = (description: string) => {
@@ -586,20 +614,23 @@ const HotelDetail = () => {
           } else {
           console.log('No pricing data found for this hotel');
           // If no pricing data, show that pricing is not available
-            roomData.push({
-              id: hotelId,
-              room_type: 'Standard Room',
-              price: 0, // Indicate no pricing available
-              free_cancellation: false,
+          roomData.push({
+            id: hotelId,
+            room_type: 'Standard Room',
+            price: 0, // Indicate no pricing available
+            free_cancellation: false,
             image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85',
-              occupancy: parseInt(adults) + parseInt(children),
-              bed_type: 'King bed',
-              size: '35',
-              description: 'Standard room with modern amenities',
-              long_description: 'Comfortable room with all necessary amenities for a pleasant stay. Pricing information is not currently available for this hotel.',
-              amenities: ['WiFi', 'TV', 'Air Conditioning'],
-              key: hotelId
-            });
+            occupancy: parseInt(adults) + parseInt(children),
+            bed_type: 'King bed',
+            size: '35',
+            description: 'Standard room with modern amenities',
+            long_description: 'Comfortable room with all necessary amenities for a pleasant stay. Pricing information is not currently available for this hotel.',
+            amenities: ['WiFi', 'TV', 'Air Conditioning'],
+            key: hotelId
+          });
+          
+          // Also add a message that pricing is not available
+          console.log('Pricing not available for this hotel - showing fallback room option');
         }
 
         // Validate room availability and guest capacity
@@ -700,7 +731,21 @@ const HotelDetail = () => {
       console.log('No fetch conditions met, setting loading to false');
       setLoading(false);
     }
-  }, [hotelId, specificHotel, hotelLoading, priceLoading, destinationId, checkin, checkout, adults, children, roomCount, totalGuests, searchParams]);
+    
+    // Additional safety check: if we've been loading for too long with no results, force stop loading
+    if (!hotelLoading && !priceLoading && !roomPricesLoading && !specificHotel && hotels.length === 0) {
+      console.log('No hotels found and all hooks finished loading, setting error');
+      setError('No hotels available for the selected destination');
+      setLoading(false);
+    }
+
+    // Cleanup timeout on unmount or dependency change
+    return () => {
+      if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+      }
+    };
+  }, [hotelId, specificHotel, hotelLoading, priceLoading, roomPricesLoading, destinationId, checkin, checkout, adults, children, roomCount, totalGuests, searchParams]);
 
   console.log('Rendering check - loading:', loading, 'error:', error, 'data:', !!data);
 
