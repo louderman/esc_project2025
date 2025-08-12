@@ -557,7 +557,8 @@ const BookingCard = ({
         bed_type: selectedRoom.bed_type || 'King bed',
         size: selectedRoom.size || '35',
         description: selectedRoom.description || 'Standard room with modern amenities',
-        amenities: selectedRoom.amenities || ['WiFi', 'TV', 'Air Conditioning']
+        amenities: selectedRoom.amenities || ['WiFi', 'TV', 'Air Conditioning'],
+        image: selectedRoom.image // Add the image property from selectedRoom
       } : {
         id: hotelId || 'default',
         room_type: 'Standard Room',
@@ -568,7 +569,8 @@ const BookingCard = ({
         bed_type: 'King bed',
         size: '35',
         description: 'Standard room with modern amenities',
-        amenities: ['WiFi', 'TV', 'Air Conditioning']
+        amenities: ['WiFi', 'TV', 'Air Conditioning'],
+        image: hotelImage // Add fallback image for default room
       },
       numberOfGuests: {
         adults: adults,
@@ -587,7 +589,10 @@ const BookingCard = ({
     // Navigate to booking page with state
     navigate('/booking', {
       state: {
-        bookingDetails,
+        bookingDetails: {
+          ...bookingDetails,
+          hotelImages: hotelImages // Add hotel images array to booking details
+        },
         hotel: {
           id: hotelId,
           name: hotelName,
