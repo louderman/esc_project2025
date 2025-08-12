@@ -17,11 +17,19 @@ function formatDate(date: Date | null): string {
 
 export default function BookingConfirmation() {
   const location = useLocation();
+  //console.log("location.state", location.state);
+  //console.log("selectedRoom", location.state?.bookingDetails?.selectedRoom?.room_type);
   const navigate = useNavigate();
   const hotel = location.state?.hotel as (Hotel & Price) | undefined;
   const stayDates = location.state?.stayDates as StayDatesState | undefined;
+  const selectedRoom = location.state?.bookingDetails?.selectedRoom;
+  const room_type = selectedRoom?.room_type || "Standard Single Room";
+  const bookingDetails = location.state?.bookingDetails || {};
+  const totalAmount = location.state?.totalAmount || 0;
 
   const [currentIndex, setCurrentIndex] = useState(0);
+  console.log('bookingDetails', bookingDetails);
+  console.log("selectedroom", bookingDetails.selectedRoom);
 
   if (!hotel) {
     return <div>No hotel selected. Please go back to the listing page.</div>;
@@ -44,12 +52,12 @@ export default function BookingConfirmation() {
       ? `${prefix}${currentIndex}${suffix}`
       : '/listing/hotel_img_placeholder.png';
 
-  const bookingDetails = {
-    hotelName: hotel.name,
-    pricePerNight: hotel.price ?? 0,
-    hotelAddress: hotel.address,
-    hotelID: hotel.id,
-  };
+  //const bookingDetails = {
+  //  hotelName: hotel.name,
+  //  pricePerNight: hotel.price ?? 0,
+  //  hotelAddress: hotel.address,
+  //  hotelID: hotel.id,
+  //};
 
   return (
     <div className={styles.bookingpage}>
@@ -79,7 +87,7 @@ export default function BookingConfirmation() {
           </div>
           <div className={styles.detailitem}>
             <div className={styles.label}>Total</div>
-            <div className={styles.value}>${hotel.price}</div>
+            <div className={styles.value}>${totalAmount}</div>
           </div>
           <div className={styles.detailitem}>
             <div className={styles.label}>Status</div>
@@ -89,7 +97,7 @@ export default function BookingConfirmation() {
 
         <div className={styles.roomdetail}>
           <p className={styles.label} style={{ marginBottom: '1rem', marginTop: '2.5rem' }}>Details:</p>
-          <p className={`${styles.value} ${styles.bold}`}>Standard Single Room</p>
+          <p className={`${styles.value} ${styles.bold}`}>{room_type}</p>
         </div>
       </div>
 

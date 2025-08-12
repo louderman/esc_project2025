@@ -8,6 +8,7 @@ import styles from './PaymentForm.module.css';
 interface PaymentFormProps {
   amount: number;
   bookingData?: CreateBookingRequest; // Booking data to send with payment
+  selectedRoom?: any; // Additional room data for confirmation page
   onPaymentSuccess: () => void;
   onPaymentError: (error: string) => void;
 }
@@ -26,7 +27,7 @@ interface BillingAddress {
   };
 }
 
-const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: PaymentFormProps) => {
+const PaymentForm = ({ amount, bookingData, selectedRoom, onPaymentSuccess, onPaymentError }: PaymentFormProps) => {
   // State for handling errors and processing status
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
@@ -207,7 +208,7 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
                         id: bookingData.hotelId,
                         name: bookingData.hotelName,
                         price: bookingData.pricePerNight,
-                        address: bookingData.bookingAddress, // Use the actual hotel address from bookingData
+                        address: bookingData.bookingAddress,
                         imageCount: 5,
                         image_details: {
                             prefix: '/listing/hotel_img_placeholder.png?id=',
@@ -219,7 +220,17 @@ const PaymentForm = ({ amount, bookingData, onPaymentSuccess, onPaymentError }: 
                         checkoutDate: bookingData.checkOutDate && bookingData.checkOutDate !== 'N/A' ? new Date(bookingData.checkOutDate) : null,
                     } : null,
                     totalAmount: amount / 100,
-                    bookingDetails: bookingData
+                    bookingDetails: {
+                        ...bookingData,
+                        selectedRoom: selectedRoom,
+                        numberOfGuests: bookingData?.guests,
+                        numberOfNights: bookingData?.numberOfNights,
+                        numberOfRooms: 1, // Default to 1 room
+                        checkinDate: bookingData?.checkInDate,
+                        checkoutDate: bookingData?.checkOutDate,
+                        pricePerNight: bookingData?.pricePerNight,
+                        hotelImage: bookingData?.imageUrl,
+                    }
                 }
             });
         }
