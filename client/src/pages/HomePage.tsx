@@ -11,6 +11,7 @@ import { useSearchBarUrlSync } from '../hooks/url/useSearchBarUrlSync';
 
 import DestinationCard from '../components/homepage/DestinationCard';
 
+
 export default function HomePage() {
   const navigate = useNavigate();
 
@@ -20,8 +21,8 @@ export default function HomePage() {
   });
   let today: Date = new Date();
   let tomorrow: Date = new Date();
-  today.setDate(new Date().getDate() + 1);
-  tomorrow.setDate(new Date().getDate() + 2);
+  today.setDate(new Date().getDate()+1)
+  tomorrow.setDate(new Date().getDate()+2)
   const [stayDates, setStayDates] = useState<StayDatesState>({
     checkinDate: today,
     checkoutDate: tomorrow,
@@ -31,6 +32,13 @@ export default function HomePage() {
     children: 0,
     rooms: 1,
   });
+  const [shouldRedirect, setShouldRedirect] = useState(false);
+  useEffect(() => {
+    if (shouldRedirect) {
+      syncSearchBarToURL('/listing')
+    }
+  }, [shouldRedirect])
+
 
   const { syncSearchBarToURL } = useSearchBarUrlSync({
     destination,
@@ -42,29 +50,27 @@ export default function HomePage() {
     navigate,
   });
 
+
   const [suggestedDests, setSuggestedDests] = useState<Destination[]>([]);
   useEffect(() => {
     async function fetchRandomSuggestions() {
       let url = `/api/destination/random?count=8`;
       const res = await fetch(url, { method: 'GET' });
       const dests: Destination[] = await res.json();
-      setSuggestedDests(dests);
+      setSuggestedDests(dests)
     }
-    fetchRandomSuggestions();
+    fetchRandomSuggestions()
   }, []);
-
-  function handleSuggestionClick(dest: Destination) {
-    let destination: DestinationState = { id: dest.dest_id, name: dest.term };
-    setDestination(destination);
-    syncSearchBarToURL('/listing');
+  
+  async function handleSuggestionClick(dest: Destination) {
+    setDestination({id: dest.dest_id, name: dest.term});
+    setShouldRedirect(prev => !prev);
   }
 
   function handleSearchHotel() {
-    if (destination.id == '') {
-      return;
-    }
+    if (destination.id=='') { return; }
     // navigate('/listing', {state: {destination: destination, occupancy: occupancy, stayDates: stayDates}})
-    syncSearchBarToURL('/listing');
+    syncSearchBarToURL('/listing')
   }
 
   return (
@@ -73,19 +79,18 @@ export default function HomePage() {
         <div className={styles.headerQuestion}>
           Looking for a place to stay?
         </div>
-        <div className={styles.searchbarWrapper}>
-          <SearchBar
-            destination={destination}
-            setDestination={setDestination}
-            stayDates={stayDates}
-            setStayDates={setStayDates}
-            occupancy={occupancy}
-            setOccupancy={setOccupancy}
-            onSubmit={handleSearchHotel}
-          />
-        </div>
+        <SearchBar
+          destination={destination}
+          setDestination={setDestination}
+          stayDates={stayDates}
+          setStayDates={setStayDates}
+          occupancy={occupancy}
+          setOccupancy={setOccupancy}
+          onSubmit={handleSearchHotel}
+        />
       </div>
-
+      
+      
       <div className={styles.destinationSuggestion}>
         <div className={styles.destinationSuggestionHeader}>
           Find Hotels in These Cities
@@ -105,16 +110,25 @@ export default function HomePage() {
           ))}
         </div>
       </div>
+      
 
       <footer className={styles.footer}>
-        <div className={styles.qualitiesHeader}>Why Choose Us</div>
+        <div className={styles.qualitiesHeader}>
+          Why Choose Us
+        </div>
         <div className={styles.qualitiesBox}>
           <div className={styles.qualityItem}>
             Destinations from across the world
           </div>
-          <div className={styles.qualityItem}>Experienced agents</div>
-          <div className={styles.qualityItem}>Buy or rent your home</div>
-          <div className={styles.qualityItem}>Cheapest prices available</div>
+          <div className={styles.qualityItem}>
+            Experienced agents
+          </div>
+          <div className={styles.qualityItem}>
+            Buy or rent your home
+          </div>
+          <div className={styles.qualityItem}>
+            Cheapest prices available
+          </div>
         </div>
       </footer>
     </div>
