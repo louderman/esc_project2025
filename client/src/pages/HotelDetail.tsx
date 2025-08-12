@@ -68,6 +68,9 @@ const HotelDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [loadingStartTime, setLoadingStartTime] = useState<number>(Date.now());
+  const [maxLoadingTime] = useState<number>(150000); // 2 minutes 30 seconds maximum loading time
+  const [specificHotel, setSpecificHotel] = useState<any>(null);
   const { hotelId: pathHotelId } = useParams<{ hotelId: string }>();
   const [searchParams] = useSearchParams();
   
@@ -160,17 +163,52 @@ const HotelDetail = () => {
     enabled: true // Enable to try to get detailed room data
   });
 
-  // Find the specific hotel we're looking for
-  let specificHotel = pricedHotels.find(hotel => hotel.id === hotelId);
-  
-  // If hotel not found in pricedHotels, try to find it in the hotels array
-  if (!specificHotel) {
-    const hotelFromHotels = hotels.find(hotel => hotel.id === hotelId);
-    if (hotelFromHotels) {
-      console.log('Debug - Hotel found in hotels array but not in pricedHotels, creating basic hotel object');
-      // Create a basic hotel object with the data from hotels array
-      specificHotel = {
-        ...hotelFromHotels,
+  // useEffect to set specificHotel when data changes
+  useEffect(() => {
+    if (!hotelId || hotelLoading || priceLoading) return;
+
+    // Find the specific hotel we're looking for
+    const foundHotel = pricedHotels.find(hotel => hotel.id === hotelId);
+    
+    // If hotel not found in pricedHotels, try to find it in the hotels array
+    if (!foundHotel) {
+      const hotelFromHotels = hotels.find(hotel => hotel.id === hotelId);
+      if (hotelFromHotels) {
+        console.log('Debug - Hotel found in hotels array but not in pricedHotels, creating basic hotel object');
+        // Create a basic hotel object with the data from hotels array
+        const basicHotel = {
+          ...hotelFromHotels,
+          price: 0,
+          lowest_price: 0,
+          price_type: 'unknown',
+          rooms_available: 0,
+          free_cancellation: false,
+          // Add missing properties required by PricedHotel type
+          searchRank: 0,
+          max_cash_payment: 0,
+          coverted_max_cash_payment: 0,
+          points: 0,
+          bonuses: 0,
+          // Add any other required fields with defaults
+        } as any; // Use type assertion to avoid TypeScript errors
+        setSpecificHotel(basicHotel);
+      }
+    } else {
+      setSpecificHotel(foundHotel);
+    }
+    
+    // If hotel still not found, use the first available hotel as fallback
+    if (!foundHotel && !specificHotel && pricedHotels.length > 0) {
+      console.log('Debug - Using fallback hotel:', pricedHotels[0]?.id);
+      setSpecificHotel(pricedHotels[0]);
+    }
+    
+    // If still no hotel found, try to use the first hotel from hotels array
+    if (!foundHotel && !specificHotel && hotels.length > 0) {
+      console.log('Debug - Using fallback hotel from hotels array:', hotels[0]?.id);
+      const fallbackHotel = hotels[0];
+      const fallbackHotelData = {
+        ...fallbackHotel,
         price: 0,
         lowest_price: 0,
         price_type: 'unknown',
@@ -182,37 +220,11 @@ const HotelDetail = () => {
         coverted_max_cash_payment: 0,
         points: 0,
         bonuses: 0,
-        // Add any other required fields with defaults
       } as any; // Use type assertion to avoid TypeScript errors
+      setSpecificHotel(fallbackHotelData);
     }
-  }
-  
-  // If hotel still not found, use the first available hotel as fallback
-  if (!specificHotel && pricedHotels.length > 0) {
-    console.log('Debug - Using fallback hotel:', pricedHotels[0]?.id);
-    specificHotel = pricedHotels[0];
-  }
-  
-  // If still no hotel found, try to use the first hotel from hotels array
-  if (!specificHotel && hotels.length > 0) {
-    console.log('Debug - Using fallback hotel from hotels array:', hotels[0]?.id);
-    const fallbackHotel = hotels[0];
-    specificHotel = {
-      ...fallbackHotel,
-      price: 0,
-      lowest_price: 0,
-      price_type: 'unknown',
-      rooms_available: 0,
-      free_cancellation: false,
-      // Add missing properties required by PricedHotel type
-      searchRank: 0,
-      max_cash_payment: 0,
-      coverted_max_cash_payment: 0,
-      points: 0,
-      bonuses: 0,
-    } as any; // Use type assertion to avoid TypeScript errors
-  }
-  
+  }, [hotelId, hotels, pricedHotels, hotelLoading, priceLoading, specificHotel]);
+
   console.log('Debug - Hooks Status:', {
     hotelLoading,
     priceLoading,
@@ -248,28 +260,73 @@ const HotelDetail = () => {
   useEffect(() => {
     console.log('useEffect triggered - hotelLoading:', hotelLoading, 'priceLoading:', priceLoading, 'roomPricesLoading:', roomPricesLoading, 'specificHotel:', !!specificHotel);
     
-    // Add timeout to prevent infinite loading
-    let loadingTimeout: NodeJS.Timeout | undefined;
+    // Add 2.5 minute maximum loading timeout to prevent infinite loading
+    let maxLoadingTimeout: NodeJS.Timeout | undefined;
+    
     if (process.env.NODE_ENV !== 'test') {
-      loadingTimeout = setTimeout(() => {
-        if (loading) {
-          console.log('Loading timeout reached, forcing loading to false');
+      console.log(`⏰ Setting maximum loading timeout: ${maxLoadingTime/1000/60} minutes (${maxLoadingTime}ms)`);
+      console.log(`⏰ Page will show error if no data is available after ${maxLoadingTime/1000/60} minutes`);
+      maxLoadingTimeout = setTimeout(() => {
+        if (loading && !data) {
+          console.log('⏰ TIMEOUT: Maximum loading time reached (2.5 minutes), forcing loading to false and showing error');
           setLoading(false);
-          if (!specificHotel) {
-            setError('Loading timeout - hotel data not available');
-          }
+          setError('Hotel information cannot be found after 2 minutes and 30 seconds of loading. Please try again or contact support.');
         }
-      }, 10000); // 10 second timeout
+      }, maxLoadingTime); // 2.5 minute maximum timeout
     }
     
-    // Set loading to true when hooks are loading
-    if (hotelLoading || priceLoading || roomPricesLoading) {
-      console.log('Setting loading to true - hooks are loading');
+    // Clear timeout if we have data (page loaded successfully)
+    if (data && maxLoadingTimeout) {
+      console.log('✅ Page loaded successfully, clearing loading timeout');
+      clearTimeout(maxLoadingTimeout);
+      maxLoadingTimeout = undefined;
+    }
+    
+    // Set loading to true when hooks are loading, but only if we don't already have data
+    if ((hotelLoading || priceLoading) && !data) {
+      console.log('Setting loading to true - main hooks are loading and no data yet');
       setLoading(true);
+      return;
+    }
+    
+    // If hooks are done loading and we have data, show results immediately
+    if (!hotelLoading && !priceLoading && data) {
+      console.log('Hooks finished loading and data available, showing results immediately');
+      // Clear the loading timeout since we're about to show results
+      if (maxLoadingTimeout) {
+        console.log('✅ Clearing loading timeout - page will display successfully');
+        clearTimeout(maxLoadingTimeout);
+        maxLoadingTimeout = undefined;
+      }
+      setLoading(false);
+      return;
+    }
+    
+    // Wait for room prices to finish loading before showing complete page
+    if (!hotelLoading && !priceLoading && roomPricesLoading && data) {
+      console.log('Main data loaded but room prices still loading, keeping loading state until rooms are ready');
+      setLoading(true);
+      return;
+    }
+    
+    // Show complete page only when all data including room prices is loaded
+    if (!hotelLoading && !priceLoading && !roomPricesLoading && data) {
+      console.log('🎯 ALL DATA READY: Main data + room prices loaded, showing complete page');
+      // Clear the loading timeout since we're about to show results
+      if (maxLoadingTimeout) {
+        console.log('✅ Clearing loading timeout - page will display successfully');
+        clearTimeout(maxLoadingTimeout);
+        maxLoadingTimeout = undefined;
+      }
+      setLoading(false);
       return;
     }
 
     const fetchHotelData = async () => {
+      console.log('=== fetchHotelData called ===');
+      console.log('hotelId:', hotelId);
+      console.log('specificHotel:', specificHotel);
+      
       if (!hotelId) {
         setError('No hotel ID provided');
         setLoading(false);
@@ -280,9 +337,9 @@ const HotelDetail = () => {
         setLoading(true);
         setError(null);
         
-        // Wait for all data to be loaded before proceeding
-        if (hotelLoading || priceLoading || roomPricesLoading) {
-          console.log('Still waiting for data to load...');
+        // Wait for main data to be loaded before proceeding
+        if (hotelLoading || priceLoading) {
+          console.log('Still waiting for main data to load...');
           return;
         }
 
@@ -311,19 +368,13 @@ const HotelDetail = () => {
 
         // Wait for room prices to be loaded if the hook is enabled
         if (roomPricesLoading) {
-          console.log('Room prices still loading, waiting...');
-          return;
+          console.log('Room prices still loading, but proceeding with main hotel data...');
+          // Don't return here - continue with the data we have
         }
 
-        // Add a 3-second delay to ensure all room data is fully loaded
-        // Skip delay in test environment to make tests faster
-        if (process.env.NODE_ENV !== 'test') {
-          console.log('All data loaded, waiting 3 seconds for room data to fully load...');
-          await new Promise(resolve => setTimeout(resolve, 3000));
-          console.log('3-second delay completed, proceeding with data processing...');
-        } else {
-          console.log('Test environment detected, skipping 3-second delay');
-        }
+        // Remove the 3-second delay that was causing loading issues
+        // The hooks should handle their own loading states properly
+        console.log('All data loaded, proceeding with data processing...');
 
         // Extract amenities from hotel description if amenities object is empty
         const extractAmenitiesFromDescription = (description: string) => {
@@ -439,14 +490,12 @@ const HotelDetail = () => {
         console.log('Room prices length:', roomPrices?.length);
         console.log('Room prices loading:', roomPricesLoading);
         
-        // Wait for room prices to be loaded if the hook is enabled
+        // Wait for room prices to finish loading before proceeding
         if (roomPricesLoading) {
-          console.log('Room prices still loading, waiting...');
-          return;
-        }
-        
-        if (roomPrices && roomPrices.length > 0) {
-          console.log('Using actual room prices from API:', roomPrices.length, 'rooms');
+          console.log('🏠 Room prices still loading, waiting for complete room data and images...');
+          return; // Don't proceed until room prices are loaded
+        } else if (roomPrices && roomPrices.length > 0) {
+          console.log('✅ Room prices loaded successfully:', roomPrices.length, 'rooms with images');
           
           // Filter out duplicates before processing
           const uniqueRoomPrices = roomPrices.filter((roomPrice, index, array) => {
@@ -499,7 +548,7 @@ const HotelDetail = () => {
               if (roomTypeLower.includes('deluxe') || roomTypeLower.includes('premium')) {
                 roomImageUrl = 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1200&h=900&fit=crop&q=85';
               } else if (roomTypeLower.includes('suite') || roomTypeLower.includes('executive')) {
-                roomImageUrl = 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1200&h=900&fit=crop&q=85';
+                roomImageUrl = 'https://images.unsplash.com/photo-1721322800607-6e44c42644a7?w=1200&h=900&fit=crop&q=85';
               } else if (roomTypeLower.includes('standard') || roomTypeLower.includes('basic')) {
                 roomImageUrl = 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85';
               }
@@ -520,117 +569,12 @@ const HotelDetail = () => {
               key: roomPrice.key
             });
           });
-        } else if (specificHotel.price || specificHotel.lowest_price) {
-          // Use the actual hotel pricing data to create detailed room options
-          console.log('Using hotel pricing data to create detailed room options');
-          const basePrice = Math.round((specificHotel.price || specificHotel.lowest_price) as number);
-          const freeCancellation = specificHotel.free_cancellation || false;
-          const roomsAvailable = specificHotel.rooms_available || 10;
-          
-          // Create room data from hotel pricing information
-          // Since the API doesn't provide detailed room data, create realistic room options based on hotel pricing
-          const roomTypes = [
-            {
-              type: 'Standard Room',
-              price: basePrice,
-              occupancy: parseInt(adults) + parseInt(children),
-              bed_type: 'King bed',
-              size: '35',
-              description: 'Comfortable standard room with modern amenities',
-              long_description: 'A well-appointed standard room featuring modern amenities, comfortable furnishings, and all the essentials for a pleasant stay.',
-              amenities: ['WiFi', 'Smart TV', 'Air Conditioning', 'Private Bathroom', 'Desk', 'Coffee Maker'],
-              availability: Math.max(1, Math.floor(roomsAvailable * 0.6)) // 60% of rooms
-            },
-            {
-              type: 'Deluxe Room',
-              price: Math.round(basePrice * 1.2),
-              occupancy: parseInt(adults) + parseInt(children),
-              bed_type: 'King bed',
-              size: '45',
-              description: 'Spacious deluxe room with enhanced amenities',
-              long_description: 'Upgraded deluxe room offering more space, enhanced amenities, and premium furnishings for an elevated stay experience.',
-              amenities: ['WiFi', 'Smart TV', 'Air Conditioning', 'Private Bathroom', 'Desk', 'Coffee Maker', 'Mini Bar', 'City View'],
-              availability: Math.max(1, Math.floor(roomsAvailable * 0.3)) // 30% of rooms
-            },
-            {
-              type: 'Suite',
-              price: Math.round(basePrice * 1.8),
-              occupancy: parseInt(adults) + parseInt(children),
-              bed_type: 'King bed + Sofa bed',
-              size: '65',
-              description: 'Luxury suite with separate living area',
-              long_description: 'Premium suite featuring a separate living area, enhanced amenities, and luxury furnishings for the ultimate comfort and convenience.',
-              amenities: ['WiFi', 'Smart TV', 'Air Conditioning', 'Private Bathroom', 'Living Area', 'Desk', 'Coffee Maker', 'Mini Bar', 'Balcony', 'City View'],
-              availability: Math.max(1, Math.floor(roomsAvailable * 0.1)) // 10% of rooms
-            }
-          ];
-          
-
-          
-          // Filter out duplicates from room types as well
-          const uniqueRoomTypes = roomTypes.filter((roomType, index, array) => {
-            // Check if this room type is a duplicate of any previous room type
-            for (let i = 0; i < index; i++) {
-              if (areRoomsSimilar(roomType, array[i])) {
-                console.log('Filtering out duplicate room type:', roomType.type, 'similar to:', array[i].type);
-                return false;
-              }
-            }
-            return true;
-          });
-          
-          console.log('After deduplication:', uniqueRoomTypes.length, 'unique room types');
-          
-          uniqueRoomTypes.forEach((roomType, index) => {
-            // Use different images for different room types
-            let roomImageUrl = 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85'; // default fallback
-            
-            if (roomType.type === 'Standard Room') {
-              roomImageUrl = 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85';
-            } else if (roomType.type === 'Deluxe Room') {
-              roomImageUrl = 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1200&h=900&fit=crop&q=85';
-            } else if (roomType.type === 'Suite') {
-              roomImageUrl = 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1200&h=900&fit=crop&q=85';
-            }
-            
-            roomData.push({
-              id: `${specificHotel.id}-${roomType.type.toLowerCase().replace(' ', '-')}`,
-              room_type: roomType.type,
-              price: roomType.price,
-              free_cancellation: freeCancellation,
-              image: roomImageUrl,
-              occupancy: roomType.occupancy,
-              bed_type: roomType.bed_type,
-              size: roomType.size,
-              description: roomType.description,
-              long_description: roomType.long_description,
-              amenities: roomType.amenities,
-              key: `${specificHotel.id}-${index}`,
-              availability: roomType.availability // Add availability to room data
-            });
-          });
-          
-          console.log('Created', roomData.length, 'room types from hotel pricing data');
-          } else {
-          console.log('No pricing data found for this hotel');
-          // If no pricing data, show that pricing is not available
-          roomData.push({
-            id: hotelId,
-            room_type: 'Standard Room',
-            price: 0, // Indicate no pricing available
-            free_cancellation: false,
-            image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85',
-            occupancy: parseInt(adults) + parseInt(children),
-            bed_type: 'King bed',
-            size: '35',
-            description: 'Standard room with modern amenities',
-            long_description: 'Comfortable room with all necessary amenities for a pleasant stay. Pricing information is not currently available for this hotel.',
-            amenities: ['WiFi', 'TV', 'Air Conditioning'],
-            key: hotelId
-          });
-          
-          // Also add a message that pricing is not available
-          console.log('Pricing not available for this hotel - showing fallback room option');
+        }
+        
+        // Only proceed if we have room data from the API
+        if (roomData.length === 0) {
+          console.log('No room data available from API, cannot proceed without room information');
+          throw new Error('Room information is required but not available. Please try again.');
         }
 
         // Validate room availability and guest capacity
@@ -706,51 +650,109 @@ const HotelDetail = () => {
             validChildren
           }
         });
+        
+        // Set data immediately - don't wait for minimum loading time
+        console.log('Data set successfully, setting loading to false immediately');
+        
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
+        // Clear the loading timeout since we're about to show results
+        if (maxLoadingTimeout) {
+          console.log('✅ Clearing loading timeout from fetchHotelData - page will display successfully');
+          clearTimeout(maxLoadingTimeout);
+          maxLoadingTimeout = undefined;
+        }
         setLoading(false);
       }
     };
 
-    // Only fetch when hooks have loaded and we have a specific hotel
+    // Only fetch when ALL hooks have loaded and we have a specific hotel
     console.log('Checking fetch conditions - hotelLoading:', hotelLoading, 'priceLoading:', priceLoading, 'roomPricesLoading:', roomPricesLoading, 'specificHotel:', !!specificHotel);
+    console.log('specificHotel object:', specificHotel);
     
-    // Wait for all data to be loaded before proceeding
+        // Wait for ALL data to be loaded before proceeding (including room prices)
     if (!hotelLoading && !priceLoading && !roomPricesLoading && specificHotel) {
-      console.log('All data loaded, fetching hotel data...');
+      console.log('🎯 ALL DATA READY: Main hotel, price, and room data loaded, fetching complete hotel data...');
+      console.log('About to call fetchHotelData...');
+      // Clear the loading timeout since we're about to fetch data
+      if (maxLoadingTimeout) {
+        console.log('✅ Clearing loading timeout - about to fetch complete hotel data');
+        clearTimeout(maxLoadingTimeout);
+        maxLoadingTimeout = undefined;
+      }
       fetchHotelData();
     } else if (!hotelLoading && !priceLoading && !roomPricesLoading && !specificHotel && hotelId) {
-      console.log('Hotel not found, setting error');
+      console.log('All hooks finished loading but hotel not found, setting error');
+      // Show error immediately when hotel not found
+      console.log('Hotel not found, showing error immediately');
+      // Clear the loading timeout since we're showing an error
+      if (maxLoadingTimeout) {
+        console.log('✅ Clearing loading timeout - showing hotel not found error');
+        clearTimeout(maxLoadingTimeout);
+        maxLoadingTimeout = undefined;
+      }
       setError(`Hotel with ID ${hotelId} not found`);
       setLoading(false);
     } else if (hotelLoading || priceLoading || roomPricesLoading) {
-      console.log('Still loading data, keeping loading state');
+      console.log('Still loading data (hotel, price, or rooms), keeping loading state');
       setLoading(true);
     } else {
       console.log('No fetch conditions met, setting loading to false');
+      console.log('Current state - hotelLoading:', hotelLoading, 'priceLoading:', priceLoading, 'roomPricesLoading:', roomPricesLoading, 'specificHotel:', !!specificHotel);
+      // Stop loading immediately
+      console.log('No fetch conditions met, setting loading to false immediately');
+      // Clear the loading timeout since we're stopping loading
+      if (maxLoadingTimeout) {
+        console.log('✅ Clearing loading timeout - no fetch conditions met');
+        clearTimeout(maxLoadingTimeout);
+        maxLoadingTimeout = undefined;
+      }
       setLoading(false);
     }
     
     // Additional safety check: if we've been loading for too long with no results, force stop loading
     if (!hotelLoading && !priceLoading && !roomPricesLoading && !specificHotel && hotels.length === 0) {
-      console.log('No hotels found and all hooks finished loading, setting error');
+      console.log('All hooks finished loading but no hotels found, setting error');
+      // Show error immediately
+      console.log('No hotels found, showing error immediately');
+      // Clear the loading timeout since we're showing an error
+      if (maxLoadingTimeout) {
+        console.log('✅ Clearing loading timeout - showing no hotels error');
+        clearTimeout(maxLoadingTimeout);
+        maxLoadingTimeout = undefined;
+      }
       setError('No hotels available for the selected destination');
       setLoading(false);
     }
 
     // Cleanup timeout on unmount or dependency change
     return () => {
-      if (loadingTimeout) {
-        clearTimeout(loadingTimeout);
+      if (maxLoadingTimeout) {
+        clearTimeout(maxLoadingTimeout);
       }
     };
-  }, [hotelId, specificHotel, hotelLoading, priceLoading, roomPricesLoading, destinationId, checkin, checkout, adults, children, roomCount, totalGuests, searchParams]);
+  }, [hotelId, specificHotel, hotelLoading, priceLoading, roomPricesLoading, destinationId, checkin, checkout, adults, children, roomCount, totalGuests, searchParams, data, maxLoadingTime]);
 
   console.log('Rendering check - loading:', loading, 'error:', error, 'data:', !!data);
 
+  // Clear loading timeout if we have data (page loaded successfully)
+  if (data && !loading) {
+    console.log('✅ Page rendered successfully, ensuring loading timeout is cleared');
+  }
+
   if (loading) {
-    console.log('Rendering loading state');
+    // Calculate remaining time before timeout
+    const elapsedTime = Date.now() - loadingStartTime;
+    const remainingTime = Math.max(0, maxLoadingTime - elapsedTime);
+    const remainingMinutes = Math.ceil(remainingTime / 1000 / 60);
+    
+    console.log(`Rendering loading state - ${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''} remaining before timeout`);
+    
+    if (!hotelLoading && !priceLoading && roomPricesLoading) {
+      console.log('🏠 Waiting for room prices and images to finish loading...');
+    }
+    
     return (
       <div className="hotel-detail-page min-h-screen bg-background">
         <HotelHeader />
@@ -758,6 +760,14 @@ const HotelDetail = () => {
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-hotel-gold mx-auto mb-4"></div>
             <p className="text-hotel-text-secondary">Loading hotel details...</p>
+            <p className="text-sm text-hotel-text-secondary mt-2">
+              Maximum loading time: {remainingMinutes} minute{remainingMinutes !== 1 ? 's' : ''} remaining
+            </p>
+            {!hotelLoading && !priceLoading && roomPricesLoading && (
+              <p className="text-xs text-hotel-text-secondary mt-1">
+                🏠 Fetching room details and images...
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -798,6 +808,8 @@ const HotelDetail = () => {
     );
   }
 
+  const loadingDuration = Date.now() - loadingStartTime;
+  console.log(`🎉 SUCCESS: Rendering HotelDetail with data after ${Math.round(loadingDuration/1000)} seconds!`);
   console.log('Rendering HotelDetail with price:', data.rooms.length > 0 ? data.rooms[0].price : 0, 'and rooms:', data.rooms);
   console.log('Hotel coordinates:', { lat: data.hotel.latitude, lng: data.hotel.longitude });
   console.log('Room data for display:', data.rooms[0]);
