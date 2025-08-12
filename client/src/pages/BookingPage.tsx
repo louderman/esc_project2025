@@ -179,16 +179,24 @@ export default function BookingPage() {
     // Navigate to booking confirmation page on successful payment
     navigate('/booking/confirmation', {
       state: {
-        bookingDetails,
         hotel,
-        totalAmount: stateData.bookingDetails?.totalAmount ?? ((stateData.bookingDetails?.pricePerNight ?? hotel.price) * numberOfNights),
+        stayDates,
+        bookingDetails: {
+          selectedRoom: stateData.bookingDetails?.selectedRoom,
+          numberOfGuests: stateData.bookingDetails?.numberOfGuests,
+          numberOfNights,
+          numberOfRooms: stateData.bookingDetails?.numberOfRooms,
+          checkinDate: stateData.bookingDetails?.checkinDate,
+          checkoutDate: stateData.bookingDetails?.checkoutDate,
+          totalAmount: stateData.bookingDetails?.totalAmount ?? ((stateData.bookingDetails?.pricePerNight ?? hotel.price) * numberOfNights),
+          pricePerNight: stateData.bookingDetails?.pricePerNight ?? hotel.price,
+          hotelImage: stateData.bookingDetails?.hotelImage,
+        },
       },
     });
   };
 
   const handlePaymentError = (error: string) => {
-    // Console error for now
-    // TODO: add a toast saying it failed, ya lazy bum
     console.error('Payment failed:', error);
   };
 
