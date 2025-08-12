@@ -153,12 +153,14 @@ export default function BookingPage() {
       ? stayDates.checkinDate.toLocaleDateString('en-US', {
           day: '2-digit',
           month: 'short',
+          year: 'numeric',
         })
       : 'N/A',
     checkOutDate: stayDates.checkoutDate
       ? stayDates.checkoutDate.toLocaleDateString('en-US', {
           day: '2-digit',
           month: 'short',
+          year: 'numeric',
         })
       : 'N/A',
     guests: `${occupancy.rooms} room${occupancy.rooms > 1 ? 's' : ''} · ${

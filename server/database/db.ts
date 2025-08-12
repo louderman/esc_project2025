@@ -13,11 +13,15 @@ async function cleanup() {
     // Check if pool is already closed before trying to end it
     if (pool && typeof pool.end === 'function') {
       await pool.end();
-      console.log('Database pool closed.');
     }
   } catch (err) {
     // Only log if it's not a "pool already closed" error
-    if (err && typeof err === 'object' && 'code' in err && err.code !== 'POOL_CLOSED') {
+    if (
+      err &&
+      typeof err === 'object' &&
+      'code' in err &&
+      err.code !== 'POOL_CLOSED'
+    ) {
       console.error('Error closing pool:', err);
     }
   }
