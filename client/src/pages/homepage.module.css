@@ -13,17 +13,13 @@
   background-size: cover;
   position: relative;
 }
-
+.searchbarWrapper {
+  width: 1280px;
+}
 .headerQuestion {
   color: white;
   font-weight: bold;
   font-size: 50px;
-}
-
-/* need to have fixed width so that searchbar wont change size */
-/* pls the width to any value you want */
-.searchbarWrapper {
-  width: 1280px;
 }
 
 .destinationSuggestion {

@@ -81,15 +81,17 @@ export default function HomePage() {
         <div className={styles.headerQuestion}>
           Looking for a place to stay?
         </div>
-        <SearchBar
-          destination={destination}
-          setDestination={setDestination}
-          stayDates={stayDates}
-          setStayDates={setStayDates}
-          occupancy={occupancy}
-          setOccupancy={setOccupancy}
-          onSubmit={handleSearchHotel}
-        />
+        <div className={styles.searchbarWrapper}>
+          <SearchBar
+            destination={destination}
+            setDestination={setDestination}
+            stayDates={stayDates}
+            setStayDates={setStayDates}
+            occupancy={occupancy}
+            setOccupancy={setOccupancy}
+            onSubmit={handleSearchHotel}
+            />
+        </div>
       </div>
       
       
