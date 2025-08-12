@@ -11,6 +11,7 @@ interface Booking {
   status: string;
   imageUrl?: string;
   createdAt: string;
+  bookingAddress?: string;
 }
 
 export default function PastBookingPage() {
@@ -22,7 +23,7 @@ export default function PastBookingPage() {
 
   useEffect(() => {
     async function fetchBookings() {
-      //using storedUser from local storage
+      //using storedUser from localStorage
       const storedUser = localStorage.getItem('user');
       console.log('Stored user from localStorage:', storedUser);
       
@@ -64,28 +65,9 @@ export default function PastBookingPage() {
     return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
   };
 
-  const handleCardClick = (booking: Booking) => {
-    navigate('/booking/confirmation', { 
-      state: { 
-        hotel: {
-          id: booking.id,
-          name: booking.hotelName,
-          address: "Location unavailable", // Replace if you have real data
-          price: 0, // Replace with actual price if you have it
-          imageCount: booking.imageUrl ? 1 : 0,
-          image_details: {
-            prefix: booking.imageUrl ?? '/listing/hotel_img_placeholder.png',
-            suffix: '', // Only needed if you have numbered image URLs
-          }
-        },
-        stayDates: {
-          checkinDate: new Date(booking.checkInDate),
-          checkoutDate: new Date(booking.checkOutDate),
-        }
-      } 
-    });
+  const handleCardClick = (bookingId: string) => {
+    navigate('/booking/confirmation', { state: { bookingId } });
   };
-
 
   if (loading) {
     return (
@@ -116,22 +98,40 @@ export default function PastBookingPage() {
       <section className={styles.mainSection}>
         <div className={styles.mainBox}>
           <div className={styles.titleCard}>
-            <h1 className={styles.pageTitle}>Past Bookings</h1>
-            <p className={styles.subtitle}>View and manage your previous hotel reservations</p>
+            <h1 className={styles.pageTitle}>Booking History</h1>
+            <p className={styles.subtitle}>Track your past and upcoming hotel stays</p>
           </div>
 
           <div className={styles.cardsContainer}>
             {bookings.length === 0 ? (
-              <p>No past bookings found for your account.</p>
+                <div className={styles.emptyState}>
+                  <div className={styles.emptyStateIcon}>
+                    <img
+                      src="/common/luggage_person.png"
+                      alt="🧳"
+                      style={{ width: '150px', height: '225px' }}
+                    />
+                  </div>
+                  <h3 className={styles.emptyStateTitle}>Ready for your next adventure?</h3>
+                  <p className={styles.emptyStateText}>
+                    You haven't made any hotel bookings yet. Discover amazing hotels and create unforgettable memories!
+                  </p>
+                  <button 
+                    className={styles.browseButton}
+                    onClick={() => navigate('/listing')}
+                  >
+                    Start Searching
+                  </button>
+                </div>
             ) : (
-              bookings.map(({ id, hotelName, checkInDate, checkOutDate, status, imageUrl }) => (
+              bookings.map(({ id, hotelName, checkInDate, checkOutDate, status, imageUrl, bookingAddress }) => (
                 <div
                   key={id}
                   className={styles.bookingCard}
-                  onClick={() => handleCardClick({ id, hotelName, checkInDate, checkOutDate, status, imageUrl, userId: '', createdAt: '' })}
+                  onClick={() => handleCardClick(id)}
                   style={{ cursor: 'pointer' }}
                   tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCardClick({ id, hotelName, checkInDate, checkOutDate, status, imageUrl, userId: '', createdAt: '' }); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCardClick(id); }}
                   role="button"
                   aria-label={`View details for booking at ${hotelName}`}
                 >
@@ -143,7 +143,7 @@ export default function PastBookingPage() {
                   <div className={styles.cardRight}>
                     <div className={styles.hotelName}>{hotelName ?? 'Unknown hotel'}</div>
                     <div className={styles.hotelAddress}>
-                      <span className={styles.icon}>📍</span> Location unavailable
+                      <span className={styles.icon}>📍</span> { bookingAddress ?? 'Location unavailable'}
                     </div>
                     <div className={styles.detailsCol}>
                       <div>

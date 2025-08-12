@@ -1,9 +1,9 @@
 import { Button } from "@/components/hotel/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/hotel/ui/card";
 import { Label } from "@/components/hotel/ui/label";
-import { Users, Star, Calendar as CalendarIcon, MapPin } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Calendar as CalendarIcon, MapPin, Star, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Calendar, { type StayDatesState } from "./Calendar";
 
 interface AvailabilityInfo {
@@ -44,6 +44,7 @@ interface BookingCardProps {
   hasRooms?: boolean;
   availability?: AvailabilityInfo;
   selectedRoom?: Room | null;
+  hotelImages?: string[];
 }
 
 const BookingCard = ({ 
@@ -55,7 +56,8 @@ const BookingCard = ({
   hotelAddress,
   hasRooms = false, 
   availability, 
-  selectedRoom 
+  selectedRoom,
+  hotelImages = []
 }: BookingCardProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -124,24 +126,6 @@ const BookingCard = ({
   
   const checkinDate = getDateFromParams('checkin', '2025-08-12');
   const checkoutDate = getDateFromParams('checkout', '2025-08-30');
-  
-  // Format dates for display with error handling
-  const formatDateForDisplay = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        return 'Select date';
-      }
-      return date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric', 
-        year: 'numeric' 
-      });
-    } catch (error) {
-      console.error('Error formatting date for display:', error);
-      return 'Select date';
-    }
-  };
 
   // Helper function to format date for display from Date object with error handling
   const formatDateFromDate = (date: Date) => {
@@ -556,6 +540,11 @@ const BookingCard = ({
     // Calculate total amount (price is already the total)
     const totalAmount = price;
 
+    // Get hotel image from hotel images array, selected room, or use fallback
+    const hotelImage = hotelImages.length > 0 ? hotelImages[0] : 
+                      selectedRoom?.image || 
+                      'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85';
+
     // Prepare booking details
     const bookingDetails = {
       selectedRoom: selectedRoom ? {
@@ -591,7 +580,8 @@ const BookingCard = ({
       checkinDate: checkin,
       checkoutDate: checkout,
       totalAmount: totalAmount,
-      pricePerNight: price / numberOfNights
+      pricePerNight: price / numberOfNights,
+      hotelImage: hotelImage // Add hotel image to booking details
     };
 
     // Navigate to booking page with state
@@ -604,7 +594,8 @@ const BookingCard = ({
           address: hotelAddress,
           rating: rating,
           reviewCount: reviewCount,
-          price: price
+          price: price,
+          image: hotelImage // Add image to hotel object
         },
         totalAmount: totalAmount,
       },

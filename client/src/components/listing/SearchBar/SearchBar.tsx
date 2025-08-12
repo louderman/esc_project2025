@@ -58,7 +58,7 @@ export default function SearchBar({
   }
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} data-cy='search-bar'>
       <DestinationInput
         errorMsg={errorMsg}
         setErrorMsg={setErrorMsg}
