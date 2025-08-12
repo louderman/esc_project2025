@@ -1,5 +1,6 @@
 .container {
   align-content: center;
+  justify-content: center;
 }
 
 .searchbarSection {
@@ -8,7 +9,6 @@
   align-items: center;
   padding: 30px 20px;
   height: 400px;
-  /*background-image: url('/common/mbs_blur.jpg');*/
   background-color: #ffca0b;
   background-size: cover;
   position: relative;
@@ -23,14 +23,18 @@
 /* need to have fixed width so that searchbar wont change size */
 /* pls the width to any value you want */
 .searchbarWrapper {
-  width: 1000px;
+  width: 1280px;
 }
 
 .destinationSuggestion {
+  display: flex;
+  flex-direction: column;
   padding-top: 80px;
   padding-bottom: 100px;
   background: #ffffff;
   background: linear-gradient(0, #ffffff 0%, #fff5d0 100%);
+  justify-content: center;
+  align-content: center;
 }
 
 .destinationSuggestionHeader {
@@ -50,13 +54,16 @@
 .destinationSuggestionsBox {
   display: flex;
   flex-wrap: wrap;
-  margin-top: 20px;
+  margin-top: 50px;
+  margin-left: 80px;
+  margin-right: 80px;
   gap: 10px;
   justify-content: center;
+  align-self: center;
+  max-width: 1500px;
 }
 
 .destinationSuggestionsItem {
-  width: 22vw;
   align-content: center;
 }
 
@@ -78,6 +85,17 @@
 
 .qualityItem {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.qualityIcon {
+  width: 60px;
+  align-content: center;
+  justify-self: center;
+  margin: 20px;
 }
 
 .qualitiesHeader {

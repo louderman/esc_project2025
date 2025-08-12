@@ -19,13 +19,9 @@ export default function HomePage() {
     id: '',
     name: '',
   });
-  let today: Date = new Date();
-  let tomorrow: Date = new Date();
-  today.setDate(new Date().getDate()+1)
-  tomorrow.setDate(new Date().getDate()+2)
   const [stayDates, setStayDates] = useState<StayDatesState>({
-    checkinDate: today,
-    checkoutDate: tomorrow,
+    checkinDate: null,
+    checkoutDate: null,
   });
   const [occupancy, setOccupancy] = useState<OccupancyState>({
     adults: 1,
@@ -64,12 +60,18 @@ export default function HomePage() {
   
   async function handleSuggestionClick(dest: Destination) {
     setDestination({id: dest.dest_id, name: dest.term});
+    if (stayDates.checkinDate==null || stayDates.checkoutDate==null) {
+      let oneweek: Date = new Date();
+      let twoweek: Date = new Date();
+      oneweek.setDate(new Date().getDate()+7)
+      twoweek.setDate(new Date().getDate()+14)
+      setStayDates({checkinDate: oneweek, checkoutDate: twoweek})
+    }
     setShouldRedirect(prev => !prev);
   }
 
   function handleSearchHotel() {
     if (destination.id=='') { return; }
-    // navigate('/listing', {state: {destination: destination, occupancy: occupancy, stayDates: stayDates}})
     syncSearchBarToURL('/listing')
   }
 
@@ -102,7 +104,6 @@ export default function HomePage() {
           {suggestedDests.map((dest, index) => (
             <div className={styles.destinationSuggestionsItem}>
               <DestinationCard
-                url='https://d2ey9sqrvkqdfs.cloudfront.net/5CCH/0.jpg'
                 dest={dest}
                 onclick={handleSuggestionClick}
               />
@@ -118,16 +119,20 @@ export default function HomePage() {
         </div>
         <div className={styles.qualitiesBox}>
           <div className={styles.qualityItem}>
-            Destinations from across the world
+            <img src='/homepage/locationpin.png' className={styles.qualityIcon}></img>
+            <div>Destinations from across the world</div>
           </div>
           <div className={styles.qualityItem}>
-            Experienced agents
+            <img src='/homepage/experience.png' className={styles.qualityIcon}></img>
+            <div>Experienced agents</div>
           </div>
           <div className={styles.qualityItem}>
-            Buy or rent your home
+            <img src='/homepage/house.png' className={styles.qualityIcon}></img>
+            <div>Buy or rent your home</div>
           </div>
           <div className={styles.qualityItem}>
-            Cheapest prices available
+            <img src='/homepage/dollar.png' className={styles.qualityIcon}></img>
+            <div>Cheapest prices available</div>
           </div>
         </div>
       </footer>
