@@ -1,4 +1,3 @@
-import React from 'react';
 import { describe, it, beforeEach, vi, expect } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { render, waitFor } from '@testing-library/react';
@@ -44,7 +43,9 @@ const getEmailInput = (ui: ReturnType<typeof setup>) => {
     if (sib && sib.tagName === 'INPUT') return sib;
   }
   const form = ui.container.querySelector('form');
-  const byType = form?.querySelector('input[type="text"]') as HTMLInputElement | null;
+  const byType = form?.querySelector(
+    'input[type="text"]'
+  ) as HTMLInputElement | null;
   if (byType) return byType;
   return ui.getAllByRole('textbox')[0] as HTMLInputElement;
 };
@@ -58,7 +59,9 @@ const getPasswordInput = (ui: ReturnType<typeof setup>) => {
     if (inp) return inp;
   }
   const form = ui.container.querySelector('form');
-  const byTypePwd = form?.querySelector('input[type="password"]') as HTMLInputElement | null;
+  const byTypePwd = form?.querySelector(
+    'input[type="password"]'
+  ) as HTMLInputElement | null;
   if (byTypePwd) return byTypePwd;
   const anyPwd = form?.querySelector('input') as HTMLInputElement | null;
   if (anyPwd) return anyPwd;
@@ -77,7 +80,11 @@ describe('ITC_LOGIN_1 – Log in button (integration)', () => {
     localStorage.clear();
   });
 
-  const fill = async (ui: ReturnType<typeof setup>, email?: string, password?: string) => {
+  const fill = async (
+    ui: ReturnType<typeof setup>,
+    email?: string,
+    password?: string
+  ) => {
     const user = userEvent.setup();
     if (typeof email === 'string') {
       await user.clear(getEmailInput(ui));
@@ -95,8 +102,12 @@ describe('ITC_LOGIN_1 – Log in button (integration)', () => {
     const user = await fill(ui, '', '');
     await user.click(getLoginButton(ui));
 
-    expect(ui.getByText(/Email must be valid and contain no spaces\./i)).toBeVisible();
-    expect(ui.getByText(/Password must be at least 8 characters with no spaces\./i)).toBeVisible();
+    expect(
+      ui.getByText(/Email must be valid and contain no spaces\./i)
+    ).toBeVisible();
+    expect(
+      ui.getByText(/Password must be at least 8 characters with no spaces\./i)
+    ).toBeVisible();
     expect(navigateMock).not.toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -106,8 +117,12 @@ describe('ITC_LOGIN_1 – Log in button (integration)', () => {
     const user = await fill(ui, 'alicegmail.com', 'StrongPass1');
     await user.click(getLoginButton(ui));
 
-    expect(ui.getByText(/Email must be valid and contain no spaces\./i)).toBeVisible();
-    expect(ui.queryByText(/Password must be at least 8 characters/i)).toBeNull();
+    expect(
+      ui.getByText(/Email must be valid and contain no spaces\./i)
+    ).toBeVisible();
+    expect(
+      ui.queryByText(/Password must be at least 8 characters/i)
+    ).toBeNull();
     expect(navigateMock).not.toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -117,8 +132,12 @@ describe('ITC_LOGIN_1 – Log in button (integration)', () => {
     const user = await fill(ui, 'alice@gmail.com', 'short');
     await user.click(getLoginButton(ui));
 
-    expect(ui.getByText(/Password must be at least 8 characters with no spaces\./i)).toBeVisible();
-    expect(ui.queryByText(/Email must be valid and contain no spaces\./i)).toBeNull();
+    expect(
+      ui.getByText(/Password must be at least 8 characters with no spaces\./i)
+    ).toBeVisible();
+    expect(
+      ui.queryByText(/Email must be valid and contain no spaces\./i)
+    ).toBeNull();
     expect(navigateMock).not.toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -152,6 +171,8 @@ describe('ITC_LOGIN_1 – Log in button (integration)', () => {
       );
     });
 
-    await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/from-here'));
+    await waitFor(() =>
+      expect(navigateMock).toHaveBeenCalledWith('/from-here')
+    );
   });
 });
