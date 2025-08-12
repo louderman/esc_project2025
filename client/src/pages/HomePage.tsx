@@ -47,17 +47,6 @@ export default function HomePage() {
   });
 
 
-  const [suggestedDests, setSuggestedDests] = useState<Destination[]>([]);
-  useEffect(() => {
-    async function fetchRandomSuggestions() {
-      let url = `/api/destination/random?count=8`;
-      const res = await fetch(url, { method: 'GET' });
-      const dests: Destination[] = await res.json();
-      setSuggestedDests(dests)
-    }
-    fetchRandomSuggestions()
-  }, []);
-  
   async function handleSuggestionClick(dest: Destination) {
     setDestination({id: dest.dest_id, name: dest.term});
     if (stayDates.checkinDate==null || stayDates.checkoutDate==null) {
@@ -74,6 +63,17 @@ export default function HomePage() {
     if (destination.id=='') { return; }
     syncSearchBarToURL('/listing')
   }
+  
+  const suggestedDests: Destination[] = [
+    {id: '', dest_id: 'A6Dz', term: 'Rome, Italy', lat: 0, lng: 0, type: '', state: ''},
+    {id: '', dest_id: 'eTo1', term: 'Seoul, Republic of Korea', lat: 0, lng: 0, type: '', state: ''},
+    {id: '', dest_id: 'jiHz', term: 'New York, NY, United States', lat: 0, lng: 0, type: '', state: ''},
+    {id: '', dest_id: '5qq3', term: 'Amsterdam, Netherlands', lat: 0, lng: 0, type: '', state: ''},
+    {id: '', dest_id: 'zjTT', term: 'Dublin, DUB, Ireland', lat: 0, lng: 0, type: '', state: ''},
+    {id: '', dest_id: 'vJh2', term: 'Paris, France', lat: 0, lng: 0, type: '', state: ''},
+    {id: '', dest_id: 'YCcf', term: 'Shanghai, China', lat: 0, lng: 0, type: '', state: ''},
+    {id: '', dest_id: 'YhrB', term: 'Gold Coast, QLD, Australia', lat: 0, lng: 0, type: '', state: ''}
+  ]
 
   return (
     <div className={styles.container}>
