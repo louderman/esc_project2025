@@ -59,11 +59,58 @@ export default function PastBookingPage() {
     fetchBookings();
   }, []);
 
-  const formatDate = (dateStr: string) => {
-    if (!dateStr || dateStr === 'N/A') return 'N/A';
-    const date = new Date(dateStr);
-    return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
+  // const formatDate = (dateStr: string) => {
+  //   if (!dateStr || dateStr === 'N/A') return 'N/A';
+
+  //   //If date format has no year 
+  //   let fullDateStr = dateStr;
+  //   if (!/\d{4}/.test(dateStr)) { 
+  //     const currentYear = new Date().getFullYear();
+  //     fullDateStr = `${dateStr} ${currentYear}`;
+  //   }
+
+  //   const date = new Date(fullDateStr);
+  //   return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
+  // };
+
+  const formatDate = (dateStr: string | null | undefined): string => {
+  if (!dateStr || dateStr === 'N/A') return 'N/A';
+
+  // Map of valid month abbreviations
+  const monthMap: Record<string, number> = {
+    Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+    Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
   };
+
+  const trimmed = dateStr.trim();
+  // Accepts: "Mon DD" or "Mon DD YYYY" or "Mon DD, YYYY"
+  const normalized = trimmed.replace(',', '').replace(/\s+/g, ' ');
+  const match = normalized.match(/^([A-Za-z]{3})\s+(\d{1,2})(?:\s+(\d{4}))?$/);
+  if (!match) return 'N/A';
+
+  const monAbbr = match[1];
+  const day = Number(match[2]);
+  if (!(monAbbr in monthMap)) return 'N/A';
+
+  const year = match[3] ? Number(match[3]) : new Date().getFullYear();
+  const d = new Date(year, monthMap[monAbbr], day);
+
+  // Validate constructed date (avoid Feb 30 etc.)
+  if (
+    d.getFullYear() !== year ||
+    d.getMonth() !== monthMap[monAbbr] ||
+    d.getDate() !== day
+  ) {
+    return 'N/A';
+  }
+
+  // Always return in DD/MM/YYYY
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = String(d.getFullYear());
+  return `${dd}/${mm}/${yyyy}`;
+};
+
 
   const handleCardClick = (bookingId: string) => {
     navigate('/booking/confirmation', { state: { bookingId } });
@@ -130,10 +177,6 @@ export default function PastBookingPage() {
                   className={styles.bookingCard}
                   onClick={() => handleCardClick(id)}
                   style={{ cursor: 'pointer' }}
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCardClick(id); }}
-                  role="button"
-                  aria-label={`View details for booking at ${hotelName}`}
                 >
                   <img
                     className={styles.bookingImg}
