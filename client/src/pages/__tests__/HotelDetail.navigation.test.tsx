@@ -241,7 +241,7 @@ describe('Unit Test - Hotel Detail Page Navigation', () => {
       
       mockUsePricedHotelsForDetails.mockReturnValue([mockPricedHotel]);
       
-      mockUseFetchHotelRoomPrices.mockReturnValue({
+      mockUseFetchHotelRoomPrices.mockReturnValue({\n retryCount: 0,
         rooms: [],
         loading: false,
         error: null,
@@ -296,7 +296,7 @@ describe('Unit Test - Hotel Detail Page Navigation', () => {
       
       mockUsePricedHotelsForDetails.mockReturnValue([mockPricedHotel]);
       
-      mockUseFetchHotelRoomPrices.mockReturnValue({
+      mockUseFetchHotelRoomPrices.mockReturnValue({\n retryCount: 0,
         rooms: [],
         loading: false,
         error: null,
@@ -361,7 +361,7 @@ describe('Unit Test - Hotel Detail Page Navigation', () => {
       
       mockUsePricedHotelsForDetails.mockReturnValue([mockPricedHotel]);
       
-      mockUseFetchHotelRoomPrices.mockReturnValue({
+      mockUseFetchHotelRoomPrices.mockReturnValue({\n retryCount: 0,
         rooms: [],
         loading: false,
         error: null,
@@ -422,7 +422,7 @@ describe('Unit Test - Hotel Detail Page Navigation', () => {
       
       mockUsePricedHotelsForDetails.mockReturnValue([]);
       
-      mockUseFetchHotelRoomPrices.mockReturnValue({
+      mockUseFetchHotelRoomPrices.mockReturnValue({\n retryCount: 0,
         rooms: [],
         loading: false,
         error: null,
@@ -465,7 +465,7 @@ describe('Unit Test - Hotel Detail Page Navigation', () => {
       
       mockUsePricedHotelsForDetails.mockReturnValue([mockPricedHotel]);
       
-      mockUseFetchHotelRoomPrices.mockReturnValue({
+      mockUseFetchHotelRoomPrices.mockReturnValue({\n retryCount: 0,
         rooms: [],
         loading: false,
         error: null,
@@ -513,7 +513,7 @@ describe('Unit Test - Hotel Detail Page Navigation', () => {
       
       mockUsePricedHotelsForDetails.mockReturnValue([mockPricedHotel]);
       
-      mockUseFetchHotelRoomPrices.mockReturnValue({
+      mockUseFetchHotelRoomPrices.mockReturnValue({\n retryCount: 0,
         rooms: [],
         loading: false,
         error: null,
@@ -552,7 +552,7 @@ describe('Unit Test - Hotel Detail Page Navigation', () => {
       
       mockUsePricedHotelsForDetails.mockReturnValue([]);
       
-      mockUseFetchHotelRoomPrices.mockReturnValue({
+      mockUseFetchHotelRoomPrices.mockReturnValue({\n retryCount: 0,
         rooms: [],
         loading: false,
         error: null,
@@ -606,7 +606,7 @@ describe('Unit Test - Hotel Detail Page Navigation', () => {
       
       mockUsePricedHotelsForDetails.mockReturnValue([]);
       
-      mockUseFetchHotelRoomPrices.mockReturnValue({
+      mockUseFetchHotelRoomPrices.mockReturnValue({\n retryCount: 0,
         rooms: [],
         loading: false,
         error: null,

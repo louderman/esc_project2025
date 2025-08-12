@@ -261,6 +261,7 @@ describe('Integration Test - Hotel Detail Page Loading', () => {
           rooms: mockRooms,
           loading: false,
           error: null,
+          retryCount: 0,
         });
 
         // Act
@@ -358,6 +359,7 @@ describe('Integration Test - Hotel Detail Page Loading', () => {
           rooms: mockRooms,
           loading: false,
           error: null,
+          retryCount: 0,
         });
 
         // Act
@@ -416,6 +418,7 @@ describe('Integration Test - Hotel Detail Page Loading', () => {
           rooms: mockRooms.map(room => ({ ...room, price: 0 })),
           loading: false,
           error: null,
+          retryCount: 0,
         });
 
         // Act
@@ -476,6 +479,7 @@ describe('Integration Test - Hotel Detail Page Loading', () => {
           rooms: mockRooms.map(room => ({ ...room, price: 0 })),
           loading: false,
           error: null,
+          retryCount: 0,
         });
 
         // Act
@@ -551,6 +555,7 @@ describe('Integration Test - Hotel Detail Page Loading', () => {
           rooms: [], // No rooms available
           loading: false,
           error: null,
+          retryCount: 0,
         });
 
         // Act
@@ -626,6 +631,7 @@ describe('Integration Test - Hotel Detail Page Loading', () => {
           rooms: [], // Empty room data instead of null
           loading: false,
           error: null,
+          retryCount: 0,
         });
 
         // Act
@@ -704,6 +710,7 @@ describe('Integration Test - Hotel Detail Page Loading', () => {
           rooms: roomsWithoutImages,
           loading: false,
           error: null,
+          retryCount: 0,
         });
 
         // Act
@@ -786,6 +793,7 @@ describe('Integration Test - Hotel Detail Page Loading', () => {
           rooms: roomsWithInvalidImages,
           loading: false,
           error: null,
+          retryCount: 0,
         });
 
         // Act
@@ -824,6 +832,7 @@ describe('Integration Test - Hotel Detail Page Loading', () => {
           rooms: [],
           loading: false,
           error: null,
+          retryCount: 0,
         });
 
         // Act
@@ -863,6 +872,7 @@ describe('Integration Test - Hotel Detail Page Loading', () => {
           rooms: [],
           loading: false,
           error: null,
+          retryCount: 0,
         });
 
         // Act
@@ -897,6 +907,7 @@ describe('Integration Test - Hotel Detail Page Loading', () => {
           rooms: [],
           loading: true,
           error: null,
+          retryCount: 0,
         });
 
         // Act
@@ -970,6 +981,7 @@ describe('Integration Test - Hotel Detail Page Loading', () => {
           rooms: mockRooms,
           loading: false,
           error: null,
+          retryCount: 0,
         });
 
         // Act
@@ -1065,6 +1077,7 @@ describe('Integration Test - Hotel Detail Page Loading', () => {
           rooms: mockRooms,
           loading: false,
           error: null,
+          retryCount: 0,
         });
 
         // Act
