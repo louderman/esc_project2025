@@ -326,7 +326,7 @@ describe('Integration Test - Search Bar Integration', () => {
 
     // Verify navigation to listing page with updated search criteria
     expect(mockNavigate).toHaveBeenCalledWith(
-      expect.stringContaining('/listing?destId="WD0M"&destName="Singapore"&checkin=2025-08-12&checkout=2025-08-30&adult=2&child=0&room=1')
+      expect.stringContaining('/listing?destId="WD0M"&destName="Singapore"&checkin="2025-08-12"&checkout="2025-08-30"&adult=2&child=0&room=1')
     );
 
     // Verify search bar maintains state during the process
@@ -533,7 +533,7 @@ describe('Integration Test - Search Bar Integration', () => {
     fireEvent.click(findHotelsButton);
     
     expect(mockNavigate).toHaveBeenCalledWith(
-      expect.stringContaining('/listing?destId="WD0M"&destName="Singapore"&checkin=2025-09-15&checkout=2025-09-22&adult=3&child=1&room=2')
+      expect.stringContaining('/listing?destId="WD0M"&destName="Singapore"&checkin="2025-09-15"&checkout="2025-09-22"&adult=3&child=1&room=2')
     );
   });
 });
