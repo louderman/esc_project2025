@@ -4,6 +4,7 @@ import { Badge } from "@/components/hotel/ui/badge";
 import { Users, Bed, Check, ImageOff } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useState } from "react";
+import { isValidImage, getImageWithFallback } from "@/utils/imageFallbacks";
 
 interface Room {
   id: string;
@@ -27,11 +28,6 @@ interface RoomOptionsProps {
 }
 
 const RoomOptions = ({ rooms, hotelId, hotelName, hotelRating, hotelReviewCount, onSelectRoom, totalAvailableRooms }: RoomOptionsProps) => {
-  // Helper function to check if image is valid
-  const isValidImage = (imageUrl: string): boolean => {
-    return Boolean(imageUrl && imageUrl.trim() !== '' && imageUrl !== 'undefined' && imageUrl !== 'null');
-  };
-
   // Component for "No image available" card
   const NoImageCard = ({ roomType }: { roomType: string }) => (
     <div className="w-full h-48 md:h-full bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300 flex flex-col items-center justify-center p-4 text-center">

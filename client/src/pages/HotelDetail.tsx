@@ -68,8 +68,9 @@ const HotelDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-  const [loadingStartTime, setLoadingStartTime] = useState<number>(Date.now());
-  const [maxLoadingTime] = useState<number>(150000); // 2 minutes 30 seconds maximum loading time
+  const [loadingStartTime] = useState(Date.now());
+  const [maxLoadingTime] = useState(150000); // 2.5 minutes
+  const [maxLoadingTimeout, setMaxLoadingTimeout] = useState<NodeJS.Timeout | undefined>(undefined);
   const [specificHotel, setSpecificHotel] = useState<any>(null);
   const { hotelId: pathHotelId } = useParams<{ hotelId: string }>();
   const [searchParams] = useSearchParams();
@@ -261,25 +262,24 @@ const HotelDetail = () => {
     console.log('useEffect triggered - hotelLoading:', hotelLoading, 'priceLoading:', priceLoading, 'roomPricesLoading:', roomPricesLoading, 'specificHotel:', !!specificHotel);
     
     // Add 2.5 minute maximum loading timeout to prevent infinite loading
-    let maxLoadingTimeout: NodeJS.Timeout | undefined;
-    
-    if (process.env.NODE_ENV !== 'test') {
+    if (process.env.NODE_ENV !== 'test' && !maxLoadingTimeout && loading && !data) {
       console.log(`⏰ Setting maximum loading timeout: ${maxLoadingTime/1000/60} minutes (${maxLoadingTime}ms)`);
       console.log(`⏰ Page will show error if no data is available after ${maxLoadingTime/1000/60} minutes`);
-      maxLoadingTimeout = setTimeout(() => {
+      const timeout = setTimeout(() => {
         if (loading && !data) {
           console.log('⏰ TIMEOUT: Maximum loading time reached (2.5 minutes), forcing loading to false and showing error');
           setLoading(false);
           setError('Hotel information cannot be found after 2 minutes and 30 seconds of loading. Please try again or contact support.');
         }
       }, maxLoadingTime); // 2.5 minute maximum timeout
+      setMaxLoadingTimeout(timeout);
     }
     
     // Clear timeout if we have data (page loaded successfully)
     if (data && maxLoadingTimeout) {
       console.log('✅ Page loaded successfully, clearing loading timeout');
       clearTimeout(maxLoadingTimeout);
-      maxLoadingTimeout = undefined;
+      setMaxLoadingTimeout(undefined);
     }
     
     // Set loading to true when hooks are loading, but only if we don't already have data
@@ -296,7 +296,7 @@ const HotelDetail = () => {
       if (maxLoadingTimeout) {
         console.log('✅ Clearing loading timeout - page will display successfully');
         clearTimeout(maxLoadingTimeout);
-        maxLoadingTimeout = undefined;
+        setMaxLoadingTimeout(undefined);
       }
       setLoading(false);
       return;
@@ -316,7 +316,7 @@ const HotelDetail = () => {
       if (maxLoadingTimeout) {
         console.log('✅ Clearing loading timeout - page will display successfully');
         clearTimeout(maxLoadingTimeout);
-        maxLoadingTimeout = undefined;
+        setMaxLoadingTimeout(undefined);
       }
       setLoading(false);
       return;
@@ -353,6 +353,16 @@ const HotelDetail = () => {
         console.log('Hotel images:', specificHotel.image_details);
         console.log('Hotel amenities:', specificHotel.amenities);
         
+        // Debug image details structure
+        if (specificHotel.image_details) {
+          console.log('=== IMAGE DETAILS DEBUG ===');
+          console.log('Image details prefix:', specificHotel.image_details.prefix);
+          console.log('Image details suffix:', specificHotel.image_details.suffix);
+          console.log('Image details count:', specificHotel.image_details.count);
+          console.log('Image details full object:', JSON.stringify(specificHotel.image_details, null, 2));
+          console.log('=== END IMAGE DETAILS DEBUG ===');
+        }
+
         // Debug room-related data
         console.log('=== ROOM DATA DEBUG ===');
         console.log('Price:', specificHotel.price);
@@ -444,6 +454,13 @@ const HotelDetail = () => {
             Array.from({ length: Math.min(specificHotel.image_details.count, 5) }, (_, i) => {
               const imageUrl = `${specificHotel.image_details.prefix}${i}${specificHotel.image_details.suffix}`;
               console.log(`Generated image URL ${i}:`, imageUrl);
+              
+              // Test if the image URL is accessible by checking the format
+              if (imageUrl.includes('undefined') || imageUrl.includes('null') || !imageUrl.startsWith('http')) {
+                console.log(`❌ Invalid image URL generated: ${imageUrl}, using fallback`);
+                return 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1200&h=900&fit=crop&q=85';
+              }
+              
               return imageUrl;
             })
           : [
@@ -529,9 +546,9 @@ const HotelDetail = () => {
               // Handle different image formats - could be strings or objects
               const validImage = roomPrice.images.find((img: any) => {
                 if (typeof img === 'string') {
-                  return img && img.trim() !== '';
+                  return img && img.trim() !== '' && img !== 'undefined' && img !== 'null';
                 } else if (img && typeof img === 'object' && 'url' in img) {
-                  return img.url && img.url.trim() !== '';
+                  return img.url && img.url.trim() !== '' && img.url !== 'undefined' && img.url !== 'null';
                 }
                 return false;
               });
@@ -539,7 +556,12 @@ const HotelDetail = () => {
               if (validImage) {
                 // Extract URL from either string or object format
                 roomImageUrl = typeof validImage === 'string' ? validImage : (validImage as any).url;
+                console.log(`✅ Using API room image: ${roomImageUrl}`);
+              } else {
+                console.log(`❌ No valid room images found in API data:`, roomPrice.images);
               }
+            } else {
+              console.log(`❌ No room images array in API data for room: ${roomPrice.room_normalized_description}`);
             }
             
             // Use different fallback images based on room type if no valid API image
@@ -634,6 +656,12 @@ const HotelDetail = () => {
         console.log('Number of room types created:', roomData.length); // Debug logging
         console.log('Total rooms available at hotel:', totalAvailableRooms); // Debug logging
 
+        // Debug final hotel object
+        console.log('=== FINAL HOTEL OBJECT DEBUG ===');
+        console.log('Final hotel object:', JSON.stringify(hotel, null, 2));
+        console.log('Final hotel images array:', hotel.images);
+        console.log('=== END FINAL HOTEL OBJECT DEBUG ===');
+
         setData({ 
           hotel, 
           rooms: roomData,
@@ -661,7 +689,7 @@ const HotelDetail = () => {
         if (maxLoadingTimeout) {
           console.log('✅ Clearing loading timeout from fetchHotelData - page will display successfully');
           clearTimeout(maxLoadingTimeout);
-          maxLoadingTimeout = undefined;
+          setMaxLoadingTimeout(undefined);
         }
         setLoading(false);
       }
@@ -679,7 +707,7 @@ const HotelDetail = () => {
       if (maxLoadingTimeout) {
         console.log('✅ Clearing loading timeout - about to fetch complete hotel data');
         clearTimeout(maxLoadingTimeout);
-        maxLoadingTimeout = undefined;
+        setMaxLoadingTimeout(undefined);
       }
       fetchHotelData();
     } else if (!hotelLoading && !priceLoading && !roomPricesLoading && !specificHotel && hotelId) {
@@ -690,7 +718,7 @@ const HotelDetail = () => {
       if (maxLoadingTimeout) {
         console.log('✅ Clearing loading timeout - showing hotel not found error');
         clearTimeout(maxLoadingTimeout);
-        maxLoadingTimeout = undefined;
+        setMaxLoadingTimeout(undefined);
       }
       setError(`Hotel with ID ${hotelId} not found`);
       setLoading(false);
@@ -706,7 +734,7 @@ const HotelDetail = () => {
       if (maxLoadingTimeout) {
         console.log('✅ Clearing loading timeout - no fetch conditions met');
         clearTimeout(maxLoadingTimeout);
-        maxLoadingTimeout = undefined;
+        setMaxLoadingTimeout(undefined);
       }
       setLoading(false);
     }
@@ -720,7 +748,7 @@ const HotelDetail = () => {
       if (maxLoadingTimeout) {
         console.log('✅ Clearing loading timeout - showing no hotels error');
         clearTimeout(maxLoadingTimeout);
-        maxLoadingTimeout = undefined;
+        setMaxLoadingTimeout(undefined);
       }
       setError('No hotels available for the selected destination');
       setLoading(false);
@@ -730,9 +758,20 @@ const HotelDetail = () => {
     return () => {
       if (maxLoadingTimeout) {
         clearTimeout(maxLoadingTimeout);
+        setMaxLoadingTimeout(undefined);
       }
     };
-  }, [hotelId, specificHotel, hotelLoading, priceLoading, roomPricesLoading, destinationId, checkin, checkout, adults, children, roomCount, totalGuests, searchParams, data, maxLoadingTime]);
+  }, [hotelId, specificHotel, hotelLoading, priceLoading, roomPricesLoading, destinationId, checkin, checkout, adults, children, roomCount, totalGuests, searchParams, data, maxLoadingTime, maxLoadingTimeout]);
+
+  // Additional cleanup effect for component unmount
+  useEffect(() => {
+    return () => {
+      if (maxLoadingTimeout) {
+        clearTimeout(maxLoadingTimeout);
+        setMaxLoadingTimeout(undefined);
+      }
+    };
+  }, [maxLoadingTimeout]);
 
   console.log('Rendering check - loading:', loading, 'error:', error, 'data:', !!data);
 
