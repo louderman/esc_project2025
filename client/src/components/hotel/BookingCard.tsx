@@ -5,6 +5,7 @@ import { Calendar as CalendarIcon, MapPin, Star, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Calendar, { type StayDatesState } from "./Calendar";
+import { getImageWithFallback } from "@/utils/imageFallbacks";
 
 interface AvailabilityInfo {
   requestedRooms: number;
@@ -541,9 +542,10 @@ const BookingCard = ({
     const totalAmount = price;
 
     // Get hotel image from hotel images array, selected room, or use fallback
-    const hotelImage = hotelImages.length > 0 ? hotelImages[0] : 
-                      selectedRoom?.image || 
-                      'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85';
+    const hotelImage = getImageWithFallback(
+      hotelImages.length > 0 ? hotelImages[0] : selectedRoom?.image,
+      'hotel'
+    );
 
     // Prepare booking details
     const bookingDetails = {

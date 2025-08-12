@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/hotel/ui/button";
 import { Camera, ImageOff } from "lucide-react";
+import { getImagesWithFallbacks, getRandomHotelFallback } from "@/utils/imageFallbacks";
 
 interface HotelImageGalleryProps {
   images?: (string | { url: string })[];
@@ -10,30 +11,15 @@ interface HotelImageGalleryProps {
 const HotelImageGallery = ({ images, hotelName }: HotelImageGalleryProps) => {
   const [currentImage, setCurrentImage] = useState(0);
   
-  const defaultImages = [
-    "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1200&h=900&fit=crop&q=85",
-    "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85",
-    "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1200&h=900&fit=crop&q=85"
-  ];
+  // Use centralized fallback system
+  const galleryImages = getImagesWithFallbacks(images, 'hotel');
   
-  // Helper function to extract URL from image item
-  const getImageUrl = (img: string | { url: string }): string => {
-    return typeof img === 'string' ? img : img.url;
-  };
-  
-  // Helper function to check if image is valid
-  const isValidImage = (img: string | { url: string }): boolean => {
-    const url = getImageUrl(img);
-    return Boolean(url && url.trim() !== '' && url !== 'undefined' && url !== 'null');
-  };
-  
-  // Check if we have valid images - handle all edge cases
-  const hasValidImages = images && Array.isArray(images) && images.length > 0 && images.some(isValidImage);
-  
-  // Only use provided images if they exist and are valid URLs
-  const galleryImages = hasValidImages
-    ? images!.filter(isValidImage).map(getImageUrl)
-    : defaultImages;
+  // Check if we have valid images from the API (not just fallbacks)
+  const hasValidImages = images && Array.isArray(images) && images.length > 0 && 
+    images.some(img => {
+      const url = typeof img === 'string' ? img : img.url;
+      return Boolean(url && url.trim() !== '' && url !== 'undefined' && url !== 'null');
+    });
 
   // If no valid images are provided, show the "No image available" card
   if (!hasValidImages) {
@@ -86,7 +72,7 @@ const HotelImageGallery = ({ images, hotelName }: HotelImageGalleryProps) => {
               const nextImageIndex = (currentImage + 1) % galleryImages.length;
               e.currentTarget.src = galleryImages[nextImageIndex];
             } else {
-              e.currentTarget.src = "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1200&h=900&fit=crop&q=85";
+              e.currentTarget.src = getRandomHotelFallback();
             }
           }}
         />
