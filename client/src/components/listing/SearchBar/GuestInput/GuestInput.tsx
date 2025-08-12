@@ -53,7 +53,7 @@ export default function GuestInput({
         {occupancy.rooms} room{occupancy.rooms > 1 && 's'}
       </button>
       {showPanel && (
-        <div ref={panelWrapperRef} className={styles.panelSection}>
+        <div ref={panelWrapperRef} className={styles.panelSection} data-testid="guest-panel">
           <div className={styles.panelContainer}>
             {(Object.keys(occupancy) as Array<keyof OccupancyState>).map(
               (info) => (
