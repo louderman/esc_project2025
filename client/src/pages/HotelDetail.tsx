@@ -68,9 +68,6 @@ const HotelDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-  const [loadingStartTime] = useState(Date.now());
-  const [maxLoadingTime] = useState(150000); // 2.5 minutes
-  const [maxLoadingTimeout, setMaxLoadingTimeout] = useState<NodeJS.Timeout | undefined>(undefined);
   const [specificHotel, setSpecificHotel] = useState<any>(null);
   const { hotelId: pathHotelId } = useParams<{ hotelId: string }>();
   const [searchParams] = useSearchParams();
@@ -261,27 +258,6 @@ const HotelDetail = () => {
   useEffect(() => {
     console.log('useEffect triggered - hotelLoading:', hotelLoading, 'priceLoading:', priceLoading, 'roomPricesLoading:', roomPricesLoading, 'specificHotel:', !!specificHotel);
     
-    // Add 2.5 minute maximum loading timeout to prevent infinite loading
-    if (process.env.NODE_ENV !== 'test' && !maxLoadingTimeout && loading && !data) {
-      console.log(`⏰ Setting maximum loading timeout: ${maxLoadingTime/1000/60} minutes (${maxLoadingTime}ms)`);
-      console.log(`⏰ Page will show error if no data is available after ${maxLoadingTime/1000/60} minutes`);
-      const timeout = setTimeout(() => {
-        if (loading && !data) {
-          console.log('⏰ TIMEOUT: Maximum loading time reached (2.5 minutes), forcing loading to false and showing error');
-          setLoading(false);
-          setError('Hotel information cannot be found after 2 minutes and 30 seconds of loading. Please try again or contact support.');
-        }
-      }, maxLoadingTime); // 2.5 minute maximum timeout
-      setMaxLoadingTimeout(timeout);
-    }
-    
-    // Clear timeout if we have data (page loaded successfully)
-    if (data && maxLoadingTimeout) {
-      console.log('✅ Page loaded successfully, clearing loading timeout');
-      clearTimeout(maxLoadingTimeout);
-      setMaxLoadingTimeout(undefined);
-    }
-    
     // Set loading to true when hooks are loading, but only if we don't already have data
     if ((hotelLoading || priceLoading) && !data) {
       console.log('Setting loading to true - main hooks are loading and no data yet');
@@ -292,12 +268,6 @@ const HotelDetail = () => {
     // If hooks are done loading and we have data, show results immediately
     if (!hotelLoading && !priceLoading && data) {
       console.log('Hooks finished loading and data available, showing results immediately');
-      // Clear the loading timeout since we're about to show results
-      if (maxLoadingTimeout) {
-        console.log('✅ Clearing loading timeout - page will display successfully');
-        clearTimeout(maxLoadingTimeout);
-        setMaxLoadingTimeout(undefined);
-      }
       setLoading(false);
       return;
     }
@@ -312,12 +282,6 @@ const HotelDetail = () => {
     // Show complete page only when all data including room prices is loaded
     if (!hotelLoading && !priceLoading && !roomPricesLoading && data) {
       console.log('🎯 ALL DATA READY: Main data + room prices loaded, showing complete page');
-      // Clear the loading timeout since we're about to show results
-      if (maxLoadingTimeout) {
-        console.log('✅ Clearing loading timeout - page will display successfully');
-        clearTimeout(maxLoadingTimeout);
-        setMaxLoadingTimeout(undefined);
-      }
       setLoading(false);
       return;
     }
@@ -685,12 +649,6 @@ const HotelDetail = () => {
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
-        // Clear the loading timeout since we're about to show results
-        if (maxLoadingTimeout) {
-          console.log('✅ Clearing loading timeout from fetchHotelData - page will display successfully');
-          clearTimeout(maxLoadingTimeout);
-          setMaxLoadingTimeout(undefined);
-        }
         setLoading(false);
       }
     };
@@ -699,27 +657,15 @@ const HotelDetail = () => {
     console.log('Checking fetch conditions - hotelLoading:', hotelLoading, 'priceLoading:', priceLoading, 'roomPricesLoading:', roomPricesLoading, 'specificHotel:', !!specificHotel);
     console.log('specificHotel object:', specificHotel);
     
-        // Wait for ALL data to be loaded before proceeding (including room prices)
+    // Wait for ALL data to be loaded before proceeding (including room prices)
     if (!hotelLoading && !priceLoading && !roomPricesLoading && specificHotel) {
       console.log('🎯 ALL DATA READY: Main hotel, price, and room data loaded, fetching complete hotel data...');
       console.log('About to call fetchHotelData...');
-      // Clear the loading timeout since we're about to fetch data
-      if (maxLoadingTimeout) {
-        console.log('✅ Clearing loading timeout - about to fetch complete hotel data');
-        clearTimeout(maxLoadingTimeout);
-        setMaxLoadingTimeout(undefined);
-      }
       fetchHotelData();
     } else if (!hotelLoading && !priceLoading && !roomPricesLoading && !specificHotel && hotelId) {
       console.log('All hooks finished loading but hotel not found, setting error');
       // Show error immediately when hotel not found
       console.log('Hotel not found, showing error immediately');
-      // Clear the loading timeout since we're showing an error
-      if (maxLoadingTimeout) {
-        console.log('✅ Clearing loading timeout - showing hotel not found error');
-        clearTimeout(maxLoadingTimeout);
-        setMaxLoadingTimeout(undefined);
-      }
       setError(`Hotel with ID ${hotelId} not found`);
       setLoading(false);
     } else if (hotelLoading || priceLoading || roomPricesLoading) {
@@ -730,12 +676,6 @@ const HotelDetail = () => {
       console.log('Current state - hotelLoading:', hotelLoading, 'priceLoading:', priceLoading, 'roomPricesLoading:', roomPricesLoading, 'specificHotel:', !!specificHotel);
       // Stop loading immediately
       console.log('No fetch conditions met, setting loading to false immediately');
-      // Clear the loading timeout since we're stopping loading
-      if (maxLoadingTimeout) {
-        console.log('✅ Clearing loading timeout - no fetch conditions met');
-        clearTimeout(maxLoadingTimeout);
-        setMaxLoadingTimeout(undefined);
-      }
       setLoading(false);
     }
     
@@ -744,50 +684,16 @@ const HotelDetail = () => {
       console.log('All hooks finished loading but no hotels found, setting error');
       // Show error immediately
       console.log('No hotels found, showing error immediately');
-      // Clear the loading timeout since we're showing an error
-      if (maxLoadingTimeout) {
-        console.log('✅ Clearing loading timeout - showing no hotels error');
-        clearTimeout(maxLoadingTimeout);
-        setMaxLoadingTimeout(undefined);
-      }
       setError('No hotels available for the selected destination');
       setLoading(false);
     }
+  }, [hotelId, specificHotel, hotelLoading, priceLoading, roomPricesLoading, destinationId, checkin, checkout, adults, children, roomCount, totalGuests, searchParams, data]);
 
-    // Cleanup timeout on unmount or dependency change
-    return () => {
-      if (maxLoadingTimeout) {
-        clearTimeout(maxLoadingTimeout);
-        setMaxLoadingTimeout(undefined);
-      }
-    };
-  }, [hotelId, specificHotel, hotelLoading, priceLoading, roomPricesLoading, destinationId, checkin, checkout, adults, children, roomCount, totalGuests, searchParams, data, maxLoadingTime, maxLoadingTimeout]);
 
-  // Additional cleanup effect for component unmount
-  useEffect(() => {
-    return () => {
-      if (maxLoadingTimeout) {
-        clearTimeout(maxLoadingTimeout);
-        setMaxLoadingTimeout(undefined);
-      }
-    };
-  }, [maxLoadingTimeout]);
 
   console.log('Rendering check - loading:', loading, 'error:', error, 'data:', !!data);
 
-  // Clear loading timeout if we have data (page loaded successfully)
-  if (data && !loading) {
-    console.log('✅ Page rendered successfully, ensuring loading timeout is cleared');
-  }
-
   if (loading) {
-    // Calculate remaining time before timeout
-    const elapsedTime = Date.now() - loadingStartTime;
-    const remainingTime = Math.max(0, maxLoadingTime - elapsedTime);
-    const remainingMinutes = Math.ceil(remainingTime / 1000 / 60);
-    
-    console.log(`Rendering loading state - ${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''} remaining before timeout`);
-    
     if (!hotelLoading && !priceLoading && roomPricesLoading) {
       console.log('🏠 Waiting for room prices and images to finish loading...');
     }
@@ -799,9 +705,6 @@ const HotelDetail = () => {
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-hotel-gold mx-auto mb-4"></div>
             <p className="text-hotel-text-secondary">Loading hotel details...</p>
-            <p className="text-sm text-hotel-text-secondary mt-2">
-              Maximum loading time: {remainingMinutes} minute{remainingMinutes !== 1 ? 's' : ''} remaining
-            </p>
             {!hotelLoading && !priceLoading && roomPricesLoading && (
               <p className="text-xs text-hotel-text-secondary mt-1">
                 🏠 Fetching room details and images...
@@ -847,8 +750,7 @@ const HotelDetail = () => {
     );
   }
 
-  const loadingDuration = Date.now() - loadingStartTime;
-  console.log(`🎉 SUCCESS: Rendering HotelDetail with data after ${Math.round(loadingDuration/1000)} seconds!`);
+  console.log(`🎉 SUCCESS: Rendering HotelDetail with data!`);
   console.log('Rendering HotelDetail with price:', data.rooms.length > 0 ? data.rooms[0].price : 0, 'and rooms:', data.rooms);
   console.log('Hotel coordinates:', { lat: data.hotel.latitude, lng: data.hotel.longitude });
   console.log('Room data for display:', data.rooms[0]);
