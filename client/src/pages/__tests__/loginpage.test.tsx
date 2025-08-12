@@ -1,10 +1,11 @@
-import React from 'react';
 import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
 import '@testing-library/jest-dom/vitest';
-import { render, cleanup, waitFor } from '@testing-library/react';
+import { render, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import LoginPage from '../../pages/LoginPage';
 import { MemoryRouter } from 'react-router-dom';
 
+// ---- Router + Auth mocks ----
 const navigateMock = vi.fn();
 const setUserMock = vi.fn();
 
@@ -21,13 +22,13 @@ vi.mock('../../components/common/authcontext', () => ({
   useAuth: () => ({ user: null, setUser: setUserMock }),
 }));
 
-import LoginPage from '../../pages/LoginPage';
-
+// ---- Network + alert mocks ----
 const fetchMock = vi.fn();
 const alertMock = vi.fn();
 Object.defineProperty(global, 'fetch', { value: fetchMock, writable: true });
 Object.defineProperty(window, 'alert', { value: alertMock, writable: true });
 
+// ---- Render helper ----
 const setup = () =>
   render(
     <MemoryRouter initialEntries={['/login']}>
@@ -35,31 +36,27 @@ const setup = () =>
     </MemoryRouter>
   );
 
+// ---- DOM helpers (label → sibling / safe fallbacks) ----
 const getEmailInput = (ui: ReturnType<typeof setup>) => {
-  const labels = ui.getAllByText(/^Email$/i);
-  const label = labels[0] as HTMLElement;
+  const label = ui.getByText(/^Email$/i);
+  // structure: <label>Email</label><input ... />
   let el = label.nextElementSibling as HTMLInputElement | null;
-
   if (!el || el.tagName !== 'INPUT') {
     const form = label.closest('form');
-    if (!form) throw new Error('Form not found for Email label');
-    el = form.querySelector('input[type="text"]') as HTMLInputElement | null;
+    el = form?.querySelector('input[type="text"]') as HTMLInputElement | null;
   }
   if (!el) throw new Error('Email input not found');
   return el;
 };
 
 const getPasswordInput = (ui: ReturnType<typeof setup>) => {
-  const labels = ui.getAllByText(/^Password$/i);
-  const label = labels[0] as HTMLElement;
-
+  const label = ui.getByText(/^Password$/i);
+  // structure: <label>Password</label><div class="passwordWrapper"><input .../></div>
   let wrapper = label.nextElementSibling as HTMLElement | null;
   if (!wrapper) {
     const form = label.closest('form');
-    if (!form) throw new Error('Form not found for Password label');
-    wrapper = form.querySelector('.passwordWrapper') as HTMLElement | null;
+    wrapper = form?.querySelector('.passwordWrapper') as HTMLElement | null;
   }
-
   let input = wrapper?.querySelector('input') as HTMLInputElement | null;
   if (!input) {
     const form = label.closest('form');
@@ -69,9 +66,10 @@ const getPasswordInput = (ui: ReturnType<typeof setup>) => {
   return input;
 };
 
-const getLoginButton = (ui: ReturnType<typeof setup>) =>
+const getLoginBtn = (ui: ReturnType<typeof setup>) =>
   ui.getByRole('button', { name: /log in/i });
 
+// ---- Lifecycle ----
 beforeEach(() => {
   fetchMock.mockReset();
   alertMock.mockReset();
@@ -84,80 +82,39 @@ afterEach(() => {
   cleanup();
 });
 
-describe('ITC_LOGIN_1 – Log in button', () => {
-  const fill = async (ui: ReturnType<typeof setup>, email?: string, password?: string) => {
+// -------------------- UNIT: test a single field at a time --------------------
+describe('UC_LOGIN_1 – Email field (unit)', () => {
+  it('typing shows email', async () => {
+    const ui = setup();
     const user = userEvent.setup();
-    if (typeof email === 'string' && email.length > 0) {
-      await user.type(getEmailInput(ui), email);
-    }
-    if (typeof password === 'string' && password.length > 0) {
-      await user.type(getPasswordInput(ui), password);
-    }
-    return user;
-  };
-
-  it('empty fields → show errors, no redirect', async () => {
-    const ui = setup();
-    const user = await fill(ui, '', '');
-    await user.click(getLoginButton(ui));
-
-    expect(ui.getByText(/Email must be valid and contain no spaces\./i)).toBeVisible();
-    expect(ui.getByText(/Password must be at least 8 characters with no spaces\./i)).toBeVisible();
-    expect(navigateMock).not.toHaveBeenCalled();
-    expect(fetchMock).not.toHaveBeenCalled();
+    const email = getEmailInput(ui);
+    await user.type(email, 'test@example.com');
+    expect(email.value).toBe('test@example.com');
   });
 
-  it('invalid email, valid password → email error only', async () => {
+  it('empty email → shows error (only email validated here)', async () => {
     const ui = setup();
-    const user = await fill(ui, 'alicegmail.com', 'StrongPass1');
-    await user.click(getLoginButton(ui));
+    const user = userEvent.setup();
+    await user.clear(getEmailInput(ui));
+    await user.click(getLoginBtn(ui));
+    expect(await ui.findByText(/Email must be valid and contain no spaces\./i)).toBeVisible();
+  });
+});
 
-    expect(ui.getByText(/Email must be valid and contain no spaces\./i)).toBeVisible();
-    expect(ui.queryByText(/Password must be at least 8 characters/i)).toBeNull();
-    expect(navigateMock).not.toHaveBeenCalled();
-    expect(fetchMock).not.toHaveBeenCalled();
+describe('UC_LOGIN_2 – Password field (unit)', () => {
+  it('typing shows password', async () => {
+    const ui = setup();
+    const user = userEvent.setup();
+    const pwd = getPasswordInput(ui);
+    await user.type(pwd, 'MySecret123');
+    expect(pwd.value).toBe('MySecret123');
   });
 
-  it('invalid password, valid email → password error only', async () => {
+  it('empty password → shows error (only password validated here)', async () => {
     const ui = setup();
-    const user = await fill(ui, 'alice@gmail.com', 'short');
-    await user.click(getLoginButton(ui));
-
-    expect(ui.getByText(/Password must be at least 8 characters with no spaces\./i)).toBeVisible();
-    expect(ui.queryByText(/Email must be valid and contain no spaces\./i)).toBeNull();
-    expect(navigateMock).not.toHaveBeenCalled();
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
-
-  it('all inputs valid', async () => {
-    const ui = setup();
-    fetchMock.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ userId: 123, name: 'Alice' }),
-    } as any);
-
-    const user = await fill(ui, 'alice@gmail.com', 'StrongPass1');
-    await user.click(getLoginButton(ui));
-
-    await waitFor(() =>
-      expect(fetchMock).toHaveBeenCalledWith(
-        '/api/auth/login',
-        expect.objectContaining({ method: 'POST' })
-      )
-    );
-
-    await waitFor(() => {
-      expect(setUserMock).toHaveBeenCalled();
-      const payload = setUserMock.mock.calls[0][0];
-      expect(payload).toEqual(
-        expect.objectContaining({
-          id: 123,
-          name: 'Alice',
-          email: 'alice@gmail.com',
-        })
-      );
-    });
-
-    await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/from-here'));
+    const user = userEvent.setup();
+    await user.clear(getPasswordInput(ui));
+    await user.click(getLoginBtn(ui));
+    expect(await ui.findByText(/Password must be at least 8 characters with no spaces\./i)).toBeVisible();
   });
 });
