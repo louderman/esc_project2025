@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { Hotel } from '../../../types/Hotel';
 import type { Price } from '../../../types/Price';
@@ -26,6 +26,7 @@ export default function BookingConfirmation() {
   const room_type = selectedRoom?.room_type || "Standard Single Room";
   const bookingDetails = location.state?.bookingDetails || {};
   const totalAmount = location.state?.totalAmount || 0;
+  const bookingId = location.state?.bookingId || "N/A";
 
   const [currentIndex, setCurrentIndex] = useState(0);
   console.log('bookingDetails', bookingDetails);
@@ -79,6 +80,37 @@ export default function BookingConfirmation() {
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     e.currentTarget.src = '/listing/hotel_img_placeholder.png';
   };
+  const [booking, setBooking] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!bookingId) {
+      setError("No booking ID provided");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    fetch(`/api/bookings/${bookingId}`)
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to fetch booking");
+        return res.json();
+      })
+      .then(data => {
+        setBooking(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [bookingId]);
+
+  if (loading) return <p>Loading booking details...</p>;
+  if (error) return <p>Error: {error}</p>;
+  if (!booking) return <p>No booking data found.</p>;
+
 
   //const bookingDetails = {
   //  hotelName: hotel.name,
@@ -86,6 +118,7 @@ export default function BookingConfirmation() {
   //  hotelAddress: hotel.address,
   //  hotelID: hotel.id,
   //};
+  //console.log('totalAmount', booking.totalAmount);
 
   return (
     <div className={styles.bookingpage}>

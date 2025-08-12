@@ -12,6 +12,8 @@ interface Booking {
   imageUrl?: string;
   createdAt: string;
   bookingAddress?: string;
+  roomType?: string;  
+  totalAmount?: number;
 }
 
 export default function PastBookingPage() {
@@ -59,15 +61,69 @@ export default function PastBookingPage() {
     fetchBookings();
   }, []);
 
-  const formatDate = (dateStr: string) => {
-    if (!dateStr || dateStr === 'N/A') return 'N/A';
-    const date = new Date(dateStr);
-    return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
+  const formatDate = (dateStr: string | null | undefined): string => {
+  if (!dateStr || dateStr === 'N/A') return 'N/A';
+
+  // Map of valid month abbreviations
+  const monthMap: Record<string, number> = {
+    Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+    Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
   };
 
-  const handleCardClick = (bookingId: string) => {
-    navigate('/booking/confirmation', { state: { bookingId } });
+  const trimmed = dateStr.trim();
+  // Accepts: "Mon DD" or "Mon DD YYYY" or "Mon DD, YYYY"
+  const normalized = trimmed.replace(',', '').replace(/\s+/g, ' ');
+  const match = normalized.match(/^([A-Za-z]{3})\s+(\d{1,2})(?:\s+(\d{4}))?$/);
+  if (!match) return 'N/A';
+
+  const monAbbr = match[1];
+  const day = Number(match[2]);
+  if (!(monAbbr in monthMap)) return 'N/A';
+
+  const year = match[3] ? Number(match[3]) : new Date().getFullYear();
+  const d = new Date(year, monthMap[monAbbr], day);
+
+  // Validate constructed date (avoid Feb 30 etc.)
+  if (
+    d.getFullYear() !== year ||
+    d.getMonth() !== monthMap[monAbbr] ||
+    d.getDate() !== day
+  ) {
+    return 'N/A';
+  }
+
+  // Always return in DD/MM/YYYY
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = String(d.getFullYear());
+  return `${dd}/${mm}/${yyyy}`;
+};
+
+
+  const handleCardClick = (booking: Booking) => {
+    navigate("/booking/confirmation", {
+      state: {
+        hotel: {
+          id: booking.id,
+          name: booking.hotelName,
+          address: booking.bookingAddress ?? "Location unavailable",
+          image_details: { prefix: booking.imageUrl ?? "/listing/hotel_img_placeholder.png" },
+          imageCount: 1,
+          price: 0, // optional, if you have price
+        },
+        stayDates: {
+          checkinDate: new Date(booking.checkInDate),
+          checkoutDate: new Date(booking.checkOutDate),
+        },
+        bookingDetails: {
+          selectedRoom: { room_type: booking.roomType ?? "Standard Single Room" }, // or actual room type if you have it
+        },
+        totalAmount: booking.totalAmount ?? 0, // put actual total amount if available
+        bookingId: booking.id,
+      },
+    });
   };
+
 
   if (loading) {
     return (
@@ -128,12 +184,18 @@ export default function PastBookingPage() {
                 <div
                   key={id}
                   className={styles.bookingCard}
-                  onClick={() => handleCardClick(id)}
+                  onClick={() => handleCardClick({
+                    id,
+                    hotelName,
+                    checkInDate,
+                    checkOutDate,
+                    status,
+                    imageUrl,
+                    bookingAddress,
+                    userId: "", // not strictly needed, but to match Booking type
+                    createdAt: "", // not strictly needed here
+                  })}
                   style={{ cursor: 'pointer' }}
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCardClick(id); }}
-                  role="button"
-                  aria-label={`View details for booking at ${hotelName}`}
                 >
                   <img
                     className={styles.bookingImg}
