@@ -59,20 +59,6 @@ export default function PastBookingPage() {
     fetchBookings();
   }, []);
 
-  // const formatDate = (dateStr: string) => {
-  //   if (!dateStr || dateStr === 'N/A') return 'N/A';
-
-  //   //If date format has no year 
-  //   let fullDateStr = dateStr;
-  //   if (!/\d{4}/.test(dateStr)) { 
-  //     const currentYear = new Date().getFullYear();
-  //     fullDateStr = `${dateStr} ${currentYear}`;
-  //   }
-
-  //   const date = new Date(fullDateStr);
-  //   return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
-  // };
-
   const formatDate = (dateStr: string | null | undefined): string => {
   if (!dateStr || dateStr === 'N/A') return 'N/A';
 
