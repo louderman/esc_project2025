@@ -46,13 +46,14 @@ export default function GuestInput({
         ref={inputButtonRef}
         className={`${inputStyles.inputBox} ${styles.button}`}
         onClick={() => setShowPanel((prev) => !prev)}
+        data-testid='occupancy'
       >
         {occupancy.adults} adult{occupancy.adults > 1 && 's'} ·{' '}
         {occupancy.children} child{occupancy.children > 1 && 'ren'} ·{' '}
         {occupancy.rooms} room{occupancy.rooms > 1 && 's'}
       </button>
       {showPanel && (
-        <div ref={panelWrapperRef} className={styles.panelSection}>
+        <div ref={panelWrapperRef} className={styles.panelSection} data-testid="guest-panel">
           <div className={styles.panelContainer}>
             {(Object.keys(occupancy) as Array<keyof OccupancyState>).map(
               (info) => (

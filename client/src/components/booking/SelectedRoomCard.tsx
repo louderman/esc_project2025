@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from './selectedroomcard.module.css';
+import { getImageWithFallback } from '@/utils/imageFallbacks';
 
 interface SelectedRoomCardProps {
   selectedRoom: {
@@ -26,7 +27,7 @@ const SelectedRoomCard: React.FC<SelectedRoomCardProps> = ({
   const totalRoomPrice = Math.round(selectedRoom.price * numberOfNights * numberOfRooms * 100) / 100;
 
   return (
-    <div className={styles.selectedRoomCard}>
+    <div className={styles.selectedRoomCard} data-cy="selected-room-card">
       <div className={styles.roomHeader}>
         <h3 className={styles.roomTitle}>Selected Room</h3>
         {selectedRoom.free_cancellation && (
@@ -48,12 +49,12 @@ const SelectedRoomCard: React.FC<SelectedRoomCardProps> = ({
           />
         </div>
         
-        <div className={styles.roomDetails}>
-          <div className={styles.roomInfo}>
-            <h4 className={styles.roomType}>{selectedRoom.room_type}</h4>
-            <p className={styles.roomDescription}>{selectedRoom.description}</p>
-            
-            <div className={styles.roomFeatures}>
+                  <div className={styles.roomDetails}>
+            <div className={styles.roomInfo}>
+              <h4 className={styles.roomType} data-cy="room-type">{selectedRoom.room_type}</h4>
+              <p className={styles.roomDescription}>{selectedRoom.description}</p>
+              
+              <div className={styles.roomFeatures}>
               <div className={styles.feature}>
                 <svg className={styles.featureIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />

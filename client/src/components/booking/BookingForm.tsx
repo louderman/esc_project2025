@@ -46,7 +46,7 @@ export default function BookingForm({
   };
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} data-cy="booking-form">
       <div className={styles.policies}>
         <h3>POLICIES</h3>
         <div className={styles.policy}>
@@ -59,20 +59,11 @@ export default function BookingForm({
         </div>
       </div>
 
-      <div className={styles.cost}>
-        <h3>Cost</h3>
-        <div className={styles.costItem}>
-          <span>${roundedCostPerNight} x {numberOfNights} nights</span>
-          <span>${totalCost}</span>
-        </div>
-        <div className={`${styles.costItem} ${styles.total}`}>
-          <span>Total</span>
-          <span>${totalCost}</span>
-        </div>
-      </div>
-
       <PaymentForm
         amount={totalCost * 100} // Convert to cents for Stripe
+        totalAmount={totalCost}
+        pricePerNight={roundedCostPerNight}
+        numberOfNights={numberOfNights}
         bookingData={bookingData}
         selectedRoom={selectedRoom}
         hotelImages={hotelImages}

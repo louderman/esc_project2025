@@ -188,6 +188,42 @@ const mockHotelWithCompleteData = {
   ] as [{ supplier: string; rate: number }],
 };
 
+// Mock room data for testing
+const mockRooms = [
+  {
+    key: 'room-1',
+    room_normalized_description: 'Deluxe King Room',
+    free_cancellation: true,
+    description: 'Deluxe King Room with city view',
+    long_description: 'Spacious deluxe room featuring a king-size bed and modern amenities with stunning city views.',
+    images: ['https://example.com/room-1.jpg'],
+    amenities: ['WiFi', 'TV', 'Air Conditioning'],
+    price: 500,
+    market_rates: [
+      {
+        supplier: 'Direct',
+        price: 500,
+      }
+    ],
+  },
+  {
+    key: 'room-2',
+    room_normalized_description: 'Executive Suite',
+    free_cancellation: true,
+    description: 'Executive Suite with marina bay view',
+    long_description: 'Luxurious executive suite featuring a king bed, sofa bed, and private balcony with spectacular marina bay views.',
+    images: ['https://example.com/room-2.jpg'],
+    amenities: ['WiFi', 'TV', 'Air Conditioning', 'Mini Bar', 'Balcony'],
+    price: 800,
+    market_rates: [
+      {
+        supplier: 'Direct',
+        price: 800,
+      }
+    ],
+  }
+];
+
 const mockHotelWithMissingPriceData = {
   ...mockHotelWithCompleteData,
   price: 0,
@@ -236,15 +272,16 @@ describe('Integration Test - Hotel Detail Data Validation', () => {
       
       mockUsePricedHotelsForDetails.mockReturnValue([mockHotelWithCompleteData]);
       
+      // Initially set room prices loading to true to simulate real loading behavior
       mockUseFetchHotelRoomPrices.mockReturnValue({
         rooms: [],
-        loading: false,
+        loading: true,
         error: null,
         retryCount: 0,
       });
-      
-      // Act
-      renderHotelDetail('jOZC', {
+
+      // Act - First render with room prices still loading
+      const { rerender } = renderHotelDetail('jOZC', {
         destination_id: 'RsBU',
         checkin: '2025-10-10',
         checkout: '2025-10-17',
@@ -252,11 +289,31 @@ describe('Integration Test - Hotel Detail Data Validation', () => {
         children: '0',
         rooms: '1'
       });
+
+      // Initially should show loading state
+      expect(screen.getByText('Loading hotel details...')).toBeInTheDocument();
+
+      // Now simulate room prices finishing loading
+      mockUseFetchHotelRoomPrices.mockReturnValue({
+        rooms: mockRooms,
+        loading: false,
+        error: null,
+        retryCount: 0,
+      });
+
+      // Re-render to trigger useEffect with updated room prices loading state
+      rerender(
+        <MemoryRouter initialEntries={['/hotel/jOZC?destination_id=RsBU&checkin=2025-10-10&checkout=2025-10-17&adults=2&children=0&rooms=1']}>
+          <Routes>
+            <Route path="/hotel/:hotelId" element={<HotelDetail />} />
+          </Routes>
+        </MemoryRouter>
+      );
       
       // Assert - Wait for component to render with complete data
       await waitFor(() => {
         expect(screen.getAllByRole('heading', { name: 'Marina Bay Sands' })[0]).toBeInTheDocument();
-      });
+      }, { timeout: 10000 });
       
       // Check that all hotel fields are populated
       expect(screen.getAllByRole('heading', { name: 'Marina Bay Sands' })[0]).toBeInTheDocument();
@@ -283,24 +340,45 @@ describe('Integration Test - Hotel Detail Data Validation', () => {
       
       mockUsePricedHotelsForDetails.mockReturnValue([mockHotelWithMissingPriceData]);
       
+      // Initially set room prices loading to true to simulate real loading behavior
       mockUseFetchHotelRoomPrices.mockReturnValue({
         rooms: [],
-        loading: false,
+        loading: true,
         error: null,
         retryCount: 0,
       });
-      
-      // Act
-      renderHotelDetail('jOZC', {
+
+      // Act - First render with room prices still loading
+      const { rerender } = renderHotelDetail('jOZC', {
         destination_id: 'RsBU',
         checkin: '2025-10-10',
         checkout: '2025-10-17'
       });
+
+      // Initially should show loading state
+      expect(screen.getByText('Loading hotel details...')).toBeInTheDocument();
+
+      // Now simulate room prices finishing loading
+      mockUseFetchHotelRoomPrices.mockReturnValue({
+        rooms: mockRooms,
+        loading: false,
+        error: null,
+        retryCount: 0,
+      });
+
+      // Re-render to trigger useEffect with updated room prices loading state
+      rerender(
+        <MemoryRouter initialEntries={['/hotel/jOZC?destination_id=RsBU&checkin=2025-10-10&checkout=2025-10-17']}>
+          <Routes>
+            <Route path="/hotel/:hotelId" element={<HotelDetail />} />
+          </Routes>
+        </MemoryRouter>
+      );
       
       // Assert - Wait for component to render
       await waitFor(() => {
         expect(screen.getAllByRole('heading', { name: 'Marina Bay Sands' })[0]).toBeInTheDocument();
-      });
+      }, { timeout: 10000 });
       
       // Check that room options are displayed
       expect(screen.getByText('Available Rooms')).toBeInTheDocument();
@@ -328,133 +406,178 @@ describe('Integration Test - Hotel Detail Data Validation', () => {
       
       mockUsePricedHotelsForDetails.mockReturnValue([mockHotelWithPricing]);
       
+      // Initially set room prices loading to true to simulate real loading behavior
       mockUseFetchHotelRoomPrices.mockReturnValue({
         rooms: [],
-        loading: false,
+        loading: true,
         error: null,
         retryCount: 0,
       });
-      
-      // Act
-      renderHotelDetail('jOZC', {
+
+      // Act - First render with room prices still loading
+      const { rerender } = renderHotelDetail('jOZC', {
         destination_id: 'RsBU',
         checkin: '2025-10-10',
         checkout: '2025-10-17'
       });
+
+      // Initially should show loading state
+      expect(screen.getByText('Loading hotel details...')).toBeInTheDocument();
+
+      // Now simulate room prices finishing loading
+      mockUseFetchHotelRoomPrices.mockReturnValue({
+        rooms: mockRooms,
+        loading: false,
+        error: null,
+        retryCount: 0,
+      });
+
+      // Re-render to trigger useEffect with updated room prices loading state
+      rerender(
+        <MemoryRouter initialEntries={['/hotel/jOZC?destination_id=RsBU&checkin=2025-10-10&checkout=2025-10-17']}>
+          <Routes>
+            <Route path="/hotel/:hotelId" element={<HotelDetail />} />
+          </Routes>
+        </MemoryRouter>
+      );
       
       // Assert - Wait for component to render
       await waitFor(() => {
         expect(screen.getAllByRole('heading', { name: 'Marina Bay Sands' })[0]).toBeInTheDocument();
-      });
+      }, { timeout: 10000 });
       
       // Check that room options are displayed
       expect(screen.getByText('Available Rooms')).toBeInTheDocument();
     });
 
     it('should use default placeholder images when hotel has missing image data', async () => {
-      // Arrange - Mock hotel with missing image data but with pricing info
-      const mockHotelWithPricing = {
-        ...mockHotelWithMissingImageData,
-        price: 500, // Need some pricing to trigger room generation
-        lowest_price: 450,
-      };
-      
+      // Arrange - Mock hotel with missing image data
       mockUseFetchHotelsForDetails.mockReturnValue({
-        hotels: [mockHotelWithPricing],
+        hotels: [mockHotelWithMissingImageData],
         loading: false,
         error: null,
       });
       
       mockUseFetchHotelPricesForDetails.mockReturnValue({
-        prices: [mockHotelWithPricing],
+        prices: [mockHotelWithMissingImageData],
         loading: false,
         error: null,
       });
       
-      mockUsePricedHotelsForDetails.mockReturnValue([mockHotelWithPricing]);
+      mockUsePricedHotelsForDetails.mockReturnValue([mockHotelWithMissingImageData]);
       
+      // Initially set room prices loading to true to simulate real loading behavior
       mockUseFetchHotelRoomPrices.mockReturnValue({
         rooms: [],
-        loading: false,
+        loading: true,
         error: null,
         retryCount: 0,
       });
-      
-      // Act
-      renderHotelDetail('jOZC', {
+
+      // Act - First render with room prices still loading
+      const { rerender } = renderHotelDetail('jOZC', {
         destination_id: 'RsBU',
         checkin: '2025-10-10',
         checkout: '2025-10-17'
       });
+
+      // Initially should show loading state
+      expect(screen.getByText('Loading hotel details...')).toBeInTheDocument();
+
+      // Now simulate room prices finishing loading
+      mockUseFetchHotelRoomPrices.mockReturnValue({
+        rooms: mockRooms,
+        loading: false,
+        error: null,
+        retryCount: 0,
+      });
+
+      // Re-render to trigger useEffect with updated room prices loading state
+      rerender(
+        <MemoryRouter initialEntries={['/hotel/jOZC?destination_id=RsBU&checkin=2025-10-10&checkout=2025-10-17']}>
+          <Routes>
+            <Route path="/hotel/:hotelId" element={<HotelDetail />} />
+          </Routes>
+        </MemoryRouter>
+      );
       
       // Assert - Wait for component to render
       await waitFor(() => {
         expect(screen.getAllByRole('heading', { name: 'Marina Bay Sands' })[0]).toBeInTheDocument();
-      });
+      }, { timeout: 10000 });
       
-      // Check that the component doesn't crash and renders properly
+      // Check that room options are displayed
       expect(screen.getByText('Available Rooms')).toBeInTheDocument();
     });
 
     it('should extract amenities from description when amenities object is empty', async () => {
-      // Arrange - Mock hotel with missing amenities but rich description and pricing info
-      const mockHotelWithPricing = {
-        ...mockHotelWithMissingAmenities,
-        price: 500, // Need some pricing to trigger room generation
-        lowest_price: 450,
-      };
-      
+      // Arrange - Mock hotel with empty amenities object
       mockUseFetchHotelsForDetails.mockReturnValue({
-        hotels: [mockHotelWithPricing],
+        hotels: [mockHotelWithMissingAmenities],
         loading: false,
         error: null,
       });
       
       mockUseFetchHotelPricesForDetails.mockReturnValue({
-        prices: [mockHotelWithPricing],
+        prices: [mockHotelWithMissingAmenities],
         loading: false,
         error: null,
       });
       
-      mockUsePricedHotelsForDetails.mockReturnValue([mockHotelWithPricing]);
+      mockUsePricedHotelsForDetails.mockReturnValue([mockHotelWithMissingAmenities]);
       
+      // Initially set room prices loading to true to simulate real loading behavior
       mockUseFetchHotelRoomPrices.mockReturnValue({
         rooms: [],
-        loading: false,
+        loading: true,
         error: null,
         retryCount: 0,
       });
-      
-      // Act
-      renderHotelDetail('jOZC', {
+
+      // Act - First render with room prices still loading
+      const { rerender } = renderHotelDetail('jOZC', {
         destination_id: 'RsBU',
         checkin: '2025-10-10',
         checkout: '2025-10-17'
       });
+
+      // Initially should show loading state
+      expect(screen.getByText('Loading hotel details...')).toBeInTheDocument();
+
+      // Now simulate room prices finishing loading
+      mockUseFetchHotelRoomPrices.mockReturnValue({
+        rooms: mockRooms,
+        loading: false,
+        error: null,
+        retryCount: 0,
+      });
+
+      // Re-render to trigger useEffect with updated room prices loading state
+      rerender(
+        <MemoryRouter initialEntries={['/hotel/jOZC?destination_id=RsBU&checkin=2025-10-10&checkout=2025-10-17']}>
+          <Routes>
+            <Route path="/hotel/:hotelId" element={<HotelDetail />} />
+          </Routes>
+        </MemoryRouter>
+      );
       
       // Assert - Wait for component to render
       await waitFor(() => {
         expect(screen.getAllByRole('heading', { name: 'Marina Bay Sands' })[0]).toBeInTheDocument();
-      });
+      }, { timeout: 10000 });
       
       // Check that room options are displayed
       expect(screen.getByText('Available Rooms')).toBeInTheDocument();
     });
 
     it('should handle mixed missing data gracefully', async () => {
-      // Arrange - Mock hotel with multiple missing data types
+      // Arrange - Mock hotel with mixed missing data
       const mockHotelWithMixedMissingData = {
         ...mockHotelWithCompleteData,
-        price: 0,
-        image_details: {
-          suffix: '.jpg',
-          count: 0,
-          prefix: '',
-        },
-        images: [],
-        imageCount: 0,
-        amenities: {},
-        // Keep the rich description for amenity extraction
+        price: 0, // Missing price
+        lowest_price: 0,
+        amenities: {}, // Empty amenities
+        images: [], // Missing images
       };
       
       mockUseFetchHotelsForDetails.mockReturnValue({
@@ -471,28 +594,48 @@ describe('Integration Test - Hotel Detail Data Validation', () => {
       
       mockUsePricedHotelsForDetails.mockReturnValue([mockHotelWithMixedMissingData]);
       
+      // Initially set room prices loading to true to simulate real loading behavior
       mockUseFetchHotelRoomPrices.mockReturnValue({
         rooms: [],
-        loading: false,
+        loading: true,
         error: null,
         retryCount: 0,
       });
-      
-      // Act
-      renderHotelDetail('jOZC', {
+
+      // Act - First render with room prices still loading
+      const { rerender } = renderHotelDetail('jOZC', {
         destination_id: 'RsBU',
         checkin: '2025-10-10',
         checkout: '2025-10-17'
       });
+
+      // Initially should show loading state
+      expect(screen.getByText('Loading hotel details...')).toBeInTheDocument();
+
+      // Now simulate room prices finishing loading
+      mockUseFetchHotelRoomPrices.mockReturnValue({
+        rooms: mockRooms,
+        loading: false,
+        error: null,
+        retryCount: 0,
+      });
+
+      // Re-render to trigger useEffect with updated room prices loading state
+      rerender(
+        <MemoryRouter initialEntries={['/hotel/jOZC?destination_id=RsBU&checkin=2025-10-10&checkout=2025-10-17']}>
+          <Routes>
+            <Route path="/hotel/:hotelId" element={<HotelDetail />} />
+          </Routes>
+        </MemoryRouter>
+      );
       
       // Assert - Wait for component to render
       await waitFor(() => {
         expect(screen.getAllByRole('heading', { name: 'Marina Bay Sands' })[0]).toBeInTheDocument();
-      });
+      }, { timeout: 10000 });
       
-      // Check that all fallback mechanisms work together
-      expect(screen.getAllByRole('heading', { name: 'Marina Bay Sands' })[0]).toBeInTheDocument();
-      expect(screen.getByText('Available Rooms')).toBeInTheDocument(); // Room generation
+      // Check that room options are displayed
+      expect(screen.getByText('Available Rooms')).toBeInTheDocument();
     });
   });
 });

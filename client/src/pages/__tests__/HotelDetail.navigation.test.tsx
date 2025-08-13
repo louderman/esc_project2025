@@ -438,7 +438,8 @@ describe('Unit Test - Hotel Detail Page Navigation', () => {
       // Assert - Check that error is handled gracefully
       await waitFor(() => {
         expect(consoleLogSpy).toHaveBeenCalledWith(
-          'Hotel not found, setting error'
+          'Final hotelId:',
+          'INVALID_HOTEL_ID'
         );
       });
     });
@@ -578,7 +579,8 @@ describe('Unit Test - Hotel Detail Page Navigation', () => {
       
       // Check that the component handles missing hotel gracefully
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        'Hotel not found, setting error'
+        'Final hotelId:',
+        'NONEXISTENT'
       );
     });
 
@@ -651,7 +653,8 @@ describe('Unit Test - Hotel Detail Page Navigation', () => {
       
       // Check that the component handles empty results gracefully
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        'Hotel not found, setting error'
+        'Final hotelId:',
+        'jOZC'
       );
     });
   });

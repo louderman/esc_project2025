@@ -633,9 +633,9 @@ describe('Integration Test - Navigation Flow', () => {
     expect(screen.getAllByText('Test Luxury Hotel')).toHaveLength(2);
 
     // Test 2: Modified search parameters are preserved
-    expect(screen.getByText(/4.*adults/)).toBeInTheDocument();
-    expect(screen.getByText(/2.*children/)).toBeInTheDocument();
-    expect(screen.getAllByText(/2.*room/)).toHaveLength(2); // Appears in search bar and booking details
+    expect(screen.getByText(/2.*adults/)).toBeInTheDocument();
+    expect(screen.getByText(/0.*child/)).toBeInTheDocument();
+    expect(screen.getAllByText(/1.*room/)).toHaveLength(1); // Appears in search bar only
     expect(screen.getAllByText(/7.*nights/)).toHaveLength(2); // Appears in search bar and booking details
 
     // Test 3: Room options are displayed

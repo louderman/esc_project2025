@@ -28,6 +28,32 @@ export default function NavBar() {
     setDropdownOpen(false);
     navigate('/');
   };
+  
+  const handleDeleteAccount = async () => {
+    if (!user?.id) return;
+    const ok = window.confirm('This will permanently delete your account. Continue?');
+    if (!ok) return;
+
+    try {
+      const res = await fetch(`/api/auth/delete/${user.id}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        alert('Your account has been deleted.');
+        localStorage.removeItem('user');
+        setUser(null);
+        setDropdownOpen(false);
+        navigate('/');
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.message || 'Failed to delete account.');
+      }
+    } catch (err) {
+      console.error('Delete account error:', err);
+      alert('An error occurred. Please try again.');
+    }
+  };
 
   return (
     <div className={styles.container}>
@@ -57,11 +83,11 @@ export default function NavBar() {
               </button>
               {dropdownOpen && (
                 <div className={styles.dropdownContent}>
-                  <button
-                    onClick={handleLogout}
-                    className={styles.logoutOption}
-                  >
+                  <button onClick={handleLogout} className={styles.logoutOption}>
                     Logout
+                  </button>
+                  <button onClick={handleDeleteAccount} className={styles.logoutOption}>
+                    Delete account
                   </button>
                 </div>
               )}
