@@ -21,7 +21,7 @@ function insertUser(name: string, email: string, password: string) {
   const trimmedPassword = password?.trim();
 
   if (!trimmedName || !trimmedEmail || !trimmedPassword) {
-    throw new Error("All fields (name, email, password) must be non-empty and trimmed.");
+    throw new Error('All fields (name, email, password) must be non-empty and trimmed.');
   }
 
   return pool.query(
@@ -30,12 +30,10 @@ function insertUser(name: string, email: string, password: string) {
   );
 }
 
-
 function findByEmail(email: string) {
   const trimmedEmail = email?.trim();
-
   if (!trimmedEmail) {
-    return Promise.resolve(null); // Return null for empty input
+    return Promise.resolve(null);
   }
 
   return pool
@@ -46,5 +44,13 @@ function findByEmail(email: string) {
     });
 }
 
+function deleteById(id: number) {
+  if (!id || Number.isNaN(id)) {
+    return Promise.resolve({ affectedRows: 0 });
+  }
+  return pool
+    .query(`DELETE FROM ${tableName} WHERE id = ?`, [id])
+    .then(([result]: any) => result);
+}
 
-export { sync, insertUser, findByEmail };
+export { sync, insertUser, findByEmail, deleteById };

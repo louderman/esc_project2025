@@ -1,5 +1,5 @@
 import express from 'express';
-import { insertUser, findByEmail } from '../models/userModel';
+import { insertUser, findByEmail, deleteById } from '../models/userModel';
 
 const router = express.Router();
 
@@ -16,13 +16,13 @@ router.post('/register', function (req, res) {
     .then((existingUser) => {
       if (existingUser) {
         res.status(400).json({ message: 'Email already exists.' });
-        return null; // Prevents returning Response
+        return null; // stop chain
       }
 
       return insertUser(name.trim(), email.trim(), password.trim());
     })
     .then((result) => {
-      if (result === null) return; // Email exists case
+      if (result === null) return;
       res.status(201).json({ message: 'User registered successfully.' });
     })
     .catch((err) => {
@@ -55,6 +55,27 @@ router.post('/login', function (req, res) {
     })
     .catch((err) => {
       console.error('Login error:', err);
+      res.status(500).json({ message: 'Internal server error.' });
+    });
+});
+
+router.delete('/delete/:id', function (req, res) {
+  const id = Number(req.params.id);
+  if (!id || Number.isNaN(id)) {
+    res.status(400).json({ message: 'Valid user id is required.' });
+    return;
+  }
+
+  deleteById(id)
+    .then((result) => {
+      if (result?.affectedRows > 0) {
+        res.status(200).json({ message: 'User deleted successfully.' });
+      } else {
+        res.status(404).json({ message: 'User not found.' });
+      }
+    })
+    .catch((err) => {
+      console.error('Delete user error:', err);
       res.status(500).json({ message: 'Internal server error.' });
     });
 });
