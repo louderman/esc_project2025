@@ -438,7 +438,7 @@ describe('Unit Test - Hotel Detail Page Navigation', () => {
       // Assert - Check that error is handled gracefully
       await waitFor(() => {
         expect(consoleLogSpy).toHaveBeenCalledWith(
-          'Hotel not found, setting error'
+          'All hooks finished loading but hotel not found, setting error'
         );
       });
     });
@@ -578,7 +578,7 @@ describe('Unit Test - Hotel Detail Page Navigation', () => {
       
       // Check that the component handles missing hotel gracefully
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        'Hotel not found, setting error'
+        'All hooks finished loading but hotel not found, setting error'
       );
     });
 
@@ -651,7 +651,7 @@ describe('Unit Test - Hotel Detail Page Navigation', () => {
       
       // Check that the component handles empty results gracefully
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        'Hotel not found, setting error'
+        'All hooks finished loading but no hotels found, setting error'
       );
     });
   });

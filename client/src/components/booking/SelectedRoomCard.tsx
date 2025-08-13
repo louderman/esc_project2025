@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from './selectedroomcard.module.css';
+import { getImageWithFallback } from '@/utils/imageFallbacks';
 
 interface SelectedRoomCardProps {
   selectedRoom: {

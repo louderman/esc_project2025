@@ -54,6 +54,13 @@ export function useFetchHotelRoomPrices({
         
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
+          
+          // Don't retry on 422 errors (validation errors) or 4xx client errors
+          if (response.status >= 400 && response.status < 500) {
+            console.log(`Client error ${response.status}:`, errorData);
+            throw new Error(errorData.message || `Failed to fetch room prices: ${response.statusText}`);
+          }
+          
           throw new Error(errorData.message || `Failed to fetch room prices: ${response.statusText}`);
         }
         
@@ -100,6 +107,8 @@ export function useFetchHotelRoomPrices({
           console.log('Transformed rooms:', transformedRooms);
           setRooms(transformedRooms);
           setRetryCount(0); // Reset retry count on success
+          console.log('✅ Room prices loaded successfully, setting loading to false');
+          setLoading(false); // Set loading to false when data is successfully fetched
         } else {
           console.log('Hotel not found in pricing or no rooms available');
           console.log('Looking for hotel ID:', hotelId);
@@ -113,25 +122,35 @@ export function useFetchHotelRoomPrices({
           } else {
             setRooms([]);
           }
+          console.log('⚠️ No rooms found, setting loading to false');
+          setLoading(false); // Set loading to false when no rooms found
         }
       } catch (err) {
         console.error(`Error fetching room prices (attempt ${attempt}):`, err);
         
-        // Retry logic for transient errors
-        if (attempt < maxRetries && err instanceof Error && 
+        // Don't retry on client errors (4xx) or if we've reached max retries
+        if (attempt >= maxRetries) {
+          console.log('Maximum retries reached, stopping retry attempts');
+          setError(err instanceof Error ? err : new Error('Failed to fetch room prices'));
+          setRetryCount(attempt);
+          setLoading(false);
+          return;
+        }
+        
+        // Only retry on network errors or 5xx server errors
+        if (err instanceof Error && 
             (err.message.includes('temporarily unavailable') || 
-             err.message.includes('Failed to fetch'))) {
+             err.message.includes('Failed to fetch') ||
+             err.message.includes('Network Error'))) {
           console.log(`Retrying in 2 seconds... (${attempt}/${maxRetries})`);
           setTimeout(() => fetchRoomPrices(attempt + 1), 2000);
           return;
         }
         
+        // For other errors, don't retry
         setError(err instanceof Error ? err : new Error('Failed to fetch room prices'));
         setRetryCount(attempt);
-      } finally {
-        if (attempt >= maxRetries || !error) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 

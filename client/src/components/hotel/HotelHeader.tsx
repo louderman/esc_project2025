@@ -9,36 +9,46 @@ const HotelHeader = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   
-  // Get URL parameters and set as default values
-  const destinationId = searchParams.get('destination_id')?.replace(/"/g, '') || searchParams.get('destId')?.replace(/"/g, '') || 'WD0M';
-  const checkin = searchParams.get('checkin')?.replace(/"/g, '') || '2025-10-01';
-  const checkout = searchParams.get('checkout')?.replace(/"/g, '') || '2025-10-07';
-  const adults = parseInt(searchParams.get('adults') || searchParams.get('adult') || '2');
-  const children = parseInt(searchParams.get('children') || searchParams.get('child') || '0');
-  const rooms = parseInt(searchParams.get('rooms') || searchParams.get('room') || '1');
-  
   // SearchBar state management with URL parameters as defaults
   const [destination, setDestination] = useState<DestinationState>({
-    id: destinationId,
-    name: 'Singapore' // This will be updated when destination is fetched
+    id: 'WD0M',
+    name: 'Singapore'
   });
   
   const [stayDates, setStayDates] = useState<StayDatesState>({
-    checkinDate: new Date(checkin),
-    checkoutDate: new Date(checkout)
+    checkinDate: new Date('2025-10-01'),
+    checkoutDate: new Date('2025-10-07')
   });
   
   const [occupancy, setOccupancy] = useState<OccupancyState>({
-    adults: adults,
-    children: children,
-    rooms: rooms
+    adults: 2,
+    children: 0,
+    rooms: 1
   });
 
   // Update state when URL parameters change
   useEffect(() => {
+    // Handle JSON-encoded values that ListingPage sends
+    const parseJsonParam = (value: string | null, fallback: string) => {
+      if (!value) return fallback;
+      try {
+        return JSON.parse(value);
+      } catch {
+        return fallback;
+      }
+    };
+
+    const destinationId = parseJsonParam(searchParams.get('destId'), 'WD0M');
+    const destinationName = parseJsonParam(searchParams.get('destName'), 'Singapore');
+    const checkin = searchParams.get('checkin')?.replace(/"/g, '') || '2025-10-01';
+    const checkout = searchParams.get('checkout')?.replace(/"/g, '') || '2025-10-07';
+    const adults = parseInt(parseJsonParam(searchParams.get('adult'), '2'));
+    const children = parseInt(parseJsonParam(searchParams.get('child'), '0'));
+    const rooms = parseInt(parseJsonParam(searchParams.get('room'), '1'));
+
     setDestination({
       id: destinationId,
-      name: 'Singapore'
+      name: destinationName
     });
     setStayDates({
       checkinDate: new Date(checkin),
@@ -49,11 +59,19 @@ const HotelHeader = () => {
       children: children,
       rooms: rooms
     });
-  }, [destinationId, checkin, checkout, adults, children, rooms]);
+  }, [searchParams]);
 
   const handleSearchSubmit = () => {
     // Redirect to listing page with new search parameters
-    const listingUrl = `/listing?destination_id=${destination.id}&checkin=${stayDates.checkinDate.toISOString().split('T')[0]}&checkout=${stayDates.checkoutDate.toISOString().split('T')[0]}&adults=${occupancy.adults}&children=${occupancy.children}&rooms=${occupancy.rooms}`;
+    // Use the correct parameter names that ListingPage expects
+    // Add null checks for dates to prevent linter errors
+    if (!stayDates.checkinDate || !stayDates.checkoutDate) {
+      console.error('Cannot submit search: dates are not set');
+      return;
+    }
+    
+    // JSON encode the values to match what ListingPage expects (similar to useSearchBarUrlSync)
+    const listingUrl = `/listing?destId=${JSON.stringify(destination.id)}&destName=${JSON.stringify(destination.name)}&checkin=${JSON.stringify(stayDates.checkinDate.toLocaleDateString('en-CA'))}&checkout=${JSON.stringify(stayDates.checkoutDate.toLocaleDateString('en-CA'))}&adult=${JSON.stringify(occupancy.adults)}&child=${JSON.stringify(occupancy.children)}&room=${JSON.stringify(occupancy.rooms)}`;
     navigate(listingUrl);
   };
 

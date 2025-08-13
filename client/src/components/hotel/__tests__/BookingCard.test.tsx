@@ -361,11 +361,11 @@ describe('Unit Test - Booking Card Interaction', () => {
       const reserveButton = screen.getByText('Reserve Now');
       await userEvent.click(reserveButton);
 
-      // Assert - Should use fallback image
+      // Assert - Should use fallback image (getImageWithFallback returns random image from fallback array)
       expect(mockNavigate).toHaveBeenCalledWith('/booking', {
         state: expect.objectContaining({
           bookingDetails: expect.objectContaining({
-            hotelImage: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85',
+            hotelImage: expect.stringMatching(/^https:\/\/images\.unsplash\.com\/photo-\d+.*$/),
           }),
         }),
       });
