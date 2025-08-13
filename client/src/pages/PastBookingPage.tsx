@@ -11,7 +11,12 @@ interface Booking {
   status: string;
   imageUrl?: string;
   createdAt: string;
-  bookingAddress?: string;
+  hotelAddress?: string;
+  numberOfNights?: number;
+  numberOfRooms: number;
+  adults: number;
+  children?: number | null;
+  totalAmount: number;
 }
 
 export default function PastBookingPage() {
@@ -59,44 +64,17 @@ export default function PastBookingPage() {
     fetchBookings();
   }, []);
 
-  const formatDate = (dateStr: string | null | undefined): string => {
-  if (!dateStr || dateStr === 'N/A') return 'N/A';
-
-  // Map of valid month abbreviations
-  const monthMap: Record<string, number> = {
-    Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
-    Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
-  };
-
-  const trimmed = dateStr.trim();
-  // Accepts: "Mon DD" or "Mon DD YYYY" or "Mon DD, YYYY"
-  const normalized = trimmed.replace(',', '').replace(/\s+/g, ' ');
-  const match = normalized.match(/^([A-Za-z]{3})\s+(\d{1,2})(?:\s+(\d{4}))?$/);
-  if (!match) return 'N/A';
-
-  const monAbbr = match[1];
-  const day = Number(match[2]);
-  if (!(monAbbr in monthMap)) return 'N/A';
-
-  const year = match[3] ? Number(match[3]) : new Date().getFullYear();
-  const d = new Date(year, monthMap[monAbbr], day);
-
-  // Validate constructed date (avoid Feb 30 etc.)
-  if (
-    d.getFullYear() !== year ||
-    d.getMonth() !== monthMap[monAbbr] ||
-    d.getDate() !== day
-  ) {
-    return 'N/A';
+  function formatDate(dateStr: string | null | undefined): string {
+    if (!dateStr) return "N/A";
+    const date = new Date(dateStr);
+    return isNaN(date.getTime())
+      ? "N/A"
+      : new Intl.DateTimeFormat("en-GB", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }).format(date);
   }
-
-  // Always return in DD/MM/YYYY
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const yyyy = String(d.getFullYear());
-  return `${dd}/${mm}/${yyyy}`;
-};
-
 
   const handleCardClick = (bookingId: string) => {
     navigate('/booking/confirmation', { state: { bookingId } });
@@ -157,22 +135,24 @@ export default function PastBookingPage() {
                   </button>
                 </div>
             ) : (
-              bookings.map(({ id, hotelName, checkInDate, checkOutDate, status, imageUrl, bookingAddress }) => (
+              bookings.map(({ id, hotelName, checkInDate, checkOutDate, status, imageUrl, hotelAddress, numberOfNights, numberOfRooms, adults, children, totalAmount }) => (
                 <div
                   key={id}
                   className={styles.bookingCard}
                   onClick={() => handleCardClick(id)}
                   style={{ cursor: 'pointer' }}
                 >
+                 <div className={styles.bookingImageWrapper}> 
                   <img
                     className={styles.bookingImg}
                     src={imageUrl ?? '/listing/hotel_img_placeholder.png'}
                     alt={hotelName}
                   />
+                 </div> 
                   <div className={styles.cardRight}>
                     <div className={styles.hotelName}>{hotelName ?? 'Unknown hotel'}</div>
                     <div className={styles.hotelAddress}>
-                      <span className={styles.icon}>📍</span> { bookingAddress ?? 'Location unavailable'}
+                      <span className={styles.icon}>📍</span> { hotelAddress ?? 'Location unavailable'}
                     </div>
                     <div className={styles.detailsCol}>
                       <div>
@@ -186,6 +166,19 @@ export default function PastBookingPage() {
                         <span className={styles.detailsLabel}>Check-out Date</span>{' '}
                         {formatDate(checkOutDate)}
                       </div>
+                      <div>
+                        <span className={styles.detailsLabel}>Duration:</span>{' '}
+                        {numberOfNights}{numberOfNights === 1 ? ' night' : ' nights'}
+                      </div>
+                      <div>
+                        <span className={styles.detailsLabel}>Details:</span>{' '}
+                        {numberOfRooms ?? 0} Room{(numberOfRooms ?? 0) !== 1 ? 's' : ''}, {adults ?? 0} Adult{(adults ?? 0) !== 1 ? 's' : ''}
+  {children && children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}
+                      </div>
+                      <div>
+                        <span className={styles.detailsLabel}>Total:</span>{' '}
+                        {totalAmount != null ? `$${totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'}
+                      </div>                      
                       <div>
                         <span className={styles.detailsLabel}>Status</span>{' '}
                         <span className={styles.statusConfirmed}>{status}</span>

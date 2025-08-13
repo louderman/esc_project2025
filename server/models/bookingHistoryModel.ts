@@ -10,7 +10,7 @@ async function getBookingHistory(userId?: string) {
       return [];
     }
 
-    let query = `SELECT id, userId, hotelName, checkInDate, checkOutDate, status, imageUrl, createdAt, bookingAddress FROM ${tableName}`;
+    let query = `SELECT id, userId, hotelName, checkInDate, checkOutDate, status, imageUrl, createdAt, hotelAddress, numberOfNights, numberOfRooms, adults, children, totalAmount FROM ${tableName}`;
     let params: any[] = [];
     
     query += ` WHERE userId = ?`;
