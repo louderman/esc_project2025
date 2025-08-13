@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import type { Hotel } from '../../../types/Hotel';
 import type { Price } from '../../../types/Price';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
@@ -14,12 +14,31 @@ function formatDate(date: Date | null): string {
     year: "numeric",
   }).format(date);
 }
+interface BookingData {
+  bookingAddress: string;
+  checkInDate: string;
+  checkOutDate: string;
+  createdAt: string;
+  email: string;
+  guests: string;
+  hotelId: string;
+  hotelName: string;
+  id: string;
+  imageUrl: string;
+  numberOfNights: number;
+  paymentIntentId: string;
+  pricePerNight: number;
+  status: string;
+  totalAmount: number;
+  userId: string;
+  whatsIncluded: string[];
+}
 
 export default function BookingConfirmation() {
   const location = useLocation();
   //console.log("location.state", location.state);
   //console.log("selectedRoom", location.state?.bookingDetails?.selectedRoom?.room_type);
-  const navigate = useNavigate();
+  //const navigate = useNavigate();
   const hotel = location.state?.hotel as (Hotel & Price) | undefined;
   const stayDates = location.state?.stayDates as StayDatesState | undefined;
   const selectedRoom = location.state?.bookingDetails?.selectedRoom;
@@ -80,37 +99,38 @@ export default function BookingConfirmation() {
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     e.currentTarget.src = '/listing/hotel_img_placeholder.png';
   };
-  //const [booking, setBooking] = useState(null);
-  //const [loading, setLoading] = useState(true);
-  //const [error, setError] = useState<string | null>(null);
-//
-  //useEffect(() => {
-  //  if (!bookingId) {
-  //    setError("No booking ID provided");
-  //    setLoading(false);
-  //    return;
-  //  }
-//
-  //  setLoading(true);
-  //  fetch(`/api/bookings/${bookingId}`)
-  //    .then(res => {
-  //      if (!res.ok) throw new Error("Failed to fetch booking");
-  //      return res.json();
-  //    })
-  //    .then(data => {
-  //      setBooking(data);
-  //      setLoading(false);
-  //    })
-  //    .catch(err => {
-  //      setError(err.message);
-  //      setLoading(false);
-  //    });
-  //}, [bookingId]);
-//
-  //if (loading) return <p>Loading booking details...</p>;
-  //if (error) return <p>Error: {error}</p>;
-  //if (!booking) return <p>No booking data found.</p>;
-//
+  const [booking, setBooking] = useState<BookingData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!bookingId) {
+      setError("No booking ID provided");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    fetch(`/api/bookings/${bookingId}`)
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to fetch booking");
+        return res.json();
+      })
+      .then(data => {
+        console.log("Fetched booking data:", data);
+        setBooking(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [bookingId]);
+
+  if (loading) return <p>Loading booking details...</p>;
+  if (error) return <p>Error: {error}</p>;
+  if (!booking) return <p>No booking data found.</p>;
+
 
   //const bookingDetails = {
   //  hotelName: hotel.name,
@@ -136,7 +156,7 @@ export default function BookingConfirmation() {
         <div className={styles.detailsgrid}>
           <div className={styles.detailitem}>
             <div className={styles.label}>Booking ID</div>
-            <div className={styles.value}>{hotel.id}</div>
+            <div className={styles.value}>{booking.id}</div>
           </div>
           <div className={styles.detailitem}>
             <div className={styles.label}>Check-in Date</div>
@@ -148,7 +168,7 @@ export default function BookingConfirmation() {
           </div>
           <div className={styles.detailitem}>
             <div className={styles.label}>Total</div>
-            <div className={styles.value}>${totalAmount}</div>
+            <div className={styles.value}>${booking.totalAmount ?? totalAmount ?? 0}</div>
           </div>
           <div className={styles.detailitem}>
             <div className={styles.label}>Status</div>

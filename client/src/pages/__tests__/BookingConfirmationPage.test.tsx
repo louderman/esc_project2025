@@ -1,7 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import BookingConfirmation from '.././BookingConfirmationPage';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { findByText } from '@testing-library/react';
 
 // Mock useLocation to provide test data
 vi.mock('react-router-dom', async () => {
@@ -10,6 +11,7 @@ vi.mock('react-router-dom', async () => {
     ...actual,
     useLocation: () => ({
       state: {
+        bookingId: 'booking-123',  
         hotel: {
           id: 'H123',
           name: 'Test Hotel',
@@ -22,22 +24,47 @@ vi.mock('react-router-dom', async () => {
           checkinDate: new Date('2025-08-10'),
           checkoutDate: new Date('2025-08-12'),
         },
+        bookingDetails: {
+          selectedRoom: { room_type: "Standard Single Room" },
+          
+        },
       },
     }),
     useNavigate: () => vi.fn(),
   };
 });
 
+// Mock fetch before all tests
+beforeAll(() => {
+  global.fetch = vi.fn(() =>
+    Promise.resolve({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          id: 'booking-123',
+          totalAmount: 400,
+        }),
+    })
+  ) as any;
+});
+
+// Restore mocks after all tests finish
+afterAll(() => {
+  vi.restoreAllMocks();
+});
+
+
 // --- Unit test for check-in date ---
 describe('BookingConfirmationPage', () => {
-  it('displays the correct check-in date', () => {
+  it('displays the correct check-in date', async () => {
     render(
       <MemoryRouter>
         <BookingConfirmation />
       </MemoryRouter>
     );
-    expect(screen.getByText('10 August 2025')).to.exist;
-    expect(screen.getByText('Check-in Date')).to.exist;
+    // Wait for the date text to appear after fetch
+    expect(await screen.findByText('10 August 2025')).toBeDefined();
+    expect(await screen.findByText('Check-in Date')).toBeDefined();
   });
 });
 
@@ -56,32 +83,34 @@ describe('Integration: Booking Confirmation and Past Bookings', () => {
     );
   }
 
-  it('displays booking details on confirmation and past bookings', () => {
-    const { rerender } = render(
-      <MemoryRouter initialEntries={['/booking-confirmation']}>
-        <Routes>
-          <Route path="/booking-confirmation" element={<BookingConfirmation />} />
-          <Route path="/past-bookings" element={<PastBookingsPage />} />
-        </Routes>
-      </MemoryRouter>
-    );
+it('displays booking details on confirmation and past bookings', async () => {
+  const { rerender } = render(
+    <MemoryRouter initialEntries={['/booking-confirmation']}>
+      <Routes>
+        <Route path="/booking-confirmation" element={<BookingConfirmation />} />
+        <Route path="/past-bookings" element={<PastBookingsPage />} />
+      </Routes>
+    </MemoryRouter>
+  );
 
-    // Confirmation page check
-    expect(screen.getByText('Test Hotel')).to.exist;
+  // Wait for booking confirmation page content
+  expect(await screen.findByText('Test Hotel')).toBeDefined();
 
-    // Simulate navigation to past bookings
-    rerender(
-      <MemoryRouter initialEntries={['/past-bookings']}>
-        <Routes>
-          <Route path="/booking-confirmation" element={<BookingConfirmation />} />
-          <Route path="/past-bookings" element={<PastBookingsPage />} />
-        </Routes>
-      </MemoryRouter>
-    );
+  // Then rerender with past bookings route
+  rerender(
+    <MemoryRouter initialEntries={['/past-bookings']}>
+      <Routes>
+        <Route path="/booking-confirmation" element={<BookingConfirmation />} />
+        <Route path="/past-bookings" element={<PastBookingsPage />} />
+      </Routes>
+    </MemoryRouter>
+  );
 
-    // Past bookings check
-    expect(screen.getByText('Test Hotel')).to.exist;
-  });
+  // Now expect past bookings content
+  expect(screen.getByText('Test Hotel')).toBeDefined();
+
+});
+
 
 
 
