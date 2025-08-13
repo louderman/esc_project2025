@@ -8,25 +8,11 @@ const pool = mysql.createPool({
   database: process.env.NODE_ENV === 'test' ? 'hotel_test' : 'hotel',
 });
 
-let isPoolClosed = false;
-
 async function cleanup() {
-  if (isPoolClosed) {
-    console.log('Pool already closed, skipping cleanup.');
-    return;
-  }
-
   try {
-    console.log('Closing database pool...');
-    isPoolClosed = true;
-    
-    // Wait a bit for any pending operations to complete
-    await new Promise(resolve => setTimeout(resolve, 50));
-    
     // Check if pool is already closed before trying to end it
     if (pool && typeof pool.end === 'function') {
       await pool.end();
-      console.log('Database pool closed successfully.');
     }
   } catch (err) {
     // Only log if it's not a "pool already closed" error
@@ -37,8 +23,6 @@ async function cleanup() {
       err.code !== 'POOL_CLOSED'
     ) {
       console.error('Error closing pool:', err);
-    } else {
-      console.log('Pool was already closed.');
     }
   }
 }

@@ -1,4 +1,4 @@
-import { pool } from './database/db';
+import { cleanup, pool } from './database/db';
 
 async function truncateTables() {
   // TODO: probably should add prefix `test_` to tables?
@@ -20,5 +20,5 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await truncateTables();
-  // Cleanup is now handled in globalTeardown
+  await cleanup();
 });
