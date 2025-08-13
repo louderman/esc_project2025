@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import type { CreateBookingRequest } from '../../../types/Booking';
+import type { CreateBookingRequest } from '../../../types/Booking';
 import type { Hotel } from '../../../types/Hotel';
 import type { Price } from '../../../types/Price';
 import BookingForm from '../components/booking/BookingForm';
@@ -17,6 +18,7 @@ export default function BookingPage() {
   const { user } = useAuth();
   
   // Get data from navigation state - updated structure to match BookingCard
+  // Get data from navigation state - updated structure to match BookingCard
   const stateData = location.state as {
     bookingDetails?: {
       selectedRoom: any;
@@ -29,9 +31,12 @@ export default function BookingPage() {
       numberOfRooms: number;
       checkinDate: string; // Already in YYYY-MM-DD format from BookingCard
       checkoutDate: string; // Already in YYYY-MM-DD format from BookingCard
+      checkinDate: string; // Already in YYYY-MM-DD format from BookingCard
+      checkoutDate: string; // Already in YYYY-MM-DD format from BookingCard
       totalAmount: number;
       pricePerNight: number;
       hotelImage?: string;
+      hotelImages?: string[]; // Array of hotel images
       hotelImages?: string[]; // Array of hotel images
     };
     hotel?: {
@@ -134,7 +139,21 @@ export default function BookingPage() {
     };
   });
   
+  // Keep dates as Date objects for internal state management, but use string format for API
+  const [stayDates, setStayDates] = useState<StayDatesState>(() => {
+    const checkinStr = stateData?.bookingDetails?.checkinDate;
+    const checkoutStr = stateData?.bookingDetails?.checkoutDate;
+    
+    return {
+      checkinDate: checkinStr ? new Date(checkinStr + 'T00:00:00') : null, // Add time to avoid timezone issues
+      checkoutDate: checkoutStr ? new Date(checkoutStr + 'T00:00:00') : null,
+    };
+  });
+  
   const [occupancy, setOccupancy] = useState<OccupancyState>({
+    adults: stateData?.bookingDetails?.numberOfGuests?.adults ?? 2,
+    children: stateData?.bookingDetails?.numberOfGuests?.children ?? 0,
+    rooms: stateData?.bookingDetails?.numberOfRooms ?? 1,
     adults: stateData?.bookingDetails?.numberOfGuests?.adults ?? 2,
     children: stateData?.bookingDetails?.numberOfGuests?.children ?? 0,
     rooms: stateData?.bookingDetails?.numberOfRooms ?? 1,
@@ -168,6 +187,8 @@ export default function BookingPage() {
 
   // Use passed booking details for calculations - prioritize passed data
   const numberOfNights = stateData?.bookingDetails?.numberOfNights ?? (
+  // Use passed booking details for calculations - prioritize passed data
+  const numberOfNights = stateData?.bookingDetails?.numberOfNights ?? (
     stayDates.checkinDate && stayDates.checkoutDate
       ? Math.ceil(
           (stayDates.checkoutDate.getTime() - stayDates.checkinDate.getTime()) /
@@ -179,6 +200,8 @@ export default function BookingPage() {
   // Get hotel images - prioritize from booking details, then from hotel data, then fallback
   const getHotelImages = (): string[] => {
     // Check if images are passed through booking details (from BookingCard)
+    if (stateData?.bookingDetails?.hotelImages && Array.isArray(stateData.bookingDetails.hotelImages) && stateData.bookingDetails.hotelImages.length > 0) {
+      return stateData.bookingDetails.hotelImages;
     if (stateData?.bookingDetails?.hotelImages && Array.isArray(stateData.bookingDetails.hotelImages) && stateData.bookingDetails.hotelImages.length > 0) {
       return stateData.bookingDetails.hotelImages;
     }
@@ -224,6 +247,25 @@ export default function BookingPage() {
     return `${year}-${month}-${day}`;
   };
 
+  // Helper function to format date for display
+  const formatDateForDisplay = (date: Date | null): string => {
+    if (!date) return 'N/A';
+    return date.toLocaleDateString('en-US', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
+  // Helper function to format date for API (YYYY-MM-DD)
+  const formatDateForAPI = (date: Date | null): string => {
+    if (!date) return 'N/A';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Consolidated bookingDetails object that serves both BookingReview and PaymentForm
   const bookingDetails = {
     // Hotel information
@@ -236,15 +278,21 @@ export default function BookingPage() {
     // Date information - formatted for display
     checkInDate: formatDateForDisplay(stayDates.checkinDate),
     checkOutDate: formatDateForDisplay(stayDates.checkoutDate),
+    // Date information - formatted for display
+    checkInDate: formatDateForDisplay(stayDates.checkinDate),
+    checkOutDate: formatDateForDisplay(stayDates.checkoutDate),
     
     // Guest and room information
     guests: `${occupancy.rooms} room${occupancy.rooms > 1 ? 's' : ''} · ${
       occupancy.adults + occupancy.children
     } guest${occupancy.adults + occupancy.children > 1 ? 's' : ''}`,
     numberOfRooms: stateData?.bookingDetails?.numberOfRooms ?? occupancy.rooms,
+    numberOfRooms: stateData?.bookingDetails?.numberOfRooms ?? occupancy.rooms,
     numberOfNights,
     
     // Pricing information
+    pricePerNight: Math.round((stateData?.bookingDetails?.pricePerNight ?? hotel.price) * 100) / 100,
+    totalAmount: stateData?.bookingDetails?.totalAmount ?? ((stateData?.bookingDetails?.pricePerNight ?? hotel.price) * numberOfNights),
     pricePerNight: Math.round((stateData?.bookingDetails?.pricePerNight ?? hotel.price) * 100) / 100,
     totalAmount: stateData?.bookingDetails?.totalAmount ?? ((stateData?.bookingDetails?.pricePerNight ?? hotel.price) * numberOfNights),
     
@@ -254,8 +302,10 @@ export default function BookingPage() {
     
     // Additional booking information
     whatsIncluded: stateData?.bookingDetails?.selectedRoom?.amenities ?? Object.entries(hotel.amenities)
+    whatsIncluded: stateData?.bookingDetails?.selectedRoom?.amenities ?? Object.entries(hotel.amenities)
       .filter(([_, value]) => value)
       .map(([key]) => key.replace(/([A-Z])/g, ' $1').trim()),
+    selectedRoom: stateData?.bookingDetails?.selectedRoom,
     selectedRoom: stateData?.bookingDetails?.selectedRoom,
   };
 
@@ -283,11 +333,26 @@ export default function BookingPage() {
     numberOfRooms: bookingDetails.numberOfRooms,
     adults: occupancy.adults,
     children: occupancy.children,
-    // Ensure roomTypes is always an array - extract room type from selectedRoom
+    // Ensure roomTypes is always an array
     roomTypes: bookingDetails.selectedRoom?.room_type ? [bookingDetails.selectedRoom.room_type] : 
                bookingDetails.selectedRoom?.roomType ? [bookingDetails.selectedRoom.roomType] : 
                ['Standard'],
     messageToHotel: undefined, // Will be filled by guest's special requests in PaymentForm
+    // Include selectedRoom information
+    selectedRoom: bookingDetails.selectedRoom ? {
+      id: bookingDetails.selectedRoom.id || 'default',
+      room_type: bookingDetails.selectedRoom.room_type || bookingDetails.selectedRoom.roomType || 'Standard Room',
+      roomType: bookingDetails.selectedRoom.roomType || bookingDetails.selectedRoom.room_type || 'Standard Room',
+      price: bookingDetails.selectedRoom.price || bookingDetails.pricePerNight,
+      totalPrice: bookingDetails.selectedRoom.totalPrice || bookingDetails.totalAmount,
+      free_cancellation: bookingDetails.selectedRoom.free_cancellation ?? true,
+      occupancy: bookingDetails.selectedRoom.occupancy || (occupancy.adults + occupancy.children),
+      bed_type: bookingDetails.selectedRoom.bed_type || 'King bed',
+      size: bookingDetails.selectedRoom.size || '35',
+      description: bookingDetails.selectedRoom.description || 'Standard room with modern amenities',
+      amenities: bookingDetails.selectedRoom.amenities || ['WiFi', 'TV', 'Air Conditioning'],
+      image: bookingDetails.selectedRoom.image
+    } : undefined,
     pricePerNight: bookingDetails.pricePerNight,
     totalAmount: bookingDetails.totalAmount,
     whatsIncluded: bookingDetails.whatsIncluded,
@@ -308,7 +373,9 @@ export default function BookingPage() {
     costPerNight: bookingDetails.pricePerNight,
     numberOfNights: bookingDetails.numberOfNights,
     bookingData: createBookingRequestData,
+    bookingData: createBookingRequestData,
     selectedRoom: bookingDetails.selectedRoom,
+    hotelImages: hotelImages,
     hotelImages: hotelImages,
     onPaymentSuccess: handlePaymentSuccess,
     onPaymentError: handlePaymentError,
