@@ -850,6 +850,7 @@ const BookingCard = ({
             </div>
             
             <Button 
+              data-cy="reserve-now-btn"
               className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-4 text-lg rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105" 
               size="lg"
               onClick={handleReserveNow}
