@@ -2,8 +2,14 @@ import { lstat } from "fs";
 
 describe('DestinationCard Click Tests', () => {
   beforeEach(() => {
+    // Mock stripe, it keeps getting console logged
+    cy.intercept('GET', 'https://js.stripe.com/v3/**', {
+      statusCode: 200,
+      body: '',
+    })
+
     // Visit the homepage before each test
-    cy.visit('/');
+    cy.visit('http://localhost:5173/');
   });
 
   it('should navigate to listing page and update search bar when clicking on Rome destination card', () => {
