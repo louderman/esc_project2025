@@ -12,12 +12,16 @@ describe('POST /api/payment/confirm-payment', () => {
     await syncBooking();
   });
 
+  let consoleErrorSpy: jest.SpyInstance;
+
   beforeEach(() => {
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    (console.error as jest.Mock).mockRestore();
+    if (consoleErrorSpy && typeof consoleErrorSpy.mockRestore === 'function') {
+      consoleErrorSpy.mockRestore();
+    }
   });
 
   it('should confirm payment and update booking status', async () => {

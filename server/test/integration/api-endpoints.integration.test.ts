@@ -48,12 +48,16 @@ const createBookingData = (
   ...overrides,
 });
 
+let consoleErrorSpy: jest.SpyInstance;
+
 beforeEach(() => {
-  jest.spyOn(console, 'error').mockImplementation(() => {});
+  consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 });
 
 afterEach(() => {
-  (console.error as jest.Mock).mockRestore();
+  if (consoleErrorSpy && typeof consoleErrorSpy.mockRestore === 'function') {
+    consoleErrorSpy.mockRestore();
+  }
 });
 
 describe('API Endpoints Integration Tests', () => {
