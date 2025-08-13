@@ -26,7 +26,7 @@ const LocationMap = ({ address, latitude, longitude, hotelName }: LocationMapPro
   }, [latitude, longitude]);
   
   return (
-    <Card>
+    <Card data-cy="location-map">
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <MapPin size={20} />
