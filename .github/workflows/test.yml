@@ -1,14 +1,4 @@
-name: Show environment info
-run: |
-  uname -a
-  node -v
-  npm -v
-  npx jest --version
-  pwd
-  ls -R
 
-name: Dump environment variables
-run: printenv | sort
 
 
 name: Run Vitest and Jest Tests
@@ -39,6 +29,16 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name != 'push' || github.event.pull_request == null
     steps:
+      - name: Show environment info
+        run: |
+          uname -a
+          node -v
+          npm -v
+          npx jest --version
+          pwd
+          ls -R
+      - name: Dump environment variables
+        run: printenv | sort
       - name: Checkout repo
         uses: actions/checkout@v3
       - name: Set up Node.js
