@@ -5,13 +5,13 @@
     height: 400px;
     width: 350px;;
     background-color: black;
-    transition: 0.2s;
     font-size: 20px;
+    --rightmargin: 33%;
 }
 
 .container:hover {
-    transition: 0.3s;
     font-size: 30px;
+    --rightmargin: 0%;
 }
 
 .bgimage {
@@ -34,4 +34,6 @@
     font-weight: bold;
     text-shadow: 2px 2px 5px #000000;
     margin: 5%;
+    margin-right: var(--rightmargin);
+    transition: 0.2s;
 }
