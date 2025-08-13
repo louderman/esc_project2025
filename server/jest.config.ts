@@ -1,6 +1,6 @@
-const { createDefaultPreset } = require('ts-jest');
-
 import type { Config } from 'jest';
+import { createDefaultPreset } from 'ts-jest';
+
 const tsJestTransformCfg = createDefaultPreset().transform;
 
 const config: Config = {
@@ -12,7 +12,15 @@ const config: Config = {
   },
   collectCoverage: true,
   coverageReporters: ['text', 'html'],
-  roots: ['./test'],
+
+  // Instead of `roots`
+  testMatch: [
+    './**/*.test.ts',
+    './**/*.integration.test.ts',
+  ],
+
+  // Optional: exclude dist tests
+  testPathIgnorePatterns: ['/node_modules/', '<rootDir>/server/dist/'],
 };
 
 export default config;

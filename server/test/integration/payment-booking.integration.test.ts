@@ -1,5 +1,6 @@
 import request from 'supertest';
 import { CreateBookingRequest } from '../../../types/Booking';
+import { cleanup } from '../../database/db';
 import { getBookingById, sync as syncBooking } from '../../models/bookingModel';
 import app from '../../server';
 
@@ -60,6 +61,13 @@ afterEach(() => {
 describe('Payment-Booking Integration Tests', () => {
   beforeAll(async () => {
     await syncBooking();
+  });
+
+  afterAll(async () => {
+    // Give time for any pending operations to complete
+    await new Promise(resolve => setTimeout(resolve, 100));
+    // Clean up database connections
+    await cleanup();
   });
 
   describe('Complete Payment Flow', () => {
