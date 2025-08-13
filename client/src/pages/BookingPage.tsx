@@ -283,26 +283,11 @@ export default function BookingPage() {
     numberOfRooms: bookingDetails.numberOfRooms,
     adults: occupancy.adults,
     children: occupancy.children,
-    // Ensure roomTypes is always an array
+    // Ensure roomTypes is always an array - extract room type from selectedRoom
     roomTypes: bookingDetails.selectedRoom?.room_type ? [bookingDetails.selectedRoom.room_type] : 
                bookingDetails.selectedRoom?.roomType ? [bookingDetails.selectedRoom.roomType] : 
                ['Standard'],
     messageToHotel: undefined, // Will be filled by guest's special requests in PaymentForm
-    // Include selectedRoom information
-    selectedRoom: bookingDetails.selectedRoom ? {
-      id: bookingDetails.selectedRoom.id || 'default',
-      room_type: bookingDetails.selectedRoom.room_type || bookingDetails.selectedRoom.roomType || 'Standard Room',
-      roomType: bookingDetails.selectedRoom.roomType || bookingDetails.selectedRoom.room_type || 'Standard Room',
-      price: bookingDetails.selectedRoom.price || bookingDetails.pricePerNight,
-      totalPrice: bookingDetails.selectedRoom.totalPrice || bookingDetails.totalAmount,
-      free_cancellation: bookingDetails.selectedRoom.free_cancellation ?? true,
-      occupancy: bookingDetails.selectedRoom.occupancy || (occupancy.adults + occupancy.children),
-      bed_type: bookingDetails.selectedRoom.bed_type || 'King bed',
-      size: bookingDetails.selectedRoom.size || '35',
-      description: bookingDetails.selectedRoom.description || 'Standard room with modern amenities',
-      amenities: bookingDetails.selectedRoom.amenities || ['WiFi', 'TV', 'Air Conditioning'],
-      image: bookingDetails.selectedRoom.image
-    } : undefined,
     pricePerNight: bookingDetails.pricePerNight,
     totalAmount: bookingDetails.totalAmount,
     whatsIncluded: bookingDetails.whatsIncluded,

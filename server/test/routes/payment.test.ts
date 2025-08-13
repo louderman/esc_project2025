@@ -23,18 +23,29 @@ describe('POST /api/payment/confirm-payment', () => {
   it('should confirm payment and update booking status', async () => {
     const bookingData: CreateBookingRequest = {
       userId: 'user_123',
-      email: 'test@example.com',
+      destinationId: 'dest_123',
       hotelId: 'hotel_123',
       hotelName: 'Test Hotel',
+      hotelAddress: '123 Test Street, Test City, Test Country',
+      imageUrl: 'http://example.com/image.jpg',
       checkInDate: '2024-01-01',
       checkOutDate: '2024-01-05',
-      guests: '2',
-      pricePerNight: 100,
       numberOfNights: 4,
+      numberOfRooms: 1,
+      adults: 2,
+      children: 0,
+      roomTypes: ['Standard'],
+      messageToHotel: 'Test message',
+      pricePerNight: 100,
       totalAmount: 400,
       whatsIncluded: ['Breakfast'],
-      imageUrl: 'http://example.com/image.jpg',
-      bookingAddress: '123 Test Street, Test City, Test Country',
+      guestInformation: {
+        firstName: 'John',
+        lastName: 'Doe',
+        phoneNumber: '+1234567890',
+        emailAddress: 'test@example.com',
+        specialRequests: 'Late check-in please'
+      }
     };
     const bookingId = await createBooking(bookingData);
 
@@ -52,7 +63,7 @@ describe('POST /api/payment/confirm-payment', () => {
 
     const booking = await getBookingById(bookingId);
     expect(booking?.status).toBe('confirmed');
-    expect(booking?.paymentIntentId).toBe('pi_test_123');
+    expect(booking?.paymentInformation.paymentIntentId).toBe('pi_test_123');
   });
 
   it('should return 400 if bookingId is missing', async () => {

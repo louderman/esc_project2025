@@ -400,13 +400,19 @@ describe('API Endpoints Integration Tests', () => {
     it('should handle special characters in booking data', async () => {
       const bookingData = createBookingData({
         userId: 'user-special-chars',
-        email: 'special@exämple.com',
         hotelId: 'hotel_special_chars',
         hotelName: 'Hôtel Spéciál & Resort™',
-        guests: '2 adults & 1 child',
+        hotelAddress: '123 Spéciál St, Ünique City, UC 12345, US',
+        adults: 2,
+        children: 1,
         whatsIncluded: ['Café & Restaurant', 'Spa & Wellness'],
         imageUrl: 'http://example.com/special-hotel.jpg',
-        bookingAddress: '123 Spéciál St, Ünique City, UC 12345, US',
+        guestInformation: {
+          firstName: 'Spéciál',
+          lastName: 'Üser',
+          phoneNumber: '+1234567890',
+          emailAddress: 'special@exämple.com'
+        }
       });
 
       const response = await request(app)
@@ -419,10 +425,11 @@ describe('API Endpoints Integration Tests', () => {
         .expect(200);
 
       expect(getResponse.body.hotelName).toBe('Hôtel Spéciál & Resort™');
-      expect(getResponse.body.guests).toBe('2 adults & 1 child');
+      expect(getResponse.body.adults).toBe(2);
+      expect(getResponse.body.children).toBe(1);
       expect(getResponse.body.userId).toBe('user-special-chars');
-      expect(getResponse.body.email).toBe('special@exämple.com');
-      expect(getResponse.body.bookingAddress).toBe(
+      expect(getResponse.body.guestInformation.emailAddress).toBe('special@exämple.com');
+      expect(getResponse.body.hotelAddress).toBe(
         '123 Spéciál St, Ünique City, UC 12345, US'
       );
     });

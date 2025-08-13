@@ -228,9 +228,8 @@ const PaymentForm = ({
             numberOfRooms: bookingData.numberOfRooms,
             adults: bookingData.adults,
             children: bookingData.children,
-            roomTypes: bookingData.roomTypes,
+            roomTypes: bookingData.roomTypes, // roomTypes array already contains the room type info
             messageToHotel: messageToHotel || undefined, // Use separate message to hotel field
-            selectedRoom: bookingData.selectedRoom, // Include selectedRoom from BookingPage
             pricePerNight: bookingData.pricePerNight,
             totalAmount: bookingData.totalAmount,
             whatsIncluded: bookingData.whatsIncluded,
