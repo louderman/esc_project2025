@@ -97,14 +97,7 @@ export interface BookingDisplayInformation {
 export interface BookingData {
   id: string; // System's booking ID
   bookingReference: string; // User-facing booking reference
-  id: string; // System's booking ID
-  bookingReference: string; // User-facing booking reference
   userId: string;
-  
-  // Destination Information
-  destinationId?: string; // Optional for backward compatibility
-  
-  // Hotel Information
   
   // Destination Information
   destinationId?: string; // Optional for backward compatibility
@@ -112,10 +105,6 @@ export interface BookingData {
   // Hotel Information
   hotelId: string;
   hotelName: string;
-  hotelAddress: string;
-  imageUrl: string;
-  
-  // Booking Details
   hotelAddress: string;
   imageUrl: string;
   
@@ -140,17 +129,8 @@ export interface BookingData {
   paymentInformation: PaymentInformation;
   
   // Booking Status
-  
-  // Guest Information
-  guestInformation: GuestInformation;
-  
-  // Payment Information (PCI Compliant)
-  paymentInformation: PaymentInformation;
-  
-  // Booking Status
   status: 'pending' | 'confirmed' | 'cancelled';
   createdAt: Date;
-  updatedAt?: Date;
   updatedAt?: Date;
 }
 
@@ -158,22 +138,13 @@ export interface BookingData {
 // Create Booking Request - updated for compliance
 export interface CreateBookingRequest {
   userId: string;
-  
-  // Destination Information
-  destinationId?: string; // Optional for backward compatibility, but recommended
-  
-  // Hotel Information
-  
+
   // Destination Information
   destinationId?: string; // Optional for backward compatibility, but recommended
   
   // Hotel Information
   hotelId: string;
   hotelName: string;
-  hotelAddress: string;
-  imageUrl: string;
-  
-  // Booking Details
   hotelAddress: string;
   imageUrl: string;
   
