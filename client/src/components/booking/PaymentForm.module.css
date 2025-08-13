@@ -4,6 +4,21 @@
   border-radius: 8px;
 }
 
+.guestSection {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #ffffff;
+}
+
+.guestSection h4 {
+  margin-bottom: 1rem;
+  color: #333;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
 .billingSection, .cardSection {
   margin-bottom: 2rem;
 }
@@ -29,6 +44,22 @@
   padding: 0.75rem;
   border: 1px solid #ccc;
   border-radius: 4px;
+}
+
+.textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.charCount {
+  display: block;
+  margin-top: 0.25rem;
+  color: #666;
+  font-size: 0.875rem;
 }
 
 .cardElement {

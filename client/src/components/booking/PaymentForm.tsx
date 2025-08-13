@@ -31,6 +31,14 @@ interface BillingAddress {
   };
 }
 
+interface GuestInformation {
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  emailAddress: string;
+  specialRequests?: string;
+}
+
 const PaymentForm = ({
   amount,
   totalAmount,
@@ -66,6 +74,18 @@ const PaymentForm = ({
       country: 'SG',
     },
   });
+
+  // State for guest information
+  const [guestInformation, setGuestInformation] = useState<GuestInformation>({
+    firstName: '',
+    lastName: '',
+    phoneNumber: '',
+    emailAddress: '',
+    specialRequests: '',
+  });
+
+  // State for message to hotel (separate from special requests)
+  const [messageToHotel, setMessageToHotel] = useState<string>('');
 
   // Stripe hooks - these will return null if Elements provider is not available
   const stripe = useStripe();
@@ -137,18 +157,52 @@ const PaymentForm = ({
       return;
     }
 
-    // Validate billing information
+    // Validate guest information
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (
+      !guestInformation.firstName ||
+      !guestInformation.lastName ||
+      !guestInformation.phoneNumber ||
+      !guestInformation.emailAddress ||
+      !emailRegex.test(guestInformation.emailAddress)
+    ) {
+      const errorMessage = 'Please fill in all required guest information including phone number.';
+      setError(errorMessage);
+      onPaymentError(errorMessage);
+      setProcessing(false);
+      return;
+    }
+
+    // Validate special requests length
+    if (guestInformation.specialRequests && guestInformation.specialRequests.length > 250) {
+      const errorMessage = 'Special requests must be 250 characters or less.';
+      setError(errorMessage);
+      onPaymentError(errorMessage);
+      setProcessing(false);
+      return;
+    }
+
+    // Validate message to hotel length
+    if (messageToHotel && messageToHotel.length > 250) {
+      const errorMessage = 'Message to hotel must be 250 characters or less.';
+      setError(errorMessage);
+      onPaymentError(errorMessage);
+      setProcessing(false);
+      return;
+    }
+
+    // Validate billing information
     if (
       !billingAddress.name ||
       !billingAddress.email ||
+      !billingAddress.phone ||
       !emailRegex.test(billingAddress.email) ||
       !billingAddress.address.line1 ||
       !billingAddress.address.city ||
       !billingAddress.address.state ||
       !billingAddress.address.postal_code
     ) {
-      const errorMessage = 'Please fill in all required billing information.';
+      const errorMessage = 'Please fill in all required billing information including phone number.';
       setError(errorMessage);
       onPaymentError(errorMessage);
       setProcessing(false);
@@ -160,10 +214,26 @@ const PaymentForm = ({
             throw new Error('Booking data is not available.');
         }
 
-        // 1. Create a booking first
-        // Use the hotel address that's already provided in bookingData
+        // 1. Create a booking first using the new compliant format
         const finalBookingData: CreateBookingRequest = {
-            ...bookingData,
+            userId: bookingData.userId,
+            destinationId: bookingData.destinationId,
+            hotelId: bookingData.hotelId,
+            hotelName: bookingData.hotelName,
+            hotelAddress: bookingData.hotelAddress,
+            imageUrl: bookingData.imageUrl,
+            checkInDate: bookingData.checkInDate,
+            checkOutDate: bookingData.checkOutDate,
+            numberOfNights: bookingData.numberOfNights,
+            numberOfRooms: bookingData.numberOfRooms,
+            adults: bookingData.adults,
+            children: bookingData.children,
+            roomTypes: bookingData.roomTypes,
+            messageToHotel: messageToHotel || undefined, // Use separate message to hotel field
+            pricePerNight: bookingData.pricePerNight,
+            totalAmount: bookingData.totalAmount,
+            whatsIncluded: bookingData.whatsIncluded,
+            guestInformation: guestInformation,
         };
 
         const bookingResponse = await fetch(`${API_BASE_URL}/api/bookings`, {
@@ -223,34 +293,35 @@ const PaymentForm = ({
             navigate(`/booking/confirmation`, {
                 state: {
                     bookingId: confirmResult.booking_id,
-                    hotel: bookingData ? {
+                    hotel: {
                         id: bookingData.hotelId,
                         name: bookingData.hotelName,
                         price: bookingData.pricePerNight,
-                        address: bookingData.bookingAddress,
+                        address: bookingData.hotelAddress,
                         imageCount: hotelImages ? hotelImages.length : 1,
                         image_details: {
                             prefix: hotelImages && hotelImages.length > 0 ? hotelImages[0] : '/listing/hotel_img_placeholder.png',
                             suffix: '',
                         },
-                        hotelImages: hotelImages, // Add images directly to hotel object as well
-                    } : null,
-                    stayDates: bookingData ? {
+                        hotelImages: hotelImages,
+                    },
+                    stayDates: {
                         checkinDate: bookingData.checkInDate && bookingData.checkInDate !== 'N/A' ? new Date(bookingData.checkInDate) : null,
                         checkoutDate: bookingData.checkOutDate && bookingData.checkOutDate !== 'N/A' ? new Date(bookingData.checkOutDate) : null,
-                    } : null,
+                    },
                     totalAmount: finalAmount,
                     bookingDetails: {
                         ...bookingData,
                         selectedRoom: selectedRoom,
-                        numberOfGuests: bookingData?.guests,
-                        numberOfNights: bookingData?.numberOfNights,
-                        numberOfRooms: numberOfRooms,
-                        checkinDate: bookingData?.checkInDate,
-                        checkoutDate: bookingData?.checkOutDate,
-                        pricePerNight: bookingData?.pricePerNight,
-                        hotelImage: bookingData?.imageUrl,
-                        hotelImages: hotelImages, // Add hotel images array
+                        numberOfGuests: `${bookingData.adults + bookingData.children} guests`,
+                        numberOfNights: bookingData.numberOfNights,
+                        numberOfRooms: bookingData.numberOfRooms,
+                        checkinDate: bookingData.checkInDate,
+                        checkoutDate: bookingData.checkOutDate,
+                        pricePerNight: bookingData.pricePerNight,
+                        hotelImage: bookingData.imageUrl,
+                        hotelImages: hotelImages,
+                        guestInformation: guestInformation,
                     }
                 }
             });
@@ -310,6 +381,92 @@ const PaymentForm = ({
       </div>
 
       <form onSubmit={handleSubmit}>
+        {/* Guest Information Section */}
+        <div className={styles.guestSection}>
+          <h4>Guest Information</h4>
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="firstName">First Name *</label>
+              <input
+                id="firstName"
+                type="text"
+                value={guestInformation.firstName}
+                onChange={(e) => setGuestInformation({...guestInformation, firstName: e.target.value})}
+                className={styles.input}
+                required
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label htmlFor="lastName">Last Name *</label>
+              <input
+                id="lastName"
+                type="text"
+                value={guestInformation.lastName}
+                onChange={(e) => setGuestInformation({...guestInformation, lastName: e.target.value})}
+                className={styles.input}
+                required
+              />
+            </div>
+          </div>
+
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="guestEmail">Email Address *</label>
+              <input
+                id="guestEmail"
+                type="email"
+                value={guestInformation.emailAddress}
+                onChange={(e) => setGuestInformation({...guestInformation, emailAddress: e.target.value})}
+                className={styles.input}
+                required
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label htmlFor="guestPhone">Phone Number *</label>
+              <input
+                id="guestPhone"
+                type="tel"
+                value={guestInformation.phoneNumber}
+                onChange={(e) => setGuestInformation({...guestInformation, phoneNumber: e.target.value})}
+                className={styles.input}
+                required
+              />
+            </div>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="specialRequests">Special Requests (max 250 characters)</label>
+            <textarea
+              id="specialRequests"
+              value={guestInformation.specialRequests}
+              onChange={(e) => setGuestInformation({...guestInformation, specialRequests: e.target.value})}
+              className={styles.textarea}
+              maxLength={250}
+              rows={3}
+              placeholder="Any special requests for your stay..."
+            />
+            <small className={styles.charCount}>
+              {guestInformation.specialRequests?.length || 0}/250 characters
+            </small>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="messageToHotel">Message to Hotel (max 250 characters)</label>
+            <textarea
+              id="messageToHotel"
+              value={messageToHotel}
+              onChange={(e) => setMessageToHotel(e.target.value)}
+              className={styles.textarea}
+              maxLength={250}
+              rows={3}
+              placeholder="Any message you'd like to send to the hotel..."
+            />
+            <small className={styles.charCount}>
+              {messageToHotel.length}/250 characters
+            </small>
+          </div>
+        </div>
+
         {/* Billing Address Section */}
         <div className={styles.billingSection}>
           <h4>Billing Information</h4>  
@@ -339,13 +496,14 @@ const PaymentForm = ({
           </div>
 
           <div className={styles.formGroup}>
-            <label htmlFor="phone">Phone</label>
+            <label htmlFor="phone">Phone *</label>
             <input
               id="phone"
               type="tel"
               value={billingAddress.phone}
               onChange={(e) => handleBillingAddressChange('phone', e.target.value)}
               className={styles.input}
+              required
             />
           </div>
 
