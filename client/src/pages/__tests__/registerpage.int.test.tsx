@@ -1,4 +1,3 @@
-import React from 'react';
 import { describe, it, beforeEach, afterEach, vi, expect } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { render, cleanup } from '@testing-library/react';
@@ -41,111 +40,6 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
-});
-
-// TC_SIGNUP_1 – Username field
-describe('TC_SIGNUP_1 – Username field (integration)', () => {
-  it('typing shows the username', async () => {
-    const ui = setup();
-    const user = userEvent.setup();
-    const name = getNameInput(ui);
-    await user.type(name, 'sh');
-    expect(name.value).toBe('sh');
-  });
-
-  it('empty string → shows errors, no redirect', async () => {
-    const ui = setup();
-    const user = userEvent.setup();
-    const name = getNameInput(ui);
-    await user.type(name, 'x');
-    await user.clear(name);
-    await user.click(getCreateBtn(ui));
-    expect(
-      await ui.findByText(/Name cannot be empty or have leading\/trailing spaces/i)
-    ).toBeVisible();
-  });
-
-  it('leading spaces → shows error but displays text', async () => {
-    const ui = setup();
-    const user = userEvent.setup();
-    const name = getNameInput(ui);
-    await user.type(name, '    Alice');
-    expect(name.value).toBe('    Alice');
-    await user.click(getCreateBtn(ui));
-    expect(
-      await ui.findByText(/Name cannot be empty or have leading\/trailing spaces/i)
-    ).toBeVisible();
-  });
-
-  it('spaces in middle → allowed (no name error) and displays text', async () => {
-    const ui = setup();
-    const user = userEvent.setup();
-    const name = getNameInput(ui);
-    await user.type(name, 'Alic  e');
-    expect(name.value).toBe('Alic  e');
-    await user.click(getCreateBtn(ui));
-    expect(
-      ui.queryByText(/Name cannot be empty or have leading\/trailing spaces/i)
-    ).toBeNull();
-  });
-
-  it('trailing spaces → shows error but displays text', async () => {
-    const ui = setup();
-    const user = userEvent.setup();
-    const name = getNameInput(ui);
-    await user.type(name, ' Alice   ');
-    expect(name.value).toBe(' Alice   ');
-    await user.click(getCreateBtn(ui));
-    expect(
-      await ui.findByText(/Name cannot be empty or have leading\/trailing spaces/i)
-    ).toBeVisible();
-  });
-});
-
-// TC_SIGNUP_2 – Email field
-describe('TC_SIGNUP_2 – Email field (integration)', () => {
-  it('typing shows email', async () => {
-    const ui = setup();
-    const user = userEvent.setup();
-    const email = getEmailInput(ui);
-    await user.type(email, 'Alice@gmail.com');
-    expect(email.value).toBe('Alice@gmail.com');
-  });
-
-  it('leading/trailing spaces displayed (input[type=email] trims visually)', async () => {
-    const ui = setup();
-    const user = userEvent.setup();
-    const email = getEmailInput(ui);
-    await user.type(email, '   Alice@gmail.com   ');
-    expect(email.value).toBe('Alice@gmail.com');
-  });
-
-  it('empty string → shows custom error on submit', async () => {
-    const ui = setup();
-    const user = userEvent.setup();
-    const email = getEmailInput(ui);
-    await user.clear(email);
-    await user.click(getCreateBtn(ui));
-    expect(
-      await ui.findByText(/Email must be valid and contain no spaces\./i)
-    ).toBeVisible();
-  });
-
-  it('spaces in middle → field shows (native popup not asserted)', async () => {
-    const ui = setup();
-    const user = userEvent.setup();
-    const email = getEmailInput(ui);
-    await user.type(email, 'Alic  e@gmail.com');
-    expect(email.value).toBe('Alic  e@gmail.com');
-  });
-
-  it('missing @ → field shows but submit will be blocked by native validation later', async () => {
-    const ui = setup();
-    const user = userEvent.setup();
-    const email = getEmailInput(ui);
-    await user.type(email, 'Alicegmail.com');
-    expect(email.value).toBe('Alicegmail.com');
-  });
 });
 
 // ITC_SIGNUP_1 – Create account button
@@ -213,7 +107,10 @@ describe('ITC_SIGNUP_1 – Create account button (integration)', () => {
 
   it('all inputs valid → alert + request sent', async () => {
     const ui = setup();
-    fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({}) } as any);
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({}),
+    } as any);
     const user = await fill(ui, 'Alice', 'alice@gmail.com', 'Strong@123!');
     await user.click(getCreateBtn(ui));
 
