@@ -1,3 +1,4 @@
+
 import express from 'express';
 import { getBookingHistory } from '../models/bookingHistoryModel';
 const router = express.Router();
@@ -17,6 +18,7 @@ router.get('/history/:userId', async (req, res) => {
     return res.status(500).json({ error: 'Failed to fetch bookings' });
   }
 });
+
 
 
 export { router };
