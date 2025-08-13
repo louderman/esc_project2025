@@ -230,6 +230,7 @@ const PaymentForm = ({
             children: bookingData.children,
             roomTypes: bookingData.roomTypes,
             messageToHotel: messageToHotel || undefined, // Use separate message to hotel field
+            selectedRoom: bookingData.selectedRoom, // Include selectedRoom from BookingPage
             pricePerNight: bookingData.pricePerNight,
             totalAmount: bookingData.totalAmount,
             whatsIncluded: bookingData.whatsIncluded,
