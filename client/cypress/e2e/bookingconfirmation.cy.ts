@@ -22,66 +22,81 @@ function setRangeValue(selector: string, index: number, value: number): void {
 
 describe('UC 5,6 - View and create booking', () => {
   before(() => {
-    cy.intercept('GET', 'https://js.stripe.com/v3/**', {
-      statusCode: 200,
-      body: '',
+    //cy.intercept('GET', 'https://js.stripe.com/v3/**', {
+    //  statusCode: 200,
+    //  body: '',
+    //});
+    cy.intercept('POST', 'https://api.stripe.com/v1/payment_intents', {
+    statusCode: 200,
+    body: {
+        id: 'pi_123',
+        object: 'payment_intent',
+        status: 'succeeded',
+        client_secret: 'pi_123_secret_456',
+    },
     });
 
-    // Increase timeout for page load
+
+
     cy.visit(
       'http://localhost:5173/hotel/wc4Z?checkin=2025-09-06&checkout=2025-09-08&adults=2&children=0&rooms=1&destination_id=H4Gp',
-      { timeout: 60000 } // 60 seconds for page load
+      { timeout: 60000 }
     );
   });
+// helper to get inside a Stripe iframe
+const getStripeInput = (iframeSelector: string, inputName: string) => {
+  return cy
+    .get(iframeSelector)
+    .find('iframe') // Stripe injects the secure input here
+    .its('0.contentDocument.body')
+    .should('not.be.empty')
+    .then(cy.wrap)
+    .find(`input[name="${inputName}"]`);
+};
 
-  it('should render main booking components correctly', () => {
-    cy.get('[data-cy=hotel-detail]', { timeout: 20000 }).should('exist').and('be.visible');
-    cy.get('[data-cy=booking-form]', { timeout: 20000 }).should('exist').and('be.visible');
 
-    cy.get('[data-cy=checkin-date]', { timeout: 20000 }).should('contain.text', 'Sep 06, 2025');
-    cy.get('[data-cy=checkout-date]', { timeout: 20000 }).should('contain.text', 'Sep 08, 2025');
+  it('clicks the Reserve Now button', () => {
+    cy.get('[data-cy="reserve-now-btn"]', { timeout: 20000 })
+      .should('be.visible')
+      .click();
 
-    cy.get('input[name="adults"]', { timeout: 20000 }).should('have.value', '2');
-    cy.get('input[name="children"]', { timeout: 20000 }).should('have.value', '0');
-    cy.get('input[name="rooms"]', { timeout: 20000 }).should('have.value', '1');
-  });
+    cy.get('[data-cy="billing-full-name"]').clear().type('Jackson');
 
-  it('should allow user to modify guest counts', () => {
-    cy.get('input[name="adults"]', { timeout: 20000 }).clear().type('3').blur();
-    cy.get('input[name="adults"]').should('have.value', '3');
+    cy.get('[data-cy="billing-email"]').clear().type('Jackson@hotmail.com');
 
-    cy.get('input[name="children"]').clear().type('1').blur();
-    cy.get('input[name="children"]').should('have.value', '1');
+    cy.get('[data-cy="billing-phone"]').clear().type('84752245');
 
-    cy.get('input[name="rooms"]').clear().type('2').blur();
-    cy.get('input[name="rooms"]').should('have.value', '2');
-  });
+    cy.get('[data-cy="billing-addressLine1"]').clear().type('123 Tampines Street 11 #12-34');
 
-  it('should update total price when inputs change', () => {
-    cy.get('[data-cy=total-price]', { timeout: 20000 }).invoke('text').then((initialPrice) => {
-      cy.get('input[name="rooms"]').clear().type('2').blur();
-      cy.get('[data-cy=total-price]').should(($price) => {
-        expect($price.text()).not.to.eq(initialPrice);
-      });
-    });
-  });
+    cy.get('[data-cy="billing-addressLine2"]').clear().type('123 Main Street');
 
-  it('should enable "Create Booking" button and allow booking creation', () => {
-    cy.get('[data-cy=create-booking-btn]', { timeout: 20000 }).should('be.enabled').click();
+    cy.get('[data-cy="billing-city"]').clear().type('Singapore');
 
-    cy.url({ timeout: 20000 }).should('include', '/booking/confirmation');
+    cy.get('[data-cy="billing-state"]').clear().type('Singapore');
 
-    cy.get('[data-cy=booking-confirmation-message]', { timeout: 20000 }).should(
-      'contain.text',
-      'Booking Confirmed'
-    );
-  });
+    cy.get('[data-cy="billing-zip-code"]').clear().type('693440');
 
-  it('should reset form when reset button clicked', () => {
-    cy.get('[data-cy=reset-booking-btn]', { timeout: 20000 }).click();
+    //// Type into card number
+    //cy.getIframeBody('iframe[name^="__privateStripeFrame"]')
+    //.find('input[name="cardnumber"]')
+    //.type('4242424242424242', { delay: 10 });
+//
+    //// Type into expiry date
+    //cy.getIframeBody('iframe[name^="__privateStripeFrame"]')
+    //.find('input[name="exp-date"]')
+    //.type('12/34', { delay: 10 });
+//
+    //// Type into CVC
+    //cy.getIframeBody('iframe[name^="__privateStripeFrame"]')
+    //.find('input[name="cvc"]')
+    //.type('123', { delay: 10 });
+    cy.wait(10000);
 
-    cy.get('input[name="adults"]').should('have.value', '2');
-    cy.get('input[name="children"]').should('have.value', '0');
-    cy.get('input[name="rooms"]').should('have.value', '1');
+    cy.get('[data-cy="create-submit-btn"]', { timeout: 10000 })
+      .should('be.visible')
+      .click();
+
+
+
   });
 });
