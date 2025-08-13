@@ -10,9 +10,6 @@ interface PaymentFormProps {
   totalAmount: number;
   pricePerNight: number;
   numberOfNights: number;
-  totalAmount: number;
-  pricePerNight: number;
-  numberOfNights: number;
   bookingData?: CreateBookingRequest; // Booking data to send with payment
   selectedRoom?: any; // Additional room data for confirmation page
   hotelImages?: string[]; // Hotel images array for confirmation page
@@ -62,12 +59,6 @@ const PaymentForm = ({
   const taxes = totalAmount * 0.1;
   const finalAmount = totalAmount + taxes;
 
-
-  const numberOfRooms = bookingData?.numberOfRooms || 1;
-  const taxes = totalAmount * 0.1;
-  const finalAmount = totalAmount + taxes;
-
-  
   // State for billing address
   const [billingAddress, setBillingAddress] = useState<BillingAddress>({
     name: '',
@@ -82,18 +73,6 @@ const PaymentForm = ({
       country: 'SG',
     },
   });
-
-  // State for guest information
-  const [guestInformation, setGuestInformation] = useState<GuestInformation>({
-    firstName: '',
-    lastName: '',
-    phoneNumber: '',
-    emailAddress: '',
-    specialRequests: '',
-  });
-
-  // State for message to hotel (separate from special requests)
-  const [messageToHotel, setMessageToHotel] = useState<string>('');
 
   // State for guest information
   const [guestInformation, setGuestInformation] = useState<GuestInformation>({
@@ -178,41 +157,7 @@ const PaymentForm = ({
     }
 
     // Validate guest information
-    // Validate guest information
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (
-      !guestInformation.firstName ||
-      !guestInformation.lastName ||
-      !guestInformation.phoneNumber ||
-      !guestInformation.emailAddress ||
-      !emailRegex.test(guestInformation.emailAddress)
-    ) {
-      const errorMessage = 'Please fill in all required guest information including phone number.';
-      setError(errorMessage);
-      onPaymentError(errorMessage);
-      setProcessing(false);
-      return;
-    }
-
-    // Validate special requests length
-    if (guestInformation.specialRequests && guestInformation.specialRequests.length > 250) {
-      const errorMessage = 'Special requests must be 250 characters or less.';
-      setError(errorMessage);
-      onPaymentError(errorMessage);
-      setProcessing(false);
-      return;
-    }
-
-    // Validate message to hotel length
-    if (messageToHotel && messageToHotel.length > 250) {
-      const errorMessage = 'Message to hotel must be 250 characters or less.';
-      setError(errorMessage);
-      onPaymentError(errorMessage);
-      setProcessing(false);
-      return;
-    }
-
-    // Validate billing information
     if (
       !guestInformation.firstName ||
       !guestInformation.lastName ||
@@ -250,14 +195,12 @@ const PaymentForm = ({
       !billingAddress.name ||
       !billingAddress.email ||
       !billingAddress.phone ||
-      !billingAddress.phone ||
       !emailRegex.test(billingAddress.email) ||
       !billingAddress.address.line1 ||
       !billingAddress.address.city ||
       !billingAddress.address.state ||
       !billingAddress.address.postal_code
     ) {
-      const errorMessage = 'Please fill in all required billing information including phone number.';
       const errorMessage = 'Please fill in all required billing information including phone number.';
       setError(errorMessage);
       onPaymentError(errorMessage);
@@ -270,7 +213,6 @@ const PaymentForm = ({
             throw new Error('Booking data is not available.');
         }
 
-        // 1. Create a booking first using the new compliant format
         // 1. Create a booking first using the new compliant format
         const finalBookingData: CreateBookingRequest = {
             userId: bookingData.userId,
@@ -351,20 +293,15 @@ const PaymentForm = ({
                 state: {
                     bookingId: confirmResult.booking_id,
                     hotel: {
-                    hotel: {
                         id: bookingData.hotelId,
                         name: bookingData.hotelName,
                         price: bookingData.pricePerNight,
-                        address: bookingData.hotelAddress,
                         address: bookingData.hotelAddress,
                         imageCount: hotelImages ? hotelImages.length : 1,
                         image_details: {
                             prefix: hotelImages && hotelImages.length > 0 ? hotelImages[0] : '/listing/hotel_img_placeholder.png',
                             suffix: '',
                         },
-                        hotelImages: hotelImages,
-                    },
-                    stayDates: {
                         hotelImages: hotelImages,
                     },
                     stayDates: {
@@ -395,14 +332,12 @@ const PaymentForm = ({
         onPaymentError(errorMessage);
     }
 
-
     setProcessing(false);
   };
 
   const handleBillingAddressChange = (field: string, value: string) => {
     if (field.startsWith('address.')) {
       const addressField = field.split('.')[1];
-      setBillingAddress((prev: BillingAddress) => ({
       setBillingAddress((prev: BillingAddress) => ({
         ...prev,
         address: {
@@ -412,7 +347,6 @@ const PaymentForm = ({
       }));
     } else {
       setBillingAddress((prev: BillingAddress) => ({
-      setBillingAddress((prev: BillingAddress) => ({
         ...prev,
         [field]: value,
       }));
@@ -420,7 +354,6 @@ const PaymentForm = ({
   };
 
   return (
-    // HTML for the payment form over here
     <div className={styles.container}>
       <h3>Payment Details</h3>
 
@@ -444,114 +377,7 @@ const PaymentForm = ({
         </div>
       </div>
 
-
-      {/* Price Breakdown Section */}
-      <div className={styles.priceBreakdown}>
-        <h4 className={styles.priceTitle}>Price Summary</h4>
-        <div className={styles.priceItem}>
-          <span>
-            {numberOfRooms} room{numberOfRooms > 1 ? 's' : ''} x {numberOfNights} night
-            {numberOfNights > 1 ? 's' : ''}
-          </span>
-          <span>${totalAmount.toFixed(2)}</span>
-        </div>
-        <div className={styles.priceItem}>
-          <span>Taxes and fees (10%)</span>
-          <span>${taxes.toFixed(2)}</span>
-        </div>
-        <div className={`${styles.priceItem} ${styles.total}`}>
-          <span>Total</span>
-          <span>${finalAmount.toFixed(2)}</span>
-        </div>
-      </div>
-
       <form onSubmit={handleSubmit}>
-        {/* Guest Information Section */}
-        <div className={styles.guestSection}>
-          <h4>Guest Information</h4>
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label htmlFor="firstName">First Name *</label>
-              <input
-                id="firstName"
-                type="text"
-                value={guestInformation.firstName}
-                onChange={(e) => setGuestInformation({...guestInformation, firstName: e.target.value})}
-                className={styles.input}
-                required
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label htmlFor="lastName">Last Name *</label>
-              <input
-                id="lastName"
-                type="text"
-                value={guestInformation.lastName}
-                onChange={(e) => setGuestInformation({...guestInformation, lastName: e.target.value})}
-                className={styles.input}
-                required
-              />
-            </div>
-          </div>
-
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label htmlFor="guestEmail">Email Address *</label>
-              <input
-                id="guestEmail"
-                type="email"
-                value={guestInformation.emailAddress}
-                onChange={(e) => setGuestInformation({...guestInformation, emailAddress: e.target.value})}
-                className={styles.input}
-                required
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label htmlFor="guestPhone">Phone Number *</label>
-              <input
-                id="guestPhone"
-                type="tel"
-                value={guestInformation.phoneNumber}
-                onChange={(e) => setGuestInformation({...guestInformation, phoneNumber: e.target.value})}
-                className={styles.input}
-                required
-              />
-            </div>
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="specialRequests">Special Requests (max 250 characters)</label>
-            <textarea
-              id="specialRequests"
-              value={guestInformation.specialRequests}
-              onChange={(e) => setGuestInformation({...guestInformation, specialRequests: e.target.value})}
-              className={styles.textarea}
-              maxLength={250}
-              rows={3}
-              placeholder="Any special requests for your stay..."
-            />
-            <small className={styles.charCount}>
-              {guestInformation.specialRequests?.length || 0}/250 characters
-            </small>
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="messageToHotel">Message to Hotel (max 250 characters)</label>
-            <textarea
-              id="messageToHotel"
-              value={messageToHotel}
-              onChange={(e) => setMessageToHotel(e.target.value)}
-              className={styles.textarea}
-              maxLength={250}
-              rows={3}
-              placeholder="Any message you'd like to send to the hotel..."
-            />
-            <small className={styles.charCount}>
-              {messageToHotel.length}/250 characters
-            </small>
-          </div>
-        </div>
-
         {/* Guest Information Section */}
         <div className={styles.guestSection}>
           <h4>Guest Information</h4>
@@ -670,7 +496,6 @@ const PaymentForm = ({
 
           <div className={styles.formGroup}>
             <label htmlFor="phone">Phone *</label>
-            <label htmlFor="phone">Phone *</label>
             <input
               data-cy="billing-phone"
               id="phone"
@@ -678,7 +503,6 @@ const PaymentForm = ({
               value={billingAddress.phone}
               onChange={(e) => handleBillingAddressChange('phone', e.target.value)}
               className={styles.input}
-              required
               required
             />
           </div>
@@ -800,7 +624,6 @@ const PaymentForm = ({
           disabled={!stripe || processing}
           className={styles.payButton}
         >
-          {processing ? 'Processing...' : `Pay $${finalAmount.toFixed(2)}`}
           {processing ? 'Processing...' : `Pay $${finalAmount.toFixed(2)}`}
         </button>
         {error && <div className={styles.error}>{error}</div>}

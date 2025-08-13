@@ -3,32 +3,21 @@ import {
   CreateBookingRequest,
   GuestInformation
 } from '../../types/Booking';
-import {
-  BookingData,
-  CreateBookingRequest,
-  GuestInformation
-} from '../../types/Booking';
 import { pool } from '../database/db';
 
 const tableName = 'bookings';
 const guestInfoTableName = 'guest_information';
-const guestInfoTableName = 'guest_information';
 
-async function sync() {
-  // Create main bookings table with all required fields
+export async function sync() {
   // Create main bookings table with all required fields
   await pool.query(`
     CREATE TABLE IF NOT EXISTS ${tableName} (
       id VARCHAR(255) PRIMARY KEY,
       bookingReference VARCHAR(255) UNIQUE NOT NULL,
-      bookingReference VARCHAR(255) UNIQUE NOT NULL,
       userId VARCHAR(255) NOT NULL,
-      destinationId VARCHAR(255),
       destinationId VARCHAR(255),
       hotelId VARCHAR(255) NOT NULL,
       hotelName VARCHAR(255) NOT NULL,
-      hotelAddress VARCHAR(500) NOT NULL DEFAULT '',
-      imageUrl VARCHAR(1000),
       hotelAddress VARCHAR(500) NOT NULL DEFAULT '',
       imageUrl VARCHAR(1000),
       checkInDate VARCHAR(255) NOT NULL,
@@ -43,46 +32,7 @@ async function sync() {
       totalAmount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
       whatsIncluded JSON NOT NULL DEFAULT (JSON_ARRAY()),
       selectedRoom JSON,
-      numberOfNights INT NOT NULL DEFAULT 0,
-      numberOfRooms INT NOT NULL DEFAULT 1,
-      adults INT NOT NULL DEFAULT 1,
-      children INT NOT NULL DEFAULT 0,
-      roomTypes JSON NOT NULL DEFAULT (JSON_ARRAY('Standard')),
-      messageToHotel VARCHAR(250),
-      pricePerNight DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-      totalAmount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-      whatsIncluded JSON NOT NULL DEFAULT (JSON_ARRAY()),
-      selectedRoom JSON,
       paymentIntentId VARCHAR(255),
-      payeeId VARCHAR(255),
-      maskedCardNumber VARCHAR(20),
-      cardExpiryDate VARCHAR(5),
-      status ENUM('pending', 'confirmed', 'cancelled') DEFAULT 'pending',
-      createdAt DATETIME NOT NULL,
-      updatedAt DATETIME,
-      INDEX idx_booking_reference (bookingReference),
-      INDEX idx_user_id (userId),
-      INDEX idx_destination_id (destinationId),
-      INDEX idx_hotel_id (hotelId),
-      INDEX idx_status (status)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-  `);
-
-  // Create guest information table
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS ${guestInfoTableName} (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      bookingId VARCHAR(255) NOT NULL,
-      firstName VARCHAR(255) NOT NULL,
-      lastName VARCHAR(255) NOT NULL,
-      phoneNumber VARCHAR(50) NOT NULL,
-      emailAddress VARCHAR(255) NOT NULL,
-      specialRequests VARCHAR(250),
-      createdAt DATETIME NOT NULL,
-      updatedAt DATETIME,
-      FOREIGN KEY (bookingId) REFERENCES ${tableName}(id) ON DELETE CASCADE,
-      INDEX idx_booking_id (bookingId)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
       payeeId VARCHAR(255),
       maskedCardNumber VARCHAR(20),
       cardExpiryDate VARCHAR(5),
@@ -195,10 +145,8 @@ function generateBookingReference(): string {
   return `BK${timestamp.slice(-6)}${random}`;
 }
 
-async function createBooking(bookingData: CreateBookingRequest): Promise<string> {
+export async function createBooking(bookingData: CreateBookingRequest): Promise<string> {
   // Validate required fields
-  if (!bookingData.userId || !bookingData.guestInformation) {
-    throw new Error('Missing required user fields: userId or guestInformation');
   if (!bookingData.userId || !bookingData.guestInformation) {
     throw new Error('Missing required user fields: userId or guestInformation');
   }
@@ -221,7 +169,6 @@ async function createBooking(bookingData: CreateBookingRequest): Promise<string>
   ) {
     throw new Error(
       'Invalid booking data: prices and nights must be valid positive values'
-      'Invalid booking data: prices and nights must be valid positive values'
     );
   }
 
@@ -243,28 +190,9 @@ async function createBooking(bookingData: CreateBookingRequest): Promise<string>
   // Validate message to hotel length
   if (bookingData.messageToHotel && bookingData.messageToHotel.length > 250) {
     throw new Error('Message to hotel must be 250 characters or less');
-  if (!bookingData.hotelAddress) {
-    throw new Error('Missing required hotel address');
-  }
-
-  // Validate guest information
-  const guest = bookingData.guestInformation;
-  if (!guest.firstName || !guest.lastName || !guest.phoneNumber || !guest.emailAddress) {
-    throw new Error('Missing required guest information: firstName, lastName, phoneNumber, or emailAddress');
-  }
-
-  // Validate special requests length
-  if (guest.specialRequests && guest.specialRequests.length > 250) {
-    throw new Error('Special requests must be 250 characters or less');
-  }
-
-  // Validate message to hotel length
-  if (bookingData.messageToHotel && bookingData.messageToHotel.length > 250) {
-    throw new Error('Message to hotel must be 250 characters or less');
   }
 
   const bookingId = 'BK' + Date.now() + Math.random().toString(36).substr(2, 9);
-  const bookingReference = generateBookingReference();
   const bookingReference = generateBookingReference();
   const createdAt = new Date();
   const status = 'pending';
@@ -304,22 +232,11 @@ async function createBooking(bookingData: CreateBookingRequest): Promise<string>
     );
 
     // Insert guest information
-    // Insert guest information
     await pool.query(
       `INSERT INTO ${guestInfoTableName} (
         bookingId, firstName, lastName, phoneNumber, emailAddress, specialRequests, createdAt
       ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      `INSERT INTO ${guestInfoTableName} (
-        bookingId, firstName, lastName, phoneNumber, emailAddress, specialRequests, createdAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
-        bookingId,
-        guest.firstName,
-        guest.lastName,
-        guest.phoneNumber,
-        guest.emailAddress,
-        guest.specialRequests,
-        createdAt,
         bookingId,
         guest.firstName,
         guest.lastName,
@@ -341,25 +258,15 @@ async function createBooking(bookingData: CreateBookingRequest): Promise<string>
       sql: (error as any).sql
     });
     throw new Error(`Failed to create booking in database: ${error instanceof Error ? error.message : 'Unknown database error'}`);
-    console.error('Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      sqlMessage: (error as any).sqlMessage,
-      sqlState: (error as any).sqlState,
-      errno: (error as any).errno,
-      sql: (error as any).sql
-    });
-    throw new Error(`Failed to create booking in database: ${error instanceof Error ? error.message : 'Unknown database error'}`);
   }
 }
 
-async function getBookingById(bookingId: string): Promise<BookingData | null> {
+export async function getBookingById(bookingId: string): Promise<BookingData | null> {
   if (!bookingId) {
     throw new Error('Booking ID is required');
   }
 
   try {
-    // Get booking data
-    const [bookingRows]: any = await pool.query(
     // Get booking data
     const [bookingRows]: any = await pool.query(
       `SELECT * FROM ${tableName} WHERE id = ? LIMIT 1`,
@@ -453,7 +360,7 @@ async function getBookingById(bookingId: string): Promise<BookingData | null> {
   }
 }
 
-async function updateBooking(
+export async function updateBooking(
   bookingId: string,
   paymentIntentId: string,
   status: 'confirmed' | 'cancelled'
@@ -485,8 +392,6 @@ async function updateBooking(
     const result: any = await pool.query(
       `UPDATE ${tableName} SET paymentIntentId = ?, status = ?, updatedAt = ? WHERE id = ?`,
       [paymentIntentId, status, new Date(), bookingId]
-      `UPDATE ${tableName} SET paymentIntentId = ?, status = ?, updatedAt = ? WHERE id = ?`,
-      [paymentIntentId, status, new Date(), bookingId]
     );
 
     return result;
@@ -498,5 +403,3 @@ async function updateBooking(
     throw new Error('Failed to update booking in database');
   }
 }
-
-export { createBooking, getBookingById, sync, updateBooking };
