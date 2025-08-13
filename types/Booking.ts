@@ -9,6 +9,7 @@ export interface BookingData {
   guests: string;
   pricePerNight: number;
   numberOfNights: number;
+  numberOfRooms: number;
   totalAmount: number;
   whatsIncluded: string[];
   imageUrl: string;
@@ -28,6 +29,7 @@ export interface CreateBookingRequest {
   guests: string;
   pricePerNight: number;
   numberOfNights: number;
+  numberOfRooms: number;
   totalAmount: number;
   whatsIncluded: string[];
   imageUrl: string;
