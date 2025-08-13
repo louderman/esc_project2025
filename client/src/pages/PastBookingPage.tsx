@@ -175,14 +175,6 @@ export default function PastBookingPage() {
                         {numberOfRooms ?? 0} Room{(numberOfRooms ?? 0) !== 1 ? 's' : ''}, {adults ?? 0} Adult{(adults ?? 0) !== 1 ? 's' : ''}
   {children && children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}
                       </div>
-                      <div>
-                        <span className={styles.detailsLabel}>Total:</span>{' '}
-                        {totalAmount != null ? `$${totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'N/A'}
-                      </div>                      
-                      <div>
-                        <span className={styles.detailsLabel}>Status</span>{' '}
-                        <span className={styles.statusConfirmed}>{status}</span>
-                      </div>
                     </div>
                   </div>
                 </div>
