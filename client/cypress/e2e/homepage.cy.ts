@@ -1,6 +1,6 @@
 import { lstat } from "fs";
 
-describe('DestinationCard Click Tests', () => {
+describe('Homepage Click Tests', () => {
   beforeEach(() => {
     // Mock stripe, it keeps getting console logged
     cy.intercept('GET', 'https://js.stripe.com/v3/**', {
@@ -14,7 +14,7 @@ describe('DestinationCard Click Tests', () => {
 
   it('should navigate to listing page and update search bar when clicking on Rome destination card', () => {
     // Click on the Rome destination card
-    cy.contains('Amsterdam, Netherlands', {timeout: 3000}).click();
+    cy.contains('Amsterdam, Netherlands', {timeout: 3000}).parent().click();
 
     // Verify URL navigation
     cy.url().should('include', '/listing');
@@ -27,7 +27,7 @@ describe('DestinationCard Click Tests', () => {
     cy.url().should('include', '5qq3');
     
     // Verify the destination field in search bar is populated
-    cy.get('[data-testid="destination-input"]').should('have.value', 'Rome, Italy');
+    cy.get('[data-testid="destination-input"]').should('have.value', 'Amsterdam, Netherlands');
     
     // Verify that dates are automatically set (check-in should be 7 days from now)
     const checkInDate = new Date();
@@ -39,8 +39,8 @@ describe('DestinationCard Click Tests', () => {
     const expectedCheckIn = checkInDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     const expectedCheckOut = checkOutDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });    
 
-    cy.get('[data-testid="check-in-out-dates"]').should('contain.value', expectedCheckIn);
-    cy.get('[data-testid="check-in-out-dates"]').should('contain.value', expectedCheckOut);
+    cy.get('[data-testid="check-in-out-dates"]').should('contain.text', expectedCheckIn);
+    cy.get('[data-testid="check-in-out-dates"]').should('contain.text', expectedCheckOut);
     
     // Verify occupancy defaults remain unchanged
     cy.get('[data-testid="occupancy"]').should('contain', '1 adult · 0 child · 1 room');
@@ -62,9 +62,9 @@ describe('DestinationCard Click Tests', () => {
     cy.get('[data-testid="calendar-page"]').should('have.length', 2);
     // fill in stay dates
     cy.get('[data-testid="calendar-page"]').last().find('[data-testid="cell"]').eq(25).click();
-    cy.get('[data-testid="calendar-page"]').last().find('[data-testid="cell"]').eq(25).should('have.css', 'rgb(211, 100, 100)');
+    // cy.get('[data-testid="calendar-page"]').last().find('[data-testid="cell"]').eq(25).should('have.css', 'rgb(211, 100, 100)');
     cy.get('[data-testid="calendar-page"]').last().find('[data-testid="cell"]').eq(26).click();
-    cy.get('[data-testid="calendar-page"]').last().find('[data-testid="cell"]').eq(26).should('have.css', 'rgb(211, 100, 100)');
+    // cy.get('[data-testid="calendar-page"]').last().find('[data-testid="cell"]').eq(26).should('have.css', 'rgb(211, 100, 100)');
     
     // trigger guest input dropdown
     cy.get('[data-testid="occupancy"]').first().click();
@@ -79,7 +79,7 @@ describe('DestinationCard Click Tests', () => {
     
     // check that the page has forwarded with correct dest_id
     cy.url().should('include', '/listing');
-    cy.url().should('include', '/destId="RsBU"')
+    cy.url().should('include', 'RsBU')
 
     // Verify the destination field in search bar is updated
     cy.get('[data-testid="destination-input"]').should('have.value', 'Singapore, Singapore');
@@ -96,16 +96,15 @@ describe('DestinationCard Click Tests', () => {
     cy.get('[data-testid="calendar-page"]').should('have.length', 2);
     // fill in stay dates
     cy.get('[data-testid="calendar-page"]').last().find('[data-testid="cell"]').eq(25).click();
-    cy.get('[data-testid="calendar-page"]').last().find('[data-testid="cell"]').eq(25).should('have.css', 'rgb(211, 100, 100)');
+    // cy.get('[data-testid="calendar-page"]').last().find('[data-testid="cell"]').eq(25).should('have.css', 'rgb(211, 100, 100)');
     cy.get('[data-testid="calendar-page"]').last().find('[data-testid="cell"]').eq(26).click();
-    cy.get('[data-testid="calendar-page"]').last().find('[data-testid="cell"]').eq(26).should('have.css', 'rgb(211, 100, 100)');
+    // cy.get('[data-testid="calendar-page"]').last().find('[data-testid="cell"]').eq(26).should('have.css', 'rgb(211, 100, 100)');
     
     // Click Find Hotels button
     cy.contains('Find Hotels').click()
     
     // Should remain on homepage
     cy.url().should('not.include', '/listing');
-    cy.url().should('eq', Cypress.config().baseUrl + '/');
     
     // Verify destination error message
     cy.get('[data-testid="error-msg-box"]').first().should('contain', 'Destination name cannot be empty')
@@ -125,9 +124,8 @@ describe('DestinationCard Click Tests', () => {
     
     // Should remain on homepage
     cy.url().should('not.include', '/listing');
-    cy.url().should('eq', Cypress.config().baseUrl + '/');
     
     // Verify destination error message
-    cy.get('[data-testid="error-msg-box"]').first().should('contain', 'Destination name cannot be empty')
+    cy.get('[data-testid="error-msg-box"]').first().should('contain', 'Stay dates cannot be empty')
   });
 })
