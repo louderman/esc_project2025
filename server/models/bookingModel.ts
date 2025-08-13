@@ -107,35 +107,40 @@ async function sync() {
   await ensureColumn(tableName, 'createdAt', 'DATETIME');
   await ensureColumn(tableName, 'updatedAt', 'DATETIME');
 
-  // Relax legacy columns that may exist from older schemas to avoid NOT NULL insertion errors
-  async function relaxObsoleteColumns(): Promise<void> {
-    // Some legacy schemas had an 'email' column on bookings; make it nullable to avoid strict-mode failures
+  // Remove legacy columns that are no longer needed since we moved to compliant structure
+  async function removeObsoleteColumns(): Promise<void> {
+    // Remove legacy 'email' column - now stored in guest_information table
     if (await columnExists(tableName, 'email')) {
       try {
-        await pool.query(`ALTER TABLE ${tableName} MODIFY COLUMN email VARCHAR(255) NULL DEFAULT NULL;`);
+        await pool.query(`ALTER TABLE ${tableName} DROP COLUMN email;`);
+        console.log('Schema migration: removed obsolete bookings.email column');
       } catch (err) {
-        console.error('Schema migration: failed to relax bookings.email column', err);
+        console.error('Schema migration: failed to remove bookings.email column', err);
       }
     }
-    // Some legacy schemas had a 'guests' column on bookings; make it nullable to avoid strict-mode failures
+    
+    // Remove legacy 'guests' column - now stored as adults/children separately
     if (await columnExists(tableName, 'guests')) {
       try {
-        await pool.query(`ALTER TABLE ${tableName} MODIFY COLUMN guests VARCHAR(255) NULL DEFAULT NULL;`);
+        await pool.query(`ALTER TABLE ${tableName} DROP COLUMN guests;`);
+        console.log('Schema migration: removed obsolete bookings.guests column');
       } catch (err) {
-        console.error('Schema migration: failed to relax bookings.guests column', err);
+        console.error('Schema migration: failed to remove bookings.guests column', err);
       }
     }
-    // Legacy 'bookingAddress' column; relax constraint to avoid NOT NULL failures in legacy DBs
+    
+    // Remove legacy 'bookingAddress' column - now stored in billing information separately
     if (await columnExists(tableName, 'bookingAddress')) {
       try {
-        await pool.query(`ALTER TABLE ${tableName} MODIFY COLUMN bookingAddress VARCHAR(500) NULL DEFAULT NULL;`);
+        await pool.query(`ALTER TABLE ${tableName} DROP COLUMN bookingAddress;`);
+        console.log('Schema migration: removed obsolete bookings.bookingAddress column');
       } catch (err) {
-        console.error('Schema migration: failed to relax bookings.bookingAddress column', err);
+        console.error('Schema migration: failed to remove bookings.bookingAddress column', err);
       }
     }
   }
 
-  await relaxObsoleteColumns();
+  await removeObsoleteColumns();
 }
 
 // Helper function to generate booking reference
