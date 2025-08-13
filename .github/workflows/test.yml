@@ -29,25 +29,23 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name != 'push' || github.event.pull_request == null
     steps:
-      - name: Show environment info
-        run: |
-          uname -a
-          node -v
-          npm -v
-          npx jest --version
-          pwd
-          ls -R
-      - name: Dump environment variables
-        run: printenv | sort
       - name: Checkout repo
         uses: actions/checkout@v3
-      - name: Set up Node.js
+      - name: Use Node 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install server dependencies
-        run: npm install
+      - name: Install deps (clean)
+        run: npm ci
         working-directory: ./server
-      - name: Run Jest (backend tests)
+      - name: Show the *local* Jest version
+        run: ./node_modules/.bin/jest --version
+        working-directory: ./server
+      - name: Run tests (local Jest)
         run: npm test
         working-directory: ./server
+        env:
+          NODE_ENV: test
+          TZ: UTC
+          LANG: C
+          LC_ALL: C
