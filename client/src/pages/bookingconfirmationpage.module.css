@@ -56,6 +56,17 @@
 .detailitem .value {
   font-weight: 600;
   color: #333;
+  word-break: break-all; /* Allows breaking anywhere in the string */
+  white-space: normal;   /* Ensures wrapping is allowed */
+  max-width: 200px;   
+}
+.detailitem .valueWhole {
+  font-weight: 600;
+  color: #333;
+  word-break: normal;        /* Don't break in the middle of normal words */
+  overflow-wrap: break-word; /* Break only if a word is too long */
+  white-space: normal;       /* Allow wrapping onto multiple lines */
+  max-width: 200px;
 }
 
 .detailitem:not(:last-child) {
