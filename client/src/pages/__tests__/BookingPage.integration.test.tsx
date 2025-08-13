@@ -120,6 +120,17 @@ describe('BookingPage Integration Tests', () => {
     );
   };
 
+  // Helper to satisfy required fields for successful submission
+  const fillRequiredFields = async (user: ReturnType<typeof userEvent.setup>) => {
+    // Guest Information
+    await user.type(screen.getByLabelText(/first name \*/i), 'John');
+    await user.type(screen.getByLabelText(/last name \*/i), 'Doe');
+    await user.type(screen.getByLabelText(/email address \*/i), 'john.doe@example.com');
+    await user.type(screen.getByLabelText(/phone number \*/i), '12345678');
+    // Billing phone (billing email/full name/address are already filled per test)
+    await user.type(screen.getByLabelText(/^phone \*$/i), '98765432');
+  };
+
   describe('Page Rendering', () => {
     it('should render booking review and payment form', () => {
       mockFetch.mockResolvedValueOnce({
@@ -131,7 +142,8 @@ describe('BookingPage Integration Tests', () => {
       // Check booking review section
       expect(screen.getByText(/review booking/i)).toBeInTheDocument();
       expect(screen.getByText(/oasia resort sentosa/i)).toBeInTheDocument();
-      expect(screen.getByText(/\$311/)).toBeInTheDocument();
+      const priceContainer1 = screen.getAllByText(/price summary/i)[0].parentElement!;
+      expect(within(priceContainer1).getByText(/\$1368\.40/)).toBeInTheDocument();
 
       // Check payment form section
       expect(screen.getByText(/payment details/i)).toBeInTheDocument();
@@ -157,12 +169,15 @@ describe('BookingPage Integration Tests', () => {
         within(reviewContainer).getByText(/1 room · 2 guests/i)
       ).toBeInTheDocument();
 
-      const costContainer = screen.getByText('Cost').parentElement!;
+      const priceContainer = screen.getAllByText(/price summary/i)[0].parentElement!;
       expect(
-        within(costContainer).getByText(/\$311 x 4 nights/)
+        within(priceContainer).getByText(/1\s*room\s*x\s*4\s*nights/i)
       ).toBeInTheDocument();
-      expect(within(costContainer).getByText(/Total/)).toBeInTheDocument();
-      expect(within(costContainer).getAllByText(/\$1244/)).toHaveLength(2);
+      expect(within(priceContainer).getByText(/\$1244\.00/)).toBeInTheDocument();
+      expect(within(priceContainer).getByText(/Taxes and fees \(10%\)/i)).toBeInTheDocument();
+      expect(within(priceContainer).getByText(/\$124\.40/)).toBeInTheDocument();
+      expect(within(priceContainer).getByText(/Total/i)).toBeInTheDocument();
+      expect(within(priceContainer).getByText(/\$1368\.40/)).toBeInTheDocument();
     });
   });
 
@@ -190,7 +205,7 @@ describe('BookingPage Integration Tests', () => {
       renderBookingPage();
 
       await user.type(screen.getByLabelText(/full name/i), 'John Doe');
-      await user.type(screen.getByLabelText(/email/i), 'john.doe@example.com');
+      await user.type(screen.getByLabelText(/^email \*$/i), 'john.doe@example.com');
       await user.type(
         screen.getByLabelText(/address line 1/i),
         '123 Main Street'
@@ -199,10 +214,13 @@ describe('BookingPage Integration Tests', () => {
       await user.type(screen.getByLabelText(/state/i), 'Central');
       await user.type(screen.getByLabelText(/zip code/i), '123456');
 
+      // Fill remaining required fields (guest info + billing phone)
+      await fillRequiredFields(user);
+
       const paymentContainer =
         screen.getAllByText(/payment details/i)[0].parentElement!;
       const payButton = within(paymentContainer).getByRole('button', {
-        name: /pay \$1244\.00/i,
+        name: /pay \$1368\.40/i,
       });
       await user.click(payButton);
 
@@ -220,16 +238,17 @@ describe('BookingPage Integration Tests', () => {
         })
       );
 
-      expect(mockNavigate).toHaveBeenCalledWith(
-        '/booking/confirmation',
+      expect(mockNavigate).toHaveBeenCalled();
+      const navCall = mockNavigate.mock.calls[0];
+      expect(navCall[0]).toBe('/booking/confirmation');
+      const navState = navCall[1]?.state;
+      expect(navState).toEqual(
         expect.objectContaining({
-          state: expect.objectContaining({
-            bookingDetails: expect.any(Object),
-            hotel: expect.any(Object),
-            totalAmount: 1244,
-          }),
+          bookingDetails: expect.any(Object),
+          hotel: expect.any(Object),
         })
       );
+      expect(navState.totalAmount).toBeCloseTo(1368.4, 2);
     });
 
     it('should handle payment errors gracefully', async () => {
@@ -245,7 +264,7 @@ describe('BookingPage Integration Tests', () => {
       renderBookingPage();
 
       await user.type(screen.getByLabelText(/full name/i), 'John Doe');
-      await user.type(screen.getByLabelText(/email/i), 'john.doe@example.com');
+      await user.type(screen.getByLabelText(/^email \*$/i), 'john.doe@example.com');
       await user.type(
         screen.getByLabelText(/address line 1/i),
         '123 Main Street'
@@ -254,10 +273,13 @@ describe('BookingPage Integration Tests', () => {
       await user.type(screen.getByLabelText(/state/i), 'Central');
       await user.type(screen.getByLabelText(/zip code/i), '123456');
 
+      // Fill remaining required fields (guest info + billing phone)
+      await fillRequiredFields(user);
+
       const paymentContainer =
         screen.getAllByText(/payment details/i)[0].parentElement!;
       const payButton = within(paymentContainer).getByRole('button', {
-        name: /pay \$1244\.00/i,
+        name: /pay \$1368\.40/i,
       });
       await user.click(payButton);
 
@@ -279,12 +301,12 @@ describe('BookingPage Integration Tests', () => {
       renderBookingPage();
 
       await user.type(screen.getByLabelText(/full name/i), 'John Doe');
-      await user.type(screen.getByLabelText(/email/i), 'john.doe@example.com');
+      await user.type(screen.getByLabelText(/^email \*$/i), 'john.doe@example.com');
 
       const paymentContainer =
         screen.getAllByText(/payment details/i)[0].parentElement!;
       const payButton = within(paymentContainer).getByRole('button', {
-        name: /pay \$1244\.00/i,
+        name: /pay \$1368\.40/i,
       });
       await user.click(payButton);
 
@@ -300,7 +322,7 @@ describe('BookingPage Integration Tests', () => {
       renderBookingPage();
 
       await user.type(screen.getByLabelText(/full name/i), 'John Doe');
-      await user.type(screen.getByLabelText(/email/i), 'invalid-email');
+      await user.type(screen.getByLabelText(/^email \*$/i), 'invalid-email');
       await user.type(
         screen.getByLabelText(/address line 1/i),
         '123 Main Street'
@@ -312,7 +334,7 @@ describe('BookingPage Integration Tests', () => {
       const paymentContainer =
         screen.getAllByText(/payment details/i)[0].parentElement!;
       const payButton = within(paymentContainer).getByRole('button', {
-        name: /pay \$1244\.00/i,
+        name: /pay \$1368\.40/i,
       });
       await user.click(payButton);
 
@@ -347,7 +369,7 @@ describe('BookingPage Integration Tests', () => {
       renderBookingPage();
 
       await user.type(screen.getByLabelText(/full name/i), 'John Doe');
-      await user.type(screen.getByLabelText(/email/i), 'john.doe@example.com');
+      await user.type(screen.getByLabelText(/^email \*$/i), 'john.doe@example.com');
       await user.type(
         screen.getByLabelText(/address line 1/i),
         '123 Main Street'
@@ -356,10 +378,13 @@ describe('BookingPage Integration Tests', () => {
       await user.type(screen.getByLabelText(/state/i), 'Central');
       await user.type(screen.getByLabelText(/zip code/i), '123456');
 
+      // Fill remaining required fields (guest info + billing phone)
+      await fillRequiredFields(user);
+
       const paymentContainer =
         screen.getAllByText(/payment details/i)[0].parentElement!;
       const payButton = within(paymentContainer).getByRole('button', {
-        name: /pay \$1244\.00/i,
+        name: /pay \$1368\.40/i,
       });
       await user.click(payButton);
 
@@ -374,14 +399,24 @@ describe('BookingPage Integration Tests', () => {
         expect.objectContaining({
           hotelId: 'test-hotel-123',
           hotelName: 'Oasia Resort Sentosa By Far East Hospitality',
+          hotelAddress: expect.any(String),
+          imageUrl: expect.any(String),
           checkInDate: expect.any(String),
           checkOutDate: expect.any(String),
-          guests: expect.any(String),
+          adults: expect.any(Number),
+          children: expect.any(Number),
+          numberOfRooms: expect.any(Number),
+          roomTypes: expect.any(Array),
+          guestInformation: expect.objectContaining({
+            firstName: expect.any(String),
+            lastName: expect.any(String),
+            emailAddress: expect.any(String),
+            phoneNumber: expect.any(String),
+          }),
           pricePerNight: 311,
           numberOfNights: 4,
           totalAmount: 1244,
           whatsIncluded: expect.any(Array),
-          imageUrl: expect.any(String),
         })
       );
     });
@@ -398,7 +433,7 @@ describe('BookingPage Integration Tests', () => {
       renderBookingPage();
 
       await user.type(screen.getByLabelText(/full name/i), 'John Doe');
-      await user.type(screen.getByLabelText(/email/i), 'john.doe@example.com');
+      await user.type(screen.getByLabelText(/^email \*$/i), 'john.doe@example.com');
       await user.type(
         screen.getByLabelText(/address line 1/i),
         '123 Main Street'
@@ -407,10 +442,13 @@ describe('BookingPage Integration Tests', () => {
       await user.type(screen.getByLabelText(/state/i), 'Central');
       await user.type(screen.getByLabelText(/zip code/i), '123456');
 
+      // Fill remaining required fields (guest info + billing phone)
+      await fillRequiredFields(user);
+
       const paymentContainer =
         screen.getAllByText(/payment details/i)[0].parentElement!;
       const payButton = within(paymentContainer).getByRole('button', {
-        name: /pay \$1244\.00/i,
+        name: /pay \$1368\.40/i,
       });
       await user.click(payButton);
 
@@ -436,7 +474,7 @@ describe('BookingPage Integration Tests', () => {
       renderBookingPage();
 
       await user.type(screen.getByLabelText(/full name/i), 'John Doe');
-      await user.type(screen.getByLabelText(/email/i), 'john.doe@example.com');
+      await user.type(screen.getByLabelText(/^email \*$/i), 'john.doe@example.com');
       await user.type(
         screen.getByLabelText(/address line 1/i),
         '123 Main Street'
@@ -445,10 +483,13 @@ describe('BookingPage Integration Tests', () => {
       await user.type(screen.getByLabelText(/state/i), 'Central');
       await user.type(screen.getByLabelText(/zip code/i), '123456');
 
+      // Fill remaining required fields (guest info + billing phone)
+      await fillRequiredFields(user);
+
       const paymentContainer =
         screen.getAllByText(/payment details/i)[0].parentElement!;
       const payButton = within(paymentContainer).getByRole('button', {
-        name: /pay \$1244\.00/i,
+        name: /pay \$1368\.40/i,
       });
       await user.click(payButton);
 
@@ -485,7 +526,7 @@ describe('BookingPage Integration Tests', () => {
       renderBookingPage();
 
       await user.type(screen.getByLabelText(/full name/i), 'John Doe');
-      await user.type(screen.getByLabelText(/email/i), 'john.doe@example.com');
+      await user.type(screen.getByLabelText(/^email \*$/i), 'john.doe@example.com');
       await user.type(
         screen.getByLabelText(/address line 1/i),
         '123 Main Street'
@@ -494,10 +535,13 @@ describe('BookingPage Integration Tests', () => {
       await user.type(screen.getByLabelText(/state/i), 'Central');
       await user.type(screen.getByLabelText(/zip code/i), '123456');
 
+      // Fill remaining required fields (guest info + billing phone)
+      await fillRequiredFields(user);
+
       const paymentContainer =
         screen.getAllByText(/payment details/i)[0].parentElement!;
       const payButton = within(paymentContainer).getByRole('button', {
-        name: /pay \$1244\.00/i,
+        name: /pay \$1368\.40/i,
       });
       await user.click(payButton);
 

@@ -38,7 +38,7 @@ export default function BookingReview({
   };
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} data-cy="booking-review">
       <div className={styles.imageContainer}>
         <img 
           src={displayImages[currentImageIndex]} 

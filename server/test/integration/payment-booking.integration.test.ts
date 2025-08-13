@@ -23,18 +23,29 @@ const createBookingData = (
   overrides: Partial<CreateBookingRequest> = {}
 ): CreateBookingRequest => ({
   userId: 'user-123',
-  email: 'test@example.com',
+  destinationId: undefined,
   hotelId: 'hotel_integration_test',
   hotelName: 'Integration Test Hotel',
+  hotelAddress: '123 Test St, Test City, TC 12345, US',
+  imageUrl: 'http://example.com/hotel.jpg',
   checkInDate: '2024-12-01',
   checkOutDate: '2024-12-05',
-  guests: '2 adults',
-  pricePerNight: 150,
   numberOfNights: 4,
+  numberOfRooms: 1,
+  adults: 2,
+  children: 0,
+  roomTypes: ['Standard'],
+  messageToHotel: undefined,
+  pricePerNight: 150,
   totalAmount: 600,
   whatsIncluded: ['Breakfast', 'WiFi'],
-  imageUrl: 'http://example.com/hotel.jpg',
-  bookingAddress: '123 Test St, Test City, TC 12345, US',
+  guestInformation: {
+    firstName: 'John',
+    lastName: 'Doe',
+    phoneNumber: '+1234567890',
+    emailAddress: 'test@example.com',
+    specialRequests: 'Late check-in'
+  },
   ...overrides,
 });
 
@@ -74,11 +85,11 @@ describe('Payment-Booking Integration Tests', () => {
       expect(createdBooking?.hotelName).toBe('Integration Test Hotel');
       expect(createdBooking?.totalAmount).toBe(600);
       expect(createdBooking?.userId).toBe('user-123');
-      expect(createdBooking?.email).toBe('test@example.com');
-      expect(createdBooking?.bookingAddress).toBe(
+      expect(createdBooking?.guestInformation.emailAddress).toBe('test@example.com');
+      expect(createdBooking?.hotelAddress).toBe(
         '123 Test St, Test City, TC 12345, US'
       );
-      expect(createdBooking?.paymentIntentId).toBeNull();
+      expect(createdBooking?.paymentInformation.paymentIntentId).toBeUndefined();
 
       // Step 4: Confirm payment
       const confirmPaymentRes = await request(app)
@@ -95,7 +106,7 @@ describe('Payment-Booking Integration Tests', () => {
       // Step 5: Verify booking status was updated
       const confirmedBooking = await getBookingById(bookingId);
       expect(confirmedBooking?.status).toBe('confirmed');
-      expect(confirmedBooking?.paymentIntentId).toBe('pi_test_integration_123');
+      expect(confirmedBooking?.paymentInformation.paymentIntentId).toBe('pi_test_integration_123');
     });
 
     it('should handle payment confirmation for non-existent booking', async () => {
@@ -143,18 +154,26 @@ describe('Payment-Booking Integration Tests', () => {
       // Create and confirm a booking
       const bookingData = createBookingData({
         userId: 'user-456',
-        email: 'test2@example.com',
         hotelId: 'hotel_retrieval_test',
         hotelName: 'Retrieval Test Hotel',
+        hotelAddress: '456 Retrieval St, Retrieval City, RC 67890, US',
+        imageUrl: 'http://example.com/retrieval-hotel.jpg',
         checkInDate: '2024-12-10',
         checkOutDate: '2024-12-15',
-        guests: '1 adult',
-        pricePerNight: 200,
         numberOfNights: 5,
+        numberOfRooms: 1,
+        adults: 1,
+        children: 0,
+        roomTypes: ['Standard'],
+        pricePerNight: 200,
         totalAmount: 1000,
         whatsIncluded: ['All-inclusive'],
-        imageUrl: 'http://example.com/retrieval-hotel.jpg',
-        bookingAddress: '456 Retrieval St, Retrieval City, RC 67890, US',
+        guestInformation: {
+          firstName: 'Jane',
+          lastName: 'Smith',
+          phoneNumber: '+1987654321',
+          emailAddress: 'test2@example.com'
+        }
       });
 
       const createRes = await request(app)
@@ -174,11 +193,11 @@ describe('Payment-Booking Integration Tests', () => {
       expect(getRes.statusCode).toBe(200);
       expect(getRes.body.id).toBe(bookingId);
       expect(getRes.body.status).toBe('confirmed');
-      expect(getRes.body.paymentIntentId).toBe('pi_retrieval_test_456');
+      expect(getRes.body.paymentInformation.paymentIntentId).toBe('pi_retrieval_test_456');
       expect(getRes.body.hotelName).toBe('Retrieval Test Hotel');
       expect(getRes.body.totalAmount).toBe(1000);
       expect(getRes.body.userId).toBe('user-456');
-      expect(getRes.body.email).toBe('test2@example.com');
+      expect(getRes.body.guestInformation.emailAddress).toBe('test2@example.com');
     });
   });
 
@@ -219,16 +238,23 @@ describe('Payment-Booking Integration Tests', () => {
       const bookingPromises = Array.from({ length: 5 }, (_, i) => {
         const bookingData = createBookingData({
           userId: `user-concurrent-${i}`,
-          email: `test${i}@example.com`,
           hotelId: `hotel_concurrent_${i}`,
           hotelName: `Concurrent Test Hotel ${i}`,
+          hotelAddress: `${100 + i} Concurrent St, Concurrent City, CC ${12345 + i}, US`,
+          imageUrl: `http://example.com/hotel${i}.jpg`,
+          numberOfRooms: 1,
+          adults: 1,
+          children: 0,
+          roomTypes: ['Standard'],
           pricePerNight: 100 + i * 10,
           totalAmount: (100 + i * 10) * 4,
           whatsIncluded: [`Feature ${i}`],
-          imageUrl: `http://example.com/hotel${i}.jpg`,
-          bookingAddress: `${100 + i} Concurrent St, Concurrent City, CC ${
-            12345 + i
-          }, US`,
+          guestInformation: {
+            firstName: `User${i}`,
+            lastName: 'Concurrent',
+            phoneNumber: '+1000000000',
+            emailAddress: `test${i}@example.com`
+          }
         });
 
         return request(app).post('/api/bookings').send(bookingData);
@@ -261,12 +287,21 @@ describe('Payment-Booking Integration Tests', () => {
       for (const testCase of testCases) {
         const bookingData = createBookingData({
           userId: `user-amount-${testCase.amount}`,
-          email: `amount${testCase.amount}@example.com`,
           hotelId: `hotel_amount_test_${testCase.amount}`,
           hotelName: `Amount Test Hotel - ${testCase.description}`,
+          hotelAddress: `${testCase.amount} Amount St, Amount City, AC ${testCase.amount}, US`,
+          numberOfRooms: 1,
+          adults: 1,
+          children: 0,
+          roomTypes: ['Standard'],
           pricePerNight: testCase.amount,
           totalAmount: testCase.amount,
-          bookingAddress: `${testCase.amount} Amount St, Amount City, AC ${testCase.amount}, US`,
+          guestInformation: {
+            firstName: 'Amount',
+            lastName: 'Tester',
+            phoneNumber: '+1111111111',
+            emailAddress: `amount${testCase.amount}@example.com`
+          }
         });
 
         const createRes = await request(app)
@@ -279,7 +314,7 @@ describe('Payment-Booking Integration Tests', () => {
         const booking = await getBookingById(bookingId);
         expect(booking?.totalAmount).toBe(testCase.amount);
         expect(booking?.userId).toBe(`user-amount-${testCase.amount}`);
-        expect(booking?.email).toBe(`amount${testCase.amount}@example.com`);
+        expect(booking?.guestInformation.emailAddress).toBe(`amount${testCase.amount}@example.com`);
       }
     });
   });

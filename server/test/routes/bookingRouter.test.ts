@@ -19,18 +19,27 @@ describe('Booking API', () => {
   it('should create a new booking', async () => {
     const bookingData: CreateBookingRequest = {
       userId: 'user_123',
-      email: 'test@example.com',
       hotelId: 'hotel_123',
       hotelName: 'Test Hotel',
+      hotelAddress: '123 Test Street, Test City, Test Country',
+      imageUrl: 'http://example.com/image.jpg',
       checkInDate: '2024-01-01',
       checkOutDate: '2024-01-05',
-      guests: '2',
-      pricePerNight: 100,
       numberOfNights: 4,
+      numberOfRooms: 1,
+      adults: 2,
+      children: 0,
+      roomTypes: ['Standard'],
+      pricePerNight: 100,
       totalAmount: 400,
       whatsIncluded: ['Breakfast'],
-      imageUrl: 'http://example.com/image.jpg',
-      bookingAddress: '123 Test Street, Test City, Test Country',
+      guestInformation: {
+        firstName: 'John',
+        lastName: 'Doe',
+        phoneNumber: '+1234567890',
+        emailAddress: 'test@example.com',
+        specialRequests: 'Late check-in'
+      }
     };
 
     const res = await request(app).post('/api/bookings').send(bookingData);
@@ -46,18 +55,26 @@ describe('Booking API', () => {
   it('should get a booking by ID', async () => {
     const bookingData: CreateBookingRequest = {
       userId: 'user_456',
-      email: 'test2@example.com',
       hotelId: 'hotel_456',
       hotelName: 'Another Test Hotel',
+      hotelAddress: '456 Test Avenue, Test City, Test Country',
+      imageUrl: 'http://example.com/image2.jpg',
       checkInDate: '2024-02-01',
       checkOutDate: '2024-02-05',
-      guests: '1',
-      pricePerNight: 150,
       numberOfNights: 4,
+      numberOfRooms: 1,
+      adults: 1,
+      children: 0,
+      roomTypes: ['Deluxe'],
+      pricePerNight: 150,
       totalAmount: 600,
       whatsIncluded: [],
-      imageUrl: 'http://example.com/image2.jpg',
-      bookingAddress: '456 Test Avenue, Test City, Test Country',
+      guestInformation: {
+        firstName: 'Jane',
+        lastName: 'Smith',
+        phoneNumber: '+1987654321',
+        emailAddress: 'test2@example.com'
+      }
     };
     const createRes = await request(app)
       .post('/api/bookings')
@@ -73,18 +90,27 @@ describe('Booking API', () => {
   it('should update a booking', async () => {
     const bookingData: CreateBookingRequest = {
       userId: 'user_789',
-      email: 'test3@example.com',
       hotelId: 'hotel_789',
       hotelName: 'Update Test Hotel',
+      hotelAddress: '789 Test Boulevard, Test City, Test Country',
+      imageUrl: 'http://example.com/image3.jpg',
       checkInDate: '2024-03-01',
       checkOutDate: '2024-03-05',
-      guests: '3',
-      pricePerNight: 200,
       numberOfNights: 4,
+      numberOfRooms: 2,
+      adults: 3,
+      children: 0,
+      roomTypes: ['Suite'],
+      pricePerNight: 200,
       totalAmount: 800,
       whatsIncluded: ['All-inclusive'],
-      imageUrl: 'http://example.com/image3.jpg',
-      bookingAddress: '789 Test Boulevard, Test City, Test Country',
+      guestInformation: {
+        firstName: 'Bob',
+        lastName: 'Johnson',
+        phoneNumber: '+1122334455',
+        emailAddress: 'test3@example.com',
+        specialRequests: 'Ocean view room'
+      }
     };
     const createRes = await request(app)
       .post('/api/bookings')
@@ -100,6 +126,6 @@ describe('Booking API', () => {
 
     const booking = await getBookingById(bookingId);
     expect(booking?.status).toBe('confirmed');
-    expect(booking?.paymentIntentId).toBe('pi_456');
+    expect(booking?.paymentInformation.paymentIntentId).toBe('pi_456');
   });
 });

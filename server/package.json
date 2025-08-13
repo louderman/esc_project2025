@@ -10,7 +10,8 @@
     "build": "npx tsc",
     "start": "node dist/server/server.js",
     "dev": "ts-node-dev ./server.ts",
-    "seed:dest": "tsc database/seedDestination.ts --outDir dist && node dist/server/database/seedDestination.js"
+    "seed:dest": "tsc database/seedDestination.ts --outDir dist && node dist/server/database/seedDestination.js",
+    "db:clear-bookings": "ts-node scripts/clearBookings.ts"
   },
   "keywords": [],
   "author": "",
