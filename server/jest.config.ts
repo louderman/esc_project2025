@@ -17,9 +17,6 @@ const config: Config = {
   // Run once after all tests
   globalTeardown: '<rootDir>/jest.globalTeardown.ts',
 
-  // Per-test hooks file
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
-
   // Match test files inside /test directory (relative to server/)
   testMatch: [
     '<rootDir>/test/**/*.test.ts',
