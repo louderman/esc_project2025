@@ -124,6 +124,15 @@ export interface BookingData {
   checkOutDate: string;
   numberOfNights: number;
   numberOfRooms: number;
+  adults: number;
+  children: number;
+  roomTypes: string[];
+  
+  // Room Information
+  selectedRoom?: SelectedRoomInfo;
+  
+  // Pricing
+  pricePerNight: number;
   totalAmount: number;
   whatsIncluded: string[];
   
@@ -176,6 +185,16 @@ export interface CreateBookingRequest {
   checkOutDate: string;
   numberOfNights: number;
   numberOfRooms: number;
+  adults: number;
+  children: number;
+  roomTypes: string[];
+  messageToHotel?: string; // Max 250 characters
+  
+  // Room Information
+  selectedRoom?: SelectedRoomInfo;
+  
+  // Pricing
+  pricePerNight: number;
   totalAmount: number;
   whatsIncluded: string[];
   

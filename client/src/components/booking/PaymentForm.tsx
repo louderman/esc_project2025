@@ -34,6 +34,14 @@ interface BillingAddress {
   };
 }
 
+interface GuestInformation {
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  emailAddress: string;
+  specialRequests?: string;
+}
+
 const PaymentForm = ({
   amount,
   totalAmount,
@@ -362,19 +370,20 @@ const PaymentForm = ({
                     stayDates: {
                         checkinDate: bookingData.checkInDate && bookingData.checkInDate !== 'N/A' ? new Date(bookingData.checkInDate) : null,
                         checkoutDate: bookingData.checkOutDate && bookingData.checkOutDate !== 'N/A' ? new Date(bookingData.checkOutDate) : null,
-                    } : null,
+                    },
                     totalAmount: finalAmount,
                     bookingDetails: {
                         ...bookingData,
                         selectedRoom: selectedRoom,
-                        numberOfGuests: bookingData?.guests,
-                        numberOfNights: bookingData?.numberOfNights,
-                        numberOfRooms: numberOfRooms,
-                        checkinDate: bookingData?.checkInDate,
-                        checkoutDate: bookingData?.checkOutDate,
-                        pricePerNight: bookingData?.pricePerNight,
-                        hotelImage: bookingData?.imageUrl,
-                        hotelImages: hotelImages, // Add hotel images array
+                        numberOfGuests: `${bookingData.adults + bookingData.children} guests`,
+                        numberOfNights: bookingData.numberOfNights,
+                        numberOfRooms: bookingData.numberOfRooms,
+                        checkinDate: bookingData.checkInDate,
+                        checkoutDate: bookingData.checkOutDate,
+                        pricePerNight: bookingData.pricePerNight,
+                        hotelImage: bookingData.imageUrl,
+                        hotelImages: hotelImages,
+                        guestInformation: guestInformation,
                     }
                 }
             });
