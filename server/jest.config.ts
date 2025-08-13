@@ -1,17 +1,18 @@
+const { createDefaultPreset } = require('ts-jest');
+
 import type { Config } from 'jest';
+const tsJestTransformCfg = createDefaultPreset().transform;
 
 const config: Config = {
   testEnvironment: 'node',
-
-  // run ONCE before all tests / ONCE after all tests
-  globalSetup: '<rootDir>/jest.globalSetup.ts',
-  globalTeardown: '<rootDir>/jest.globalTeardown.ts',
-  roots: ['<rootDir>/test'],
-  testMatch: ['**/?(*.)+(spec|test).ts?(x)'],
-
-  transform: { '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json' }] },
+  setupFilesAfterEnv: ['./jest.globalSetup.ts'],
+  globalTeardown: './jest.globalTeardown.ts',
+  transform: {
+    ...tsJestTransformCfg,
+  },
   collectCoverage: true,
   coverageReporters: ['text', 'html'],
+  roots: ['./test'],
 };
-export default config;
 
+export default config;

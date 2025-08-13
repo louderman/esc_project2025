@@ -1,11 +1,13 @@
-import fs from 'fs';
 import path from 'path';
-import { cleanup } from './database/db';
+import { existsSync, rmSync } from 'fs';
 
-export default async () => {
-  await cleanup(); // <-- close the pool ONCE here
-
-  // (optional) delete coverage if you want
+function deleteCoverageFolder() {
   const coveragePath = path.join(__dirname, 'coverage');
-  if (fs.existsSync(coveragePath)) fs.rmSync(coveragePath, { recursive: true, force: true });
-};
+  if (existsSync(coveragePath)) {
+    rmSync(coveragePath, { recursive: true, force: true });
+  }
+}
+
+export default function () {
+  deleteCoverageFolder();
+}
