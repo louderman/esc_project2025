@@ -1,14 +1,12 @@
 import { getBookingHistory } from '../../models/bookingHistoryModel';
 import { pool } from '../../database/db';
 
-// Mock the database module with proper TypeScript types
 jest.mock('../../database/db', () => ({
   pool: {
     query: jest.fn()
   }
 }));
 
-// Type the mocked pool for better TypeScript support
 const mockedPool = pool as jest.Mocked<typeof pool>;
 
 interface MockBooking {
@@ -44,7 +42,6 @@ describe('BookingHistory Model Unit Tests', () => {
         }
       ];
 
-      // Mock the database query result with proper typing
       (mockedPool.query as jest.MockedFunction<any>).mockResolvedValueOnce([mockBookings]);
 
       const result = await getBookingHistory('5') as MockBooking[];
@@ -68,7 +65,6 @@ describe('BookingHistory Model Unit Tests', () => {
     });
 
     test('returns empty array when userId is null', async () => {
-      // Cast null to the expected type to avoid TypeScript error
       const result = await getBookingHistory(null as any);
 
       expect(result).toEqual([]);

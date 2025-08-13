@@ -1,5 +1,3 @@
-// server/test/routes/bookingHistoryRouter.test.ts
-
 import request from 'supertest';
 import express from 'express';
 import { router } from '../../routes/bookingHistoryRouter';
@@ -32,7 +30,7 @@ interface TestBooking {
 const toMySQLDateTime = (isoString: string): string =>
   new Date(isoString).toISOString().slice(0, 19).replace('T', ' ');
 
-describe('ITC_BOOKINGHISTORYROUTER_1: Booking History Router Integration (Real DB)', () => {
+describe('ITC_BOOKINGHISTORYROUTER_1', () => {
   const testUserId = 'router-int-user';
   let insertedIds: string[] = [];
 
@@ -139,7 +137,6 @@ describe('ITC_BOOKINGHISTORYROUTER_1: Booking History Router Integration (Real D
       await pool.query('DELETE FROM bookings WHERE id = ?', [id]);
     }
     insertedIds = [];
-    // Do not call pool.end() here; let global teardown handle closing the pool
   });
 
   test('Valid userId returns bookings with all required fields', async () => {
