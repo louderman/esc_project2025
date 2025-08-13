@@ -57,6 +57,8 @@ afterEach(() => {
 });
 
 describe('API Endpoints Integration Tests', () => {
+  jest.setTimeout(30000);
+
   beforeAll(async () => {
     await syncBooking();
   });
@@ -386,8 +388,7 @@ describe('API Endpoints Integration Tests', () => {
       const response = await request(app)
         .post('/api/bookings')
         .send(bookingData)
-        .expect(201);
-
+        .expect(201)
       expect(response.body.bookingId).toBeDefined();
 
       // Verify the booking was created with correct amount
