@@ -275,9 +275,9 @@ async function createBooking(bookingData: CreateBookingRequest): Promise<string>
       `INSERT INTO ${tableName} (
         id, bookingReference, userId, destinationId, hotelId, hotelName, hotelAddress, imageUrl, 
         checkInDate, checkOutDate, numberOfNights, numberOfRooms, adults, children, 
-        roomTypes, messageToHotel, pricePerNight, totalAmount, whatsIncluded, selectedRoom,
+        roomTypes, messageToHotel, pricePerNight, totalAmount, whatsIncluded,
         status, createdAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         bookingId,
         bookingReference,
@@ -293,12 +293,11 @@ async function createBooking(bookingData: CreateBookingRequest): Promise<string>
         bookingData.numberOfRooms,
         bookingData.adults,
         bookingData.children,
-        JSON.stringify(bookingData.roomTypes),
+        JSON.stringify(bookingData.roomTypes), // roomTypes contains the room type information
         bookingData.messageToHotel,
         bookingData.pricePerNight,
         bookingData.totalAmount,
         JSON.stringify(bookingData.whatsIncluded),
-        bookingData.selectedRoom ? JSON.stringify(bookingData.selectedRoom) : null,
         status,
         createdAt,
       ]
@@ -377,12 +376,10 @@ async function getBookingById(bookingId: string): Promise<BookingData | null> {
     try {
       bookingRow.whatsIncluded = bookingRow.whatsIncluded ? JSON.parse(bookingRow.whatsIncluded) : [];
       bookingRow.roomTypes = bookingRow.roomTypes ? JSON.parse(bookingRow.roomTypes) : ['Standard'];
-      bookingRow.selectedRoom = bookingRow.selectedRoom ? JSON.parse(bookingRow.selectedRoom) : undefined;
     } catch (parseError) {
       console.error('Error parsing JSON fields:', parseError);
       bookingRow.whatsIncluded = [];
       bookingRow.roomTypes = ['Standard'];
-      bookingRow.selectedRoom = undefined;
     }
 
     // Get guest information
@@ -438,8 +435,7 @@ async function getBookingById(bookingId: string): Promise<BookingData | null> {
       numberOfRooms: bookingRow.numberOfRooms || 1,
       adults: bookingRow.adults || 1,
       children: bookingRow.children || 0,
-      roomTypes: bookingRow.roomTypes || ['Standard'],
-      selectedRoom: bookingRow.selectedRoom || undefined,
+      roomTypes: bookingRow.roomTypes || ['Standard'], // roomTypes contains the room type information
       pricePerNight: bookingRow.pricePerNight || 0,
       totalAmount: bookingRow.totalAmount || 0,
       whatsIncluded: bookingRow.whatsIncluded || [],
