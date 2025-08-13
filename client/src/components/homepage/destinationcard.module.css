@@ -4,9 +4,9 @@
     overflow: hidden;
     height: 400px;
     width: 350px;;
-    background-color: black;
     font-size: 20px;
     --rightmargin: 33%;
+    cursor: pointer;
 }
 
 .container:hover {
@@ -15,18 +15,29 @@
 }
 
 .bgimage {
+    position: absolute;
+    bottom: 0px;
+    object-fit: cover;
     width: 100%;
     height: 100%;
-    transition: 0.3s;
-    opacity: 80%;
+    pointer-events: none;
 }
 
-.bgimage:hover {
+.blacktint {
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    transition: 0.3s;
+    opacity: 40%;
+}
+
+.blacktint:hover {
     transition: 0.5s;
-    opacity: 50%;
+    opacity: 70%;
 }
 
 .bottomtext {
+    pointer-events: none;
     position: absolute;
     bottom: 0px;
     left: 0px;

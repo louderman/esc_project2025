@@ -12,6 +12,7 @@ export default function DestinationCard({
     return (
     <div className={styles.container} onClick={() => onclick(dest)}>
         <img className={styles.bgimage} src={"/homepage/"+dest.dest_id+".jpg"}></img>
+        <div className={styles.blacktint} />
         <div className={styles.bottomtext}>
             {dest.term}
         </div>
