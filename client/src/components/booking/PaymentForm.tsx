@@ -474,6 +474,7 @@ const PaymentForm = ({
             <div className={styles.formGroup}>
               <label htmlFor="fullName">Full Name *</label>
               <input
+                data-cy="billing-full-name"
                 id="fullName"
                 type="text"
                 value={billingAddress.name}
@@ -485,6 +486,7 @@ const PaymentForm = ({
             <div className={styles.formGroup}>
               <label htmlFor="email">Email *</label>
               <input
+                data-cy="billing-email"
                 id="email"
                 type="email"
                 value={billingAddress.email}
@@ -498,6 +500,7 @@ const PaymentForm = ({
           <div className={styles.formGroup}>
             <label htmlFor="phone">Phone *</label>
             <input
+              data-cy="billing-phone"
               id="phone"
               type="tel"
               value={billingAddress.phone}
@@ -510,6 +513,7 @@ const PaymentForm = ({
           <div className={styles.formGroup}>
             <label htmlFor="address1">Address Line 1 *</label>
             <input
+              data-cy="billing-addressLine1"
               id="address1"
               type="text"
               value={billingAddress.address.line1}
@@ -522,6 +526,7 @@ const PaymentForm = ({
           <div className={styles.formGroup}>
             <label htmlFor="address2">Address Line 2</label>
             <input
+              data-cy="billing-addressLine2"
               id="address2"
               type="text"
               value={billingAddress.address.line2}
@@ -534,6 +539,7 @@ const PaymentForm = ({
             <div className={styles.formGroup}>
               <label htmlFor="city">City *</label>
               <input
+                data-cy="billing-city"
                 id="city"
                 type="text"
                 value={billingAddress.address.city}
@@ -545,6 +551,7 @@ const PaymentForm = ({
             <div className={styles.formGroup}>
               <label htmlFor="state">State *</label>
               <input
+                data-cy="billing-state"
                 id="state"
                 type="text"
                 value={billingAddress.address.state}
@@ -556,6 +563,7 @@ const PaymentForm = ({
             <div className={styles.formGroup}>
               <label htmlFor="zip">ZIP Code *</label>
               <input
+                data-cy="billing-zip-code"
                 id="zip"
                 type="text"
                 value={billingAddress.address.postal_code}
@@ -588,13 +596,13 @@ const PaymentForm = ({
             </select>
           </div>
         </div>
-
+        
         {/* Card Details Section */}
         <div className={styles.cardSection}>
           <h4>Card Details</h4>
           <div className={styles.formGroup}>
             <label>Card Information</label>
-            <div className={styles.cardElement}>
+            <div className={styles.cardElement} data-cy="billing-card-info">
               <CardElement 
                 options={{
                   hidePostalCode: true,
@@ -614,6 +622,7 @@ const PaymentForm = ({
         </div>
 
         <button
+          data-cy="create-submit-btn"
           type="submit"
           disabled={!stripe || processing}
           className={styles.payButton}
