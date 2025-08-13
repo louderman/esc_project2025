@@ -5,22 +5,30 @@ const tsJestTransformCfg = createDefaultPreset().transform;
 
 const config: Config = {
   testEnvironment: 'node',
-  setupFilesAfterEnv: ['./jest.globalSetup.ts'],
-  globalTeardown: './jest.globalTeardown.ts',
   transform: {
     ...tsJestTransformCfg,
   },
   collectCoverage: true,
   coverageReporters: ['text', 'html'],
 
-  // Instead of `roots`
+  // Run once before all tests
+  globalSetup: '<rootDir>/jest.globalSetup.ts',
+
+  // Run once after all tests
+  globalTeardown: '<rootDir>/jest.globalTeardown.ts',
+
+  // Per-test hooks file
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+
+  // Match test files inside /test directory (relative to server/)
   testMatch: [
-    './**/*.test.ts',
-    './**/*.integration.test.ts',
+    '<rootDir>/test/**/*.test.ts',
+    '<rootDir>/test/**/*.spec.ts',
+    '<rootDir>/test/**/*.integration.test.ts',
   ],
 
-  // Optional: exclude dist tests
-  testPathIgnorePatterns: ['/node_modules/', '<rootDir>/server/dist/'],
+  // Ignore compiled files and node_modules
+  testPathIgnorePatterns: ['/node_modules/', '<rootDir>/dist/'],
 };
 
 export default config;
