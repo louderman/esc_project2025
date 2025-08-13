@@ -8,16 +8,12 @@ describe('Booking API', () => {
     await syncBooking();
   });
 
-  let consoleErrorSpy: jest.SpyInstance;
-
   beforeEach(() => {
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    if (consoleErrorSpy && typeof consoleErrorSpy.mockRestore === 'function') {
-      consoleErrorSpy.mockRestore();
-    }
+    (console.error as jest.Mock).mockRestore();
   });
 
   it('should create a new booking', async () => {
