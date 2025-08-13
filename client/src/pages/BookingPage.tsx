@@ -315,7 +315,7 @@ export default function BookingPage() {
   };
 
   return (
-    <main>
+    <main data-cy="booking-page">
       <div className={styles.mainSection}>
         <div className={styles.mainBox}>
           <BookingReview {...bookingDetails} />

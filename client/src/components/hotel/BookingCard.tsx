@@ -610,12 +610,12 @@ const BookingCard = ({
   };
 
   return (
-    <Card className="w-full shadow-xl border-0 bg-white rounded-xl overflow-hidden">
+    <Card className="w-full shadow-xl border-0 bg-white rounded-xl overflow-hidden" data-cy="booking-card">
       <CardHeader className="pb-6 border-b border-orange-100 bg-gradient-to-r from-orange-50 to-yellow-50">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-6">
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">{hotelName}</h3>
+                         <div>
+               <h3 className="text-2xl font-bold text-gray-900 mb-2" data-cy="hotel-name">{hotelName}</h3>
               {hotelAddress && (
                 <p className="text-sm text-gray-600 mb-2 flex items-center">
                   <MapPin size={14} className="mr-1" />
@@ -638,9 +638,9 @@ const BookingCard = ({
             </div>
           </div>
           <div className="text-right">
-            {hasRooms && price > 0 ? (
-              <>
-                <div className="text-3xl font-bold text-orange-500">${price.toFixed(2)}</div>
+                         {hasRooms && price > 0 ? (
+               <>
+                 <div className="text-3xl font-bold text-orange-500" data-cy="room-price">${price.toFixed(2)}</div>
                 <div className="text-base text-hotel-text-secondary">total</div>
                 {selectedRoom && (
                   <div className="text-sm text-hotel-text-secondary mt-1">
@@ -846,7 +846,7 @@ const BookingCard = ({
                     </div>
                     <div className="flex justify-between items-center font-semibold text-lg border-t pt-3">
                       <span className="text-gray-900">Total</span>
-                      <span className="text-orange-500">${(totalPrice + taxes).toFixed(2)}</span>
+                      <span className="text-orange-500" data-cy="total-price">${(totalPrice + taxes).toFixed(2)}</span>
                     </div>
                   </>
                 );
@@ -857,6 +857,7 @@ const BookingCard = ({
               className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-4 text-lg rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105" 
               size="lg"
               onClick={handleReserveNow}
+              data-cy="reserve-now-btn"
             >
               Reserve Now
             </Button>

@@ -118,6 +118,7 @@ const RoomOptions = ({ rooms, hotelId, hotelName, hotelRating, hotelReviewCount,
                       <Button 
                         className="bg-primary hover:bg-primary/90"
                         onClick={() => onSelectRoom?.(room)}
+                        data-cy="select-room-btn"
                       >
                         Select Room
                       </Button>

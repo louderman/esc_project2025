@@ -46,7 +46,7 @@ export default function BookingForm({
   };
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} data-cy="booking-form">
       <div className={styles.policies}>
         <h3>POLICIES</h3>
         <div className={styles.policy}>
