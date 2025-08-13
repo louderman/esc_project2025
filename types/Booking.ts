@@ -67,10 +67,7 @@ export interface BookingData {
   numberOfRooms: number;
   adults: number;
   children: number;
-  roomTypes: string[];
-  
-  // Room Information
-  selectedRoom?: SelectedRoomInfo;
+  roomTypes: string[]; // Contains room type information
   
   // Pricing
   pricePerNight: number;
@@ -109,11 +106,8 @@ export interface CreateBookingRequest {
   numberOfRooms: number;
   adults: number;
   children: number;
-  roomTypes: string[];
+  roomTypes: string[]; // Contains room type information
   messageToHotel?: string; // Max 250 characters
-  
-  // Room Information
-  selectedRoom?: SelectedRoomInfo;
   
   // Pricing
   pricePerNight: number;
