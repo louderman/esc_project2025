@@ -11,9 +11,6 @@ import {
 const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY)
   : null;
-// , {
-//     apiVersion: '2025-07-30.basil',
-//   }
 
 const router = express.Router();
 
@@ -22,23 +19,45 @@ router.post('/', async (req, res) => {
   try {
     const bookingData: CreateBookingRequest = req.body;
 
-    // Validate required fields
+    // Validate required fields for new compliant format
     if (
       !bookingData.userId ||
-      !bookingData.email ||
+      !bookingData.guestInformation ||
       !bookingData.hotelId ||
       !bookingData.hotelName ||
       !bookingData.checkInDate ||
       !bookingData.checkOutDate ||
-      !bookingData.guests ||
-      !bookingData.bookingAddress
+      !bookingData.hotelAddress
     ) {
       return res.status(400).json({
         error:
-          'Missing required fields: userId, email, hotelId, hotelName, checkInDate, checkOutDate, guests, or bookingAddress',
+          'Missing required fields: userId, guestInformation, hotelId, hotelName, checkInDate, checkOutDate, or hotelAddress',
       });
     }
 
+    // Validate guest information
+    const guest = bookingData.guestInformation;
+    if (!guest.firstName || !guest.lastName || !guest.phoneNumber || !guest.emailAddress) {
+      return res.status(400).json({
+        error: 'Missing required guest information: firstName, lastName, phoneNumber, or emailAddress',
+      });
+    }
+
+    // Validate special requests length
+    if (guest.specialRequests && guest.specialRequests.length > 250) {
+      return res.status(400).json({
+        error: 'Special requests must be 250 characters or less',
+      });
+    }
+
+    // Validate message to hotel length
+    if (bookingData.messageToHotel && bookingData.messageToHotel.length > 250) {
+      return res.status(400).json({
+        error: 'Message to hotel must be 250 characters or less',
+      });
+    }
+
+    // Validate pricing
     if (
       bookingData.pricePerNight <= 0 ||
       bookingData.numberOfNights <= 0 ||
