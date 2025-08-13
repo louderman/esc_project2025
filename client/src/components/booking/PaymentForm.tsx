@@ -10,6 +10,9 @@ interface PaymentFormProps {
   totalAmount: number;
   pricePerNight: number;
   numberOfNights: number;
+  totalAmount: number;
+  pricePerNight: number;
+  numberOfNights: number;
   bookingData?: CreateBookingRequest; // Booking data to send with payment
   selectedRoom?: any; // Additional room data for confirmation page
   hotelImages?: string[]; // Hotel images array for confirmation page
@@ -31,22 +34,6 @@ interface BillingAddress {
   };
 }
 
-interface GuestInformation {
-  firstName: string;
-  lastName: string;
-  phoneNumber: string;
-  emailAddress: string;
-  specialRequests?: string;
-}
-
-interface GuestInformation {
-  firstName: string;
-  lastName: string;
-  phoneNumber: string;
-  emailAddress: string;
-  specialRequests?: string;
-}
-
 const PaymentForm = ({
   amount,
   totalAmount,
@@ -62,6 +49,11 @@ const PaymentForm = ({
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const navigate = useNavigate();
+
+  const numberOfRooms = bookingData?.numberOfRooms || 1;
+  const taxes = totalAmount * 0.1;
+  const finalAmount = totalAmount + taxes;
+
 
   const numberOfRooms = bookingData?.numberOfRooms || 1;
   const taxes = totalAmount * 0.1;
@@ -370,30 +362,19 @@ const PaymentForm = ({
                     stayDates: {
                         checkinDate: bookingData.checkInDate && bookingData.checkInDate !== 'N/A' ? new Date(bookingData.checkInDate) : null,
                         checkoutDate: bookingData.checkOutDate && bookingData.checkOutDate !== 'N/A' ? new Date(bookingData.checkOutDate) : null,
-                    },
-                    },
+                    } : null,
                     totalAmount: finalAmount,
                     bookingDetails: {
                         ...bookingData,
                         selectedRoom: selectedRoom,
-                        numberOfGuests: `${bookingData.adults + bookingData.children} guests`,
-                        numberOfNights: bookingData.numberOfNights,
-                        numberOfRooms: bookingData.numberOfRooms,
-                        checkinDate: bookingData.checkInDate,
-                        checkoutDate: bookingData.checkOutDate,
-                        pricePerNight: bookingData.pricePerNight,
-                        hotelImage: bookingData.imageUrl,
-                        hotelImages: hotelImages,
-                        guestInformation: guestInformation,
-                        numberOfGuests: `${bookingData.adults + bookingData.children} guests`,
-                        numberOfNights: bookingData.numberOfNights,
-                        numberOfRooms: bookingData.numberOfRooms,
-                        checkinDate: bookingData.checkInDate,
-                        checkoutDate: bookingData.checkOutDate,
-                        pricePerNight: bookingData.pricePerNight,
-                        hotelImage: bookingData.imageUrl,
-                        hotelImages: hotelImages,
-                        guestInformation: guestInformation,
+                        numberOfGuests: bookingData?.guests,
+                        numberOfNights: bookingData?.numberOfNights,
+                        numberOfRooms: numberOfRooms,
+                        checkinDate: bookingData?.checkInDate,
+                        checkoutDate: bookingData?.checkOutDate,
+                        pricePerNight: bookingData?.pricePerNight,
+                        hotelImage: bookingData?.imageUrl,
+                        hotelImages: hotelImages, // Add hotel images array
                     }
                 }
             });
@@ -413,6 +394,7 @@ const PaymentForm = ({
     if (field.startsWith('address.')) {
       const addressField = field.split('.')[1];
       setBillingAddress((prev: BillingAddress) => ({
+      setBillingAddress((prev: BillingAddress) => ({
         ...prev,
         address: {
           ...prev.address,
@@ -420,6 +402,7 @@ const PaymentForm = ({
         },
       }));
     } else {
+      setBillingAddress((prev: BillingAddress) => ({
       setBillingAddress((prev: BillingAddress) => ({
         ...prev,
         [field]: value,
@@ -431,6 +414,27 @@ const PaymentForm = ({
     // HTML for the payment form over here
     <div className={styles.container}>
       <h3>Payment Details</h3>
+
+      {/* Price Breakdown Section */}
+      <div className={styles.priceBreakdown}>
+        <h4 className={styles.priceTitle}>Price Summary</h4>
+        <div className={styles.priceItem}>
+          <span>
+            {numberOfRooms} room{numberOfRooms > 1 ? 's' : ''} x {numberOfNights} night
+            {numberOfNights > 1 ? 's' : ''}
+          </span>
+          <span>${totalAmount.toFixed(2)}</span>
+        </div>
+        <div className={styles.priceItem}>
+          <span>Taxes and fees (10%)</span>
+          <span>${taxes.toFixed(2)}</span>
+        </div>
+        <div className={`${styles.priceItem} ${styles.total}`}>
+          <span>Total</span>
+          <span>${finalAmount.toFixed(2)}</span>
+        </div>
+      </div>
+
 
       {/* Price Breakdown Section */}
       <div className={styles.priceBreakdown}>
@@ -787,6 +791,7 @@ const PaymentForm = ({
           disabled={!stripe || processing}
           className={styles.payButton}
         >
+          {processing ? 'Processing...' : `Pay $${finalAmount.toFixed(2)}`}
           {processing ? 'Processing...' : `Pay $${finalAmount.toFixed(2)}`}
         </button>
         {error && <div className={styles.error}>{error}</div>}

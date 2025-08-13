@@ -4,21 +4,6 @@
   border-radius: 8px;
 }
 
-.guestSection {
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  background-color: #ffffff;
-}
-
-.guestSection h4 {
-  margin-bottom: 1rem;
-  color: #333;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
 .billingSection, .cardSection {
   margin-bottom: 2rem;
 }
@@ -29,6 +14,8 @@
 }
 
 .formGroup {
+  margin-bottom: 1rem;
+  flex: 1;
   margin-bottom: 1rem;
   flex: 1;
 }
@@ -46,22 +33,6 @@
   border-radius: 4px;
 }
 
-.textarea {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  resize: vertical;
-  font-family: inherit;
-}
-
-.charCount {
-  display: block;
-  margin-top: 0.25rem;
-  color: #666;
-  font-size: 0.875rem;
-}
-
 .cardElement {
   padding: 0.75rem;
   border: 1px solid #ccc;
@@ -74,8 +45,12 @@
   padding: 1rem;
   background-color: #007bff;
   color: white;
+  background-color: #007bff;
+  color: white;
   border: none;
   border-radius: 4px;
+  font-size: 1rem;
+  font-weight: bold;
   font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
@@ -84,17 +59,24 @@
 
 .payButton:disabled {
   background-color: #ccc;
+  background-color: #ccc;
   cursor: not-allowed;
 }
 
 .error {
+  color: #dc3545;
   color: #dc3545;
   margin-top: 1rem;
   text-align: center;
 }
 
 .priceBreakdown {
+.priceBreakdown {
   margin-bottom: 2rem;
+  padding: 1.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #f9f9f9;
   padding: 1.5rem;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
@@ -104,18 +86,37 @@
 .priceTitle {
   font-size: 1.2rem;
   font-weight: 600;
+.priceTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
   color: #333;
   margin-bottom: 1rem;
 }
 
+.priceItem {
 .priceItem {
   display: flex;
   justify-content: space-between;
   font-size: 1rem;
   color: #555;
   margin-bottom: 0.75rem;
+  justify-content: space-between;
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 0.75rem;
 }
 
+.priceItem span:last-child {
+  font-weight: 500;
+}
+
+.total {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #333;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #ddd;
 .priceItem span:last-child {
   font-weight: 500;
 }
