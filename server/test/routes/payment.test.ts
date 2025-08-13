@@ -1,3 +1,4 @@
+import { Server } from 'http';
 import request from 'supertest';
 import { CreateBookingRequest } from '../../../types/Booking';
 import {
@@ -7,9 +8,20 @@ import {
 } from '../../models/bookingModel';
 import app from '../../server';
 
+let server: Server;
+
 describe('POST /api/payment/confirm-payment', () => {
   beforeAll(async () => {
     await syncBooking();
+    server = app.listen(0); // Use port 0 for random available port
+  });
+
+  afterAll(async () => {
+    if (server) {
+      await new Promise<void>((resolve) => {
+        server.close(() => resolve());
+      });
+    }
   });
 
   beforeEach(() => {

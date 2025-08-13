@@ -1,24 +1,10 @@
-import { cleanup, pool } from './database/db';
+import { pool } from './database/db';
 
-async function truncateTables() {
-  // TODO: probably should add prefix `test_` to tables?
-  // I think it's too risky to have same table name for both production and test db
-  const [tables] = await pool.query(`SHOW TABLES;`);
-  const tableNames = (tables as unknown as string[]).map(
-    (row) => Object.values(row)[0]
-  );
-  await pool.query(`SET FOREIGN_KEY_CHECKS = 0;`);
-  for (const table of tableNames) {
-    await pool.query(`TRUNCATE TABLE \`${table}\`;`);
-  }
-  await pool.query(`SET FOREIGN_KEY_CHECKS = 1;`);
-}
-
-beforeAll(async () => {
-  await truncateTables();
-});
-
-afterAll(async () => {
-  await truncateTables();
-  await cleanup();
-});
+export default async () => {
+  // create the pool implicitly by importing, then clean DB once
+  await pool.query('SET FOREIGN_KEY_CHECKS = 0;');
+  const [tables]: any = await pool.query('SHOW TABLES;');
+  const names = tables.map((r: any) => Object.values(r)[0]);
+  for (const t of names) await pool.query(`TRUNCATE TABLE \`${t}\`;`);
+  await pool.query('SET FOREIGN_KEY_CHECKS = 1;');
+};
