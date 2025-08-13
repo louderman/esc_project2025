@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from './selectedroomcard.module.css';
+import { getImageWithFallback } from '@/utils/imageFallbacks';
 
 interface SelectedRoomCardProps {
   selectedRoom: {
@@ -12,6 +13,7 @@ interface SelectedRoomCardProps {
     size: string;
     description?: string;
     amenities?: string[];
+    image?: string;
   };
   numberOfNights: number;
   numberOfRooms: number;
@@ -41,7 +43,7 @@ const SelectedRoomCard: React.FC<SelectedRoomCardProps> = ({
       <div className={styles.roomContent}>
         <div className={styles.roomImage}>
           <img 
-            src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=300&h=200&fit=crop" 
+            src={selectedRoom.image || "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=300&h=200&fit=crop"} 
             alt={selectedRoom.room_type}
             className={styles.image}
           />

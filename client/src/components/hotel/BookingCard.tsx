@@ -5,6 +5,7 @@ import { Calendar as CalendarIcon, MapPin, Star, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Calendar, { type StayDatesState } from "./Calendar";
+import { getImageWithFallback } from "@/utils/imageFallbacks";
 
 interface AvailabilityInfo {
   requestedRooms: number;
@@ -198,11 +199,7 @@ const BookingCard = ({
         return { isValid: false, error: 'Check-out date cannot be in the past' };
       }
       
-      // Check if stay is too long (e.g., more than 30 days)
-      const daysDiff = Math.ceil((checkout.getTime() - checkin.getTime()) / (1000 * 60 * 60 * 24));
-      if (daysDiff > 30) {
-        return { isValid: false, error: 'Stay cannot be longer than 30 days' };
-      }
+
       
       return { isValid: true };
     } catch (error) {
@@ -541,9 +538,10 @@ const BookingCard = ({
     const totalAmount = price;
 
     // Get hotel image from hotel images array, selected room, or use fallback
-    const hotelImage = hotelImages.length > 0 ? hotelImages[0] : 
-                      selectedRoom?.image || 
-                      'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=1200&h=900&fit=crop&q=85';
+    const hotelImage = getImageWithFallback(
+      hotelImages.length > 0 ? hotelImages[0] : selectedRoom?.image,
+      'hotel'
+    );
 
     // Prepare booking details
     const bookingDetails = {
@@ -557,7 +555,8 @@ const BookingCard = ({
         bed_type: selectedRoom.bed_type || 'King bed',
         size: selectedRoom.size || '35',
         description: selectedRoom.description || 'Standard room with modern amenities',
-        amenities: selectedRoom.amenities || ['WiFi', 'TV', 'Air Conditioning']
+        amenities: selectedRoom.amenities || ['WiFi', 'TV', 'Air Conditioning'],
+        image: selectedRoom.image // Add the image property from selectedRoom
       } : {
         id: hotelId || 'default',
         room_type: 'Standard Room',
@@ -568,7 +567,8 @@ const BookingCard = ({
         bed_type: 'King bed',
         size: '35',
         description: 'Standard room with modern amenities',
-        amenities: ['WiFi', 'TV', 'Air Conditioning']
+        amenities: ['WiFi', 'TV', 'Air Conditioning'],
+        image: hotelImage // Add fallback image for default room
       },
       numberOfGuests: {
         adults: adults,
@@ -587,7 +587,10 @@ const BookingCard = ({
     // Navigate to booking page with state
     navigate('/booking', {
       state: {
-        bookingDetails,
+        bookingDetails: {
+          ...bookingDetails,
+          hotelImages: hotelImages // Add hotel images array to booking details
+        },
         hotel: {
           id: hotelId,
           name: hotelName,

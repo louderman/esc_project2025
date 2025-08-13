@@ -4,6 +4,7 @@ import type { Price } from '../../../../../types/Price';
 import type { StayDatesState } from '../SearchBar/DateInput/DateInput';
 import type { OccupancyState } from '../SearchBar/GuestInput/GuestInput';
 import styles from './maplistingcard.module.css';
+import { useNavigate } from 'react-router-dom';
 
 export default function MapListingCard({
   hotel,
@@ -26,11 +27,40 @@ export default function MapListingCard({
         )
       : 0;
 
+  const navigate = useNavigate();
+  const handleView = () => {
+    // Build URL parameters for hotel detail page
+    const params = new URLSearchParams();
+
+    if (stayDates.checkinDate) {
+      params.set('checkin', stayDates.checkinDate.toISOString().split('T')[0]);
+    }
+    if (stayDates.checkoutDate) {
+      params.set(
+        'checkout',
+        stayDates.checkoutDate.toISOString().split('T')[0]
+      );
+    }
+    params.set('adults', occupancy.adults.toString());
+    params.set('children', occupancy.children.toString());
+    params.set('rooms', occupancy.rooms.toString());
+    // Get the destination ID from the current URL (should be passed down from parent)
+    const currentDestId = new URLSearchParams(window.location.search).get(
+      'destId'
+    );
+    if (currentDestId) {
+      params.set('destination_id', JSON.parse(currentDestId));
+    }
+
+    navigate(`/hotel/${hotel.id}?${params.toString()}`);
+  };
+
   return (
     <div
       className={styles.container}
       onMouseEnter={() => setHoveredHotelId(hotel.id)}
       onMouseLeave={() => setHoveredHotelId(null)}
+      onClick={handleView}
     >
       {hotel.imageCount > 0 ? (
         <img

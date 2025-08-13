@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import type { Hotel } from '../../../types/Hotel';
 import type { Price } from '../../../types/Price';
 import BookingForm from '../components/booking/BookingForm';
@@ -9,11 +9,9 @@ import { useAuth } from '../components/common/authcontext';
 import type { StayDatesState } from '../components/listing/SearchBar/DateInput/DateInput';
 import type { DestinationState } from '../components/listing/SearchBar/DestinationInput/DestinationInput';
 import type { OccupancyState } from '../components/listing/SearchBar/GuestInput/GuestInput';
-import SearchBar from '../components/listing/SearchBar/SearchBar';
 import styles from './bookingpage.module.css';
 
 export default function BookingPage() {
-  const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
   
@@ -137,6 +135,28 @@ export default function BookingPage() {
     name: '',
   });
 
+  // Fetch destination data when component mounts (for consistency with other pages)
+  useEffect(() => {
+    const fetchDestination = async () => {
+      try {
+        const response = await fetch('/api/destination/random?count=1');
+        if (response.ok) {
+          const destinations = await response.json();
+          if (destinations && destinations.length > 0) {
+            setDestination({
+              id: destinations[0].dest_id,
+              name: destinations[0].term,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch destination:', error);
+      }
+    };
+
+    fetchDestination();
+  }, []);
+
   // Use passed booking details for calculations
   const numberOfNights = stateData.bookingDetails?.numberOfNights ?? (
     stayDates.checkinDate && stayDates.checkoutDate
@@ -147,46 +167,91 @@ export default function BookingPage() {
       : 1
   );
 
+  // Get hotel images - prioritize from booking details, then from hotel data, then fallback
+  const getHotelImages = (): string[] => {
+    // Check if images are passed through booking details (from BookingCard)
+    if (stateData?.bookingDetails && 'hotelImages' in stateData.bookingDetails) {
+      const hotelImages = (stateData.bookingDetails as any).hotelImages;
+      if (Array.isArray(hotelImages) && hotelImages.length > 0) {
+        return hotelImages;
+      }
+    }
+    
+    // Check if hotel has image_details for multiple images
+    if (hotel.imageCount > 0 && hotel.image_details.prefix && hotel.image_details.suffix) {
+      return Array.from({ length: Math.min(hotel.imageCount, 10) }, (_, i) => 
+        `${hotel.image_details.prefix}${i}${hotel.image_details.suffix}`
+      );
+    }
+    
+    // Check for single image from various sources
+    const singleImage = stateData?.bookingDetails?.hotelImage || 
+                       stateData?.hotel?.image || 
+                       hotel.image_details.prefix;
+    
+    if (singleImage && singleImage !== '') {
+      return [singleImage];
+    }
+    
+    // Fallback to placeholder
+    return ['/listing/hotel_img_placeholder.png'];
+  };
+
+  const hotelImages = getHotelImages();
+
+  // Consolidated bookingDetails object that serves both BookingReview and PaymentForm
   const bookingDetails = {
+    // Hotel information
+    hotelId: hotel.id,
     hotelName: hotel.name,
+    hotelAddress: [hotel.address, hotel.address1].filter(Boolean).join(', ') || 'Address not available',
+    images: hotelImages,
+    imageUrl: hotelImages[0], // Keep for backward compatibility with PaymentForm
+    
+    // Date information
     checkInDate: stayDates.checkinDate
       ? stayDates.checkinDate.toLocaleDateString('en-US', {
           day: '2-digit',
           month: 'short',
+          year: 'numeric',
         })
       : 'N/A',
     checkOutDate: stayDates.checkoutDate
       ? stayDates.checkoutDate.toLocaleDateString('en-US', {
           day: '2-digit',
           month: 'short',
+          year: 'numeric',
         })
       : 'N/A',
+    
+    // Guest and room information
     guests: `${occupancy.rooms} room${occupancy.rooms > 1 ? 's' : ''} · ${
       occupancy.adults + occupancy.children
     } guest${occupancy.adults + occupancy.children > 1 ? 's' : ''}`,
-    hotelAddress: [hotel.address, hotel.address1].filter(Boolean).join(', ') || 'Address not available',
-    imageUrl:
-      stateData.bookingDetails?.hotelImage || 
-      stateData.hotel.image || 
-      (hotel.imageCount > 0
-        ? `${hotel.image_details.prefix}0${hotel.image_details.suffix}`
-        : '/listing/hotel_img_placeholder.png'),
+    numberOfRooms: stateData.bookingDetails?.numberOfRooms ?? occupancy.rooms,
+    numberOfNights,
+    
+    // Pricing information
+    pricePerNight: Math.round((stateData.bookingDetails?.pricePerNight ?? hotel.price) * 100) / 100,
+    totalAmount: stateData.bookingDetails?.totalAmount ?? ((stateData.bookingDetails?.pricePerNight ?? hotel.price) * numberOfNights),
+    
+    // User information
+    userId: user ? String(user.id) : '',
+    email: user ? user.email : '',
+    
+    // Additional booking information
+    whatsIncluded: stateData.bookingDetails?.selectedRoom?.amenities ?? Object.entries(hotel.amenities)
+      .filter(([_, value]) => value)
+      .map(([key]) => key.replace(/([A-Z])/g, ' $1').trim()),
+    selectedRoom: stateData.bookingDetails?.selectedRoom,
   };
 
   const handlePaymentSuccess = () => {
-    // Navigate to booking confirmation page on successful payment
-    navigate('/booking/confirmation', {
-      state: {
-        bookingDetails,
-        hotel,
-        totalAmount: stateData.bookingDetails?.totalAmount ?? ((stateData.bookingDetails?.pricePerNight ?? hotel.price) * numberOfNights),
-      },
-    });
+    // PaymentForm will handle navigation to confirmation page
+    console.log('Payment successful - navigation handled by PaymentForm');
   };
 
   const handlePaymentError = (error: string) => {
-    // Console error for now
-    // TODO: add a toast saying it failed, ya lazy bum
     console.error('Payment failed:', error);
   };
 
@@ -194,50 +259,39 @@ export default function BookingPage() {
     guaranteePolicy: 'Credit Card is required at the time of booking.',
     cancelPolicy:
       'Reservation must be cancelled by 3pm local time 1 day before arrival to avoid penalty of 1 night room and tax.',
-    costPerNight: Math.round((stateData.bookingDetails?.pricePerNight ?? hotel.price) * 100) / 100,
-    numberOfNights,
+    costPerNight: bookingDetails.pricePerNight,
+    numberOfNights: bookingDetails.numberOfNights,
     bookingData: {
-      userId: user ? String(user.id) : '',
-      email: user ? user.email : '',
-      hotelId: hotel.id,
-      hotelName: hotel.name,
+      userId: bookingDetails.userId,
+      email: bookingDetails.email,
+      hotelId: bookingDetails.hotelId,
+      hotelName: bookingDetails.hotelName,
       checkInDate: bookingDetails.checkInDate,
       checkOutDate: bookingDetails.checkOutDate,
       guests: bookingDetails.guests,
-      pricePerNight: Math.round((stateData.bookingDetails?.pricePerNight ?? hotel.price) * 100) / 100,
-      numberOfNights,
-      totalAmount: stateData.bookingDetails?.totalAmount ?? ((stateData.bookingDetails?.pricePerNight ?? hotel.price) * numberOfNights),
-      whatsIncluded: stateData.bookingDetails?.selectedRoom?.amenities ?? Object.entries(hotel.amenities)
-        .filter(([_, value]) => value)
-        .map(([key]) => key.replace(/([A-Z])/g, ' $1').trim()),
+      pricePerNight: bookingDetails.pricePerNight,
+      numberOfNights: bookingDetails.numberOfNights,
+      totalAmount: bookingDetails.totalAmount,
+      whatsIncluded: bookingDetails.whatsIncluded,
       imageUrl: bookingDetails.imageUrl,
-      bookingAddress: [hotel.address, hotel.address1].filter(Boolean).join(', '),
+      bookingAddress: bookingDetails.hotelAddress,
     },
+    selectedRoom: bookingDetails.selectedRoom,
+    hotelImages: hotelImages, // Add hotel images array
     onPaymentSuccess: handlePaymentSuccess,
     onPaymentError: handlePaymentError,
   };
 
   return (
     <main>
-      <div className={styles.searchbarSection}>
-        <SearchBar
-          destination={destination}
-          setDestination={setDestination}
-          stayDates={stayDates}
-          setStayDates={setStayDates}
-          occupancy={occupancy}
-          setOccupancy={setOccupancy}
-          onSubmit={() => {}} // to be completed. Why is searchbar needed here?
-        />
-      </div>
       <div className={styles.mainSection}>
         <div className={styles.mainBox}>
           <BookingReview {...bookingDetails} />
-          {stateData.bookingDetails?.selectedRoom && (
+          {bookingDetails.selectedRoom && (
             <SelectedRoomCard
-              selectedRoom={stateData.bookingDetails.selectedRoom}
-              numberOfNights={numberOfNights}
-              numberOfRooms={stateData.bookingDetails.numberOfRooms}
+              selectedRoom={bookingDetails.selectedRoom}
+              numberOfNights={bookingDetails.numberOfNights}
+              numberOfRooms={bookingDetails.numberOfRooms}
             />
           )}
           <BookingForm {...policyDetails} />

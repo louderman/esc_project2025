@@ -21,6 +21,8 @@ export function useFetchHotelRoomPrices({
   const [rooms, setRooms] = useState<RoomPrice[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 3;
 
   useEffect(() => {
     // Early return if hook is disabled or missing required parameters
@@ -37,12 +39,12 @@ export function useFetchHotelRoomPrices({
       return;
     }
 
-    const fetchRoomPrices = async () => {
+    const fetchRoomPrices = async (attempt: number = 1) => {
       setLoading(true);
       setError(null);
 
       try {
-        console.log('Fetching room prices for hotel:', hotelId, 'from destination:', destinationId);
+        console.log(`Fetching room prices for hotel: ${hotelId}, attempt ${attempt}/${maxRetries}`);
         
         // Use the hotel detail pricing endpoint that matches the server route
         const url = `/api/hotel-detail/hotel/${hotelId}/prices?destination_id=${destinationId}&checkin=${checkin}&checkout=${checkout}&guests=${guests}`;
@@ -51,11 +53,30 @@ export function useFetchHotelRoomPrices({
         const response = await fetch(url);
         
         if (!response.ok) {
-          throw new Error(`Failed to fetch room prices: ${response.statusText}`);
+          const errorData = await response.json().catch(() => ({}));
+          
+          // Don't retry on 422 errors (validation errors) or 4xx client errors
+          if (response.status >= 400 && response.status < 500) {
+            console.log(`Client error ${response.status}:`, errorData);
+            throw new Error(errorData.message || `Failed to fetch room prices: ${response.statusText}`);
+          }
+          
+          throw new Error(errorData.message || `Failed to fetch room prices: ${response.statusText}`);
         }
         
         const data = await response.json();
         console.log('Destination pricing response:', data);
+        
+        // Check if the search is still in progress
+        if (!data.completed && data.status !== 'no_rooms') {
+          console.log('Price search still in progress, will retry...');
+          if (attempt < maxRetries) {
+            setTimeout(() => fetchRoomPrices(attempt + 1), 2000); // Retry after 2 seconds
+            return;
+          } else {
+            throw new Error('Price search timed out after maximum retries');
+          }
+        }
         
         // Debug: Log available hotel IDs in pricing data
         if (data.hotels && data.hotels.length > 0) {
@@ -66,7 +87,7 @@ export function useFetchHotelRoomPrices({
         // The server now returns only the specific hotel, so we can directly access it
         const hotelWithRooms = data.hotels?.[0];
         
-        if (hotelWithRooms && hotelWithRooms.rooms) {
+        if (hotelWithRooms && hotelWithRooms.rooms && Array.isArray(hotelWithRooms.rooms)) {
           console.log('Found hotel with rooms:', hotelWithRooms.rooms.length, 'rooms');
           console.log('Hotel rooms data:', hotelWithRooms.rooms);
           
@@ -85,16 +106,50 @@ export function useFetchHotelRoomPrices({
           
           console.log('Transformed rooms:', transformedRooms);
           setRooms(transformedRooms);
+          setRetryCount(0); // Reset retry count on success
+          console.log('✅ Room prices loaded successfully, setting loading to false');
+          setLoading(false); // Set loading to false when data is successfully fetched
         } else {
           console.log('Hotel not found in pricing or no rooms available');
           console.log('Looking for hotel ID:', hotelId);
           console.log('Available hotel IDs in pricing:', data.hotels?.map((h: any) => h.id) || []);
-          setRooms([]);
+          
+          // Handle case where no rooms are available
+          if (data.status === 'no_rooms' && data.message) {
+            console.log('No rooms available:', data.message);
+            setRooms([]);
+            setError(new Error(data.message));
+          } else {
+            setRooms([]);
+          }
+          console.log('⚠️ No rooms found, setting loading to false');
+          setLoading(false); // Set loading to false when no rooms found
         }
       } catch (err) {
-        console.error('Error fetching room prices:', err);
+        console.error(`Error fetching room prices (attempt ${attempt}):`, err);
+        
+        // Don't retry on client errors (4xx) or if we've reached max retries
+        if (attempt >= maxRetries) {
+          console.log('Maximum retries reached, stopping retry attempts');
+          setError(err instanceof Error ? err : new Error('Failed to fetch room prices'));
+          setRetryCount(attempt);
+          setLoading(false);
+          return;
+        }
+        
+        // Only retry on network errors or 5xx server errors
+        if (err instanceof Error && 
+            (err.message.includes('temporarily unavailable') || 
+             err.message.includes('Failed to fetch') ||
+             err.message.includes('Network Error'))) {
+          console.log(`Retrying in 2 seconds... (${attempt}/${maxRetries})`);
+          setTimeout(() => fetchRoomPrices(attempt + 1), 2000);
+          return;
+        }
+        
+        // For other errors, don't retry
         setError(err instanceof Error ? err : new Error('Failed to fetch room prices'));
-      } finally {
+        setRetryCount(attempt);
         setLoading(false);
       }
     };
@@ -102,5 +157,5 @@ export function useFetchHotelRoomPrices({
     fetchRoomPrices();
   }, [hotelId, destinationId, checkin, checkout, guests, enabled]);
 
-  return { rooms, loading, error };
+  return { rooms, loading, error, retryCount };
 } 
