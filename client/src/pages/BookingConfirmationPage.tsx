@@ -23,7 +23,7 @@ interface GuestInformation {
 }
 
 interface BookingData {
-  bookingAddress: string;
+  hotelAddress: string;
   checkInDate: string;
   checkOutDate: string;
   hotelId: string;
@@ -53,12 +53,13 @@ export default function BookingConfirmation() {
   const bookingDetails = location.state?.bookingDetails || {};
   const [totalAmount, setTotalAmount] = useState<number>(location.state?.totalAmount || 0);
 
-  const [destinationId, setDestinationId] = useState<string>("");
-  const [hotelIdBackend, setHotelIdBackend] = useState<string>("");
+  const [destinationId, setDestinationId] = useState<string>(bookingDetails.destinationId || "");
+  const [hotelIdBackend, setHotelIdBackend] = useState<string>(bookingDetails.hotelId || "");
   const [paymentIntentId, setPaymentIntentId] = useState<string>("");
-  const [guestInfo, setGuestInfo] = useState<GuestInformation | null>(null);
-
-  const bookingId = location.state?.bookingId as string | undefined;
+  const [guestInfo, setGuestInfo] = useState<GuestInformation | null>(bookingDetails.guestInformation || null);
+  const [hotelAddress, setHotelAddress] = useState<string>(bookingDetails.hotelAddress || hotel?.address || '');
+  const [bookingId, setBookingId] = useState<string | undefined>(location.state?.bookingId);
+  //const bookingId = location.state?.bookingId as string | undefined;
   const [currentIndex, setCurrentIndex] = useState(0);
   console.log('bookingDetails', bookingDetails);
   console.log("selectedroom", bookingDetails.selectedRoom);
@@ -78,12 +79,13 @@ export default function BookingConfirmation() {
         return res.json();
       })
       .then((data: BookingData) => {
+        console.log("Fetched booking data:", data);
         if (cancelled) return;
 
         setHotel({
           id: data.id,
           name: data.hotelName,
-          address: data.bookingAddress || '',
+          address: data.hotelAddress || '',
           price: data.pricePerNight,
           image_details: { prefix: data.imageUrl || '', suffix: '' },
           imageCount: data.imageUrl ? 1 : 0
@@ -100,8 +102,9 @@ export default function BookingConfirmation() {
         setDestinationId(data.destinationId);
         setHotelIdBackend(data.hotelId);
         setPaymentIntentId(data.paymentIntentId);
-        if (data.guestInformation) setGuestInfo(data.guestInformation);
-
+        setHotelAddress(data.hotelAddress  || '');
+        setBookingId(data.id);
+        setGuestInfo(data.guestInformation);
         setLoading(false);
       })
       .catch((err) => {
@@ -176,10 +179,14 @@ export default function BookingConfirmation() {
         <hr className={styles.divider} />
 
         <div className={styles.detailstitle} style={{ marginBottom: '1.5rem' }}>Booking Details</div>
+        <div className={styles.roomdetail} style={{ marginBottom: '1.5rem' }}>
+          <span className={styles.label}>Guest Information:</span>
+          <span className={`${styles.value} ${styles.bold}`}> {guestInfo ? `${guestInfo.firstName} ${guestInfo.lastName}` : 'N/A'}</span>
+        </div>        
         <div className={styles.detailsgrid}>
           <div className={styles.detailitem}>
             <div className={styles.label}>Booking ID</div>
-            <div className={styles.value}>{hotel.id}</div>
+            <div className={styles.value}>{bookingId}</div>
           </div>
           <div className={styles.detailitem}>
             <div className={styles.label}>Destination ID</div>
@@ -189,17 +196,14 @@ export default function BookingConfirmation() {
             <div className={styles.label}>Hotel ID</div>
             <div className={styles.value}>{hotelIdBackend}</div>
           </div>
-          <div className={styles.detailitem}>
-            <div className={styles.label}>Payment Intent ID</div>
-            <div className={styles.value}>{paymentIntentId}</div>
-          </div>
+
           <div className={styles.detailitem}>
             <div className={styles.label}>Check-in</div>
-            <div className={styles.value}>{formatDate(stayDates?.checkinDate ?? null)}</div>
+            <div className={styles.valueWhole}>{formatDate(stayDates?.checkinDate ?? null)}</div>
           </div>
           <div className={styles.detailitem}>
             <div className={styles.label}>Check-out</div>
-            <div className={styles.value}>{formatDate(stayDates?.checkoutDate ?? null)}</div>
+            <div className={styles.valueWhole}>{formatDate(stayDates?.checkoutDate ?? null)}</div>
           </div>
           <div className={styles.detailitem}>
             <div className={styles.label}>Total</div>
@@ -214,22 +218,10 @@ export default function BookingConfirmation() {
           <span className={styles.label}>Room Type:</span>
           <span className={`${styles.value} ${styles.bold}`}> {room_type}</span>
         </div>
-        {guestInfo && (
-          <>
-            <div className={styles.detailstitle} style={{ marginTop: '2rem' }}>Guest Information</div>
-            <div style={{ marginBottom: '0.6rem' }}>
-              {guestInfo.firstName} {guestInfo.lastName}
-            </div>
-            <div style={{ marginBottom: '0.6rem' }}>Phone: {guestInfo.phoneNumber}</div>
-            <div style={{ marginBottom: '0.6rem' }}>Email: {guestInfo.emailAddress}</div>
-            {guestInfo.specialRequests && (
-              <div style={{ marginBottom: '0.6rem' }}>
-                <strong>Special requests to hotel:</strong> {guestInfo.specialRequests}
-              </div>
-            )}
-          </>
-        )}
-
+                <div className={styles.roomdetail}>
+          <span className={styles.label}>Special Request:</span>
+          <span className={`${styles.value} ${styles.bold}`}> {guestInfo?.specialRequests}</span>
+        </div>
       </div>
 <div className={styles.hotelsection}>
       <div className={styles.flexrow}>
@@ -251,7 +243,7 @@ export default function BookingConfirmation() {
         <div className={styles.textcontent}>
           <div className={styles.hotelinfo}>
             <h2 className={styles.hotelname}>{hotel.name}</h2>
-            <p className={styles.hoteladdress}>{hotel.address}</p>
+            <p className={styles.hoteladdress}>{bookingDetails.hotelAddress || hotel.address || hotelAddress}</p>
           </div>
         </div>
       </div>
