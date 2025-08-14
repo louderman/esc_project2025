@@ -40,7 +40,6 @@ interface BookingData {
   roomTypes?: string;
 }
 
-
 export default function BookingConfirmation() {
   const location = useLocation();
   //console.log("location.state", location.state);
@@ -106,8 +105,6 @@ export default function BookingConfirmation() {
         setHotelAddress(data.hotelAddress  || '');
         setBookingId(data.id);
         setGuestInfo(data.guestInformation);
-        
-
         setLoading(false);
       })
       .catch((err) => {
@@ -225,8 +222,6 @@ export default function BookingConfirmation() {
           <span className={styles.label}>Special Request:</span>
           <span className={`${styles.value} ${styles.bold}`}> {guestInfo?.specialRequests}</span>
         </div>
-
-
       </div>
 <div className={styles.hotelsection}>
       <div className={styles.flexrow}>

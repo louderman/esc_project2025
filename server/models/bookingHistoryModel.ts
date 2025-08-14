@@ -25,6 +25,4 @@ async function getBookingHistory(userId?: string) {
     throw new Error('Failed to fetch bookings');
   }
 }
-
-
 export { getBookingHistory };

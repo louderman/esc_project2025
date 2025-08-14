@@ -60,7 +60,6 @@
   white-space: normal;   /* Ensures wrapping is allowed */
   max-width: 200px;   
 }
-
 .detailitem .valueWhole {
   font-weight: 600;
   color: #333;

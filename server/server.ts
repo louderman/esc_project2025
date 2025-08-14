@@ -122,8 +122,6 @@ app.get('/api/hotel-detail/combined/:hotelId', async (req, res) => {
   }
 });
 
-process.on('SIGINT', cleanup);
-process.on('SIGTERM', cleanup);
 
 syncUser();
 syncDest();
