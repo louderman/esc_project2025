@@ -270,6 +270,13 @@ const HotelDetail = () => {
     if (data || hotelLoading || priceLoading || roomPricesLoading) {
       return;
     }
+    
+    // Show complete page only when all data including room prices is loaded
+    if (!hotelLoading && !priceLoading && !roomPricesLoading && data) {
+      console.log('🎯 ALL DATA READY: Main data + room prices loaded, showing complete page');
+      setLoading(false);
+      return;
+    }
 
     // Don't process if we don't have a specific hotel
     if (!specificHotel) {
@@ -471,7 +478,7 @@ const HotelDetail = () => {
     } finally {
       setLoading(false);
     }
-  }, [hotelId, specificHotel, hotelLoading, priceLoading, roomPricesLoading, hotels, destinationId, checkin, checkout, adults, children, roomCount, totalGuests]);
+  }, [hotelId, specificHotel, hotelLoading, priceLoading, roomPricesLoading, hotels, destinationId, checkin, checkout, adults, children, roomCount, totalGuests, searchParams, data]);
 
 
 
