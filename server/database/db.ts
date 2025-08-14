@@ -39,6 +39,19 @@ process.on('SIGINT', async () => {
   }
 });
 
+
+process.on('SIGTERM', async () => {
+  console.log('\nClosing MySQL pool...');
+  try {
+    await cleanup();
+    console.log('MySQL pool closed. Exiting process.');
+    process.exit(0);
+  } catch (err) {
+    console.error('Error closing MySQL pool:', err);
+    process.exit(1);
+  }
+});
+
 export { cleanup, pool };
 
 // CREATE USER 'your_username'@'your_host' IDENTIFIED BY 'your_password';

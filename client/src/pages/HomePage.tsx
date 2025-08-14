@@ -11,6 +11,7 @@ import { useSearchBarUrlSync } from '../hooks/url/useSearchBarUrlSync';
 
 import DestinationCard from '../components/homepage/DestinationCard';
 
+
 export default function HomePage() {
   const navigate = useNavigate();
 
@@ -18,19 +19,22 @@ export default function HomePage() {
     id: '',
     name: '',
   });
-  let today: Date = new Date();
-  let tomorrow: Date = new Date();
-  today.setDate(new Date().getDate() + 1);
-  tomorrow.setDate(new Date().getDate() + 2);
   const [stayDates, setStayDates] = useState<StayDatesState>({
-    checkinDate: today,
-    checkoutDate: tomorrow,
+    checkinDate: null,
+    checkoutDate: null,
   });
   const [occupancy, setOccupancy] = useState<OccupancyState>({
     adults: 1,
     children: 0,
     rooms: 1,
   });
+  const [shouldRedirect, setShouldRedirect] = useState(false);
+  useEffect(() => {
+    if (shouldRedirect) {
+      syncSearchBarToURL('/listing')
+    }
+  }, [shouldRedirect])
+
 
   const { syncSearchBarToURL } = useSearchBarUrlSync({
     destination,
@@ -42,30 +46,34 @@ export default function HomePage() {
     navigate,
   });
 
-  const [suggestedDests, setSuggestedDests] = useState<Destination[]>([]);
-  useEffect(() => {
-    async function fetchRandomSuggestions() {
-      let url = `/api/destination/random?count=8`;
-      const res = await fetch(url, { method: 'GET' });
-      const dests: Destination[] = await res.json();
-      setSuggestedDests(dests);
-    }
-    fetchRandomSuggestions();
-  }, []);
 
-  function handleSuggestionClick(dest: Destination) {
-    let destination: DestinationState = { id: dest.dest_id, name: dest.term };
-    setDestination(destination);
-    syncSearchBarToURL('/listing');
+  async function handleSuggestionClick(dest: Destination) {
+    setDestination({id: dest.dest_id, name: dest.term});
+    if (stayDates.checkinDate==null || stayDates.checkoutDate==null) {
+      let oneweek: Date = new Date();
+      let twoweek: Date = new Date();
+      oneweek.setDate(new Date().getDate()+7)
+      twoweek.setDate(new Date().getDate()+14)
+      setStayDates({checkinDate: oneweek, checkoutDate: twoweek})
+    }
+    setShouldRedirect(prev => !prev);
   }
 
   function handleSearchHotel() {
-    if (destination.id == '') {
-      return;
-    }
-    // navigate('/listing', {state: {destination: destination, occupancy: occupancy, stayDates: stayDates}})
-    syncSearchBarToURL('/listing');
+    if (destination.id=='') { return; }
+    syncSearchBarToURL('/listing')
   }
+  
+  const suggestedDests: Destination[] = [
+    {id: '', dest_id: 'A6Dz', term: 'Rome, Italy', lat: 0, lng: 0, type: '', state: ''},
+    {id: '', dest_id: 'eTo1', term: 'Seoul, Republic of Korea', lat: 0, lng: 0, type: '', state: ''},
+    {id: '', dest_id: 'jiHz', term: 'New York, NY, United States', lat: 0, lng: 0, type: '', state: ''},
+    {id: '', dest_id: '5qq3', term: 'Amsterdam, Netherlands', lat: 0, lng: 0, type: '', state: ''},
+    {id: '', dest_id: 'zjTT', term: 'Dublin, DUB, Ireland', lat: 0, lng: 0, type: '', state: ''},
+    {id: '', dest_id: 'vJh2', term: 'Paris, France', lat: 0, lng: 0, type: '', state: ''},
+    {id: '', dest_id: 'YCcf', term: 'Shanghai, China', lat: 0, lng: 0, type: '', state: ''},
+    {id: '', dest_id: 'YhrB', term: 'Gold Coast, QLD, Australia', lat: 0, lng: 0, type: '', state: ''}
+  ]
 
   return (
     <div className={styles.container}>
@@ -82,10 +90,11 @@ export default function HomePage() {
             occupancy={occupancy}
             setOccupancy={setOccupancy}
             onSubmit={handleSearchHotel}
-          />
+            />
         </div>
       </div>
-
+      
+      
       <div className={styles.destinationSuggestion}>
         <div className={styles.destinationSuggestionHeader}>
           Find Hotels in These Cities
@@ -97,7 +106,6 @@ export default function HomePage() {
           {suggestedDests.map((dest, index) => (
             <div className={styles.destinationSuggestionsItem}>
               <DestinationCard
-                url='https://d2ey9sqrvkqdfs.cloudfront.net/5CCH/0.jpg'
                 dest={dest}
                 onclick={handleSuggestionClick}
               />
@@ -105,16 +113,29 @@ export default function HomePage() {
           ))}
         </div>
       </div>
+      
 
       <footer className={styles.footer}>
-        <div className={styles.qualitiesHeader}>Why Choose Us</div>
+        <div className={styles.qualitiesHeader}>
+          Why Choose Us
+        </div>
         <div className={styles.qualitiesBox}>
           <div className={styles.qualityItem}>
-            Destinations from across the world
+            <img src='/homepage/locationpin.png' className={styles.qualityIcon}></img>
+            <div>Destinations from across the world</div>
           </div>
-          <div className={styles.qualityItem}>Experienced agents</div>
-          <div className={styles.qualityItem}>Buy or rent your home</div>
-          <div className={styles.qualityItem}>Cheapest prices available</div>
+          <div className={styles.qualityItem}>
+            <img src='/homepage/experience.png' className={styles.qualityIcon}></img>
+            <div>Experienced agents</div>
+          </div>
+          <div className={styles.qualityItem}>
+            <img src='/homepage/house.png' className={styles.qualityIcon}></img>
+            <div>Buy or rent your home</div>
+          </div>
+          <div className={styles.qualityItem}>
+            <img src='/homepage/dollar.png' className={styles.qualityIcon}></img>
+            <div>Cheapest prices available</div>
+          </div>
         </div>
       </footer>
     </div>

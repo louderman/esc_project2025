@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './pastbookingpage.module.css';
@@ -186,3 +187,4 @@ export default function PastBookingPage() {
     </div>
   );
 }
+

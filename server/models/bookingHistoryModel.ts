@@ -1,3 +1,4 @@
+
 import { pool } from '../database/db'; 
 
 const tableName = 'bookings';
@@ -24,5 +25,4 @@ async function getBookingHistory(userId?: string) {
     throw new Error('Failed to fetch bookings');
   }
 }
-
 export { getBookingHistory };
