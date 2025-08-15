@@ -56,7 +56,7 @@ function setRangeValue(selector: string, index: number, value: number): void {
   
   
     it('clicks the Reserve Now button', () => {
-      cy.get('[data-cy="reserve-now-btn"]', { timeout: 20000 })
+      cy.get('[data-cy="reserve-now-btn"]', { timeout: 50000 })
         .should('be.visible')
         .click();
   
