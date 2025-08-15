@@ -26,7 +26,6 @@ describe('User Model', () => {
   });
 
   // TC_USERMODEL_1: insertUser
-
   test('Input: Non-existing ("Shawn","Shawn@gmail.com","Shawn@123") → Output: Returns ID', async () => {
     const [result]: any = await insertUser(
       'Shawn',
@@ -44,7 +43,7 @@ describe('User Model', () => {
     expect(rows.length).toBe(1);
     expect(rows[0].name).toBe('Shawn');
     expect(rows[0].email).toBe('Shawn@gmail.com');
-    expect(await bcrypt.compare(rows[0].password, 'Shawn@123')).toBe(true);
+    expect(await bcrypt.compare('Shawn@123', rows[0].password)).toBe(true);
   });
 
   test('Input: Existing ("Shawn","Shawn@gmail.com","Shawn@123") again → Output: Error due to unique email', async () => {
@@ -63,22 +62,22 @@ describe('User Model', () => {
     }
   });
 
-  test('Input: One string empty ("", "Shawn@gmail.com", "Shawn@123") → Output: validation error message', () => {
-    expect(
-      async () => await insertUser('', 'Shawn@gmail.com', 'Shawn@123')
-    ).toThrow(
+  test('Input: One string empty ("", "Shawn@gmail.com", "Shawn@123") → Output: validation error message', async () => {
+    await expect(
+      insertUser('', 'Shawn@gmail.com', 'Shawn@123')
+    ).rejects.toThrow(
       'All fields (name, email, password) must be non-empty and trimmed.'
     );
   });
 
-  test('Input: Two strings empty ("", "", "Shawn@123") → Output: validation error message', () => {
-    expect(async () => await insertUser('', '', 'Shawn@123')).toThrow(
+  test('Input: Two strings empty ("", "", "Shawn@123") → Output: validation error message', async () => {
+    await expect(insertUser('', '', 'Shawn@123')).rejects.toThrow(
       'All fields (name, email, password) must be non-empty and trimmed.'
     );
   });
 
-  test('Input: All three empty ("", "", "") → Output: validation error message', () => {
-    expect(async () => await insertUser('', '', '')).toThrow(
+  test('Input: All three empty ("", "", "") → Output: validation error message', async () => {
+    await expect(insertUser('', '', '')).rejects.toThrow(
       'All fields (name, email, password) must be non-empty and trimmed.'
     );
   });
@@ -99,7 +98,7 @@ describe('User Model', () => {
     expect(typeof user!.id).toBe('number');
     expect(user).toHaveProperty('name', 'Alice');
     expect(user).toHaveProperty('email', 'Alice@gmail.com');
-    expect(user).toHaveProperty('password', 'Alice@123');
+    expect(await bcrypt.compare('Alice@123', user.password)).toBe(true);
   });
 
   test('Input: Non-existing "notAlice@gmail.com" → Output: null', async () => {
