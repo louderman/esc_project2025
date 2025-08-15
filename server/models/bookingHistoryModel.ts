@@ -1,3 +1,4 @@
+
 import { pool } from '../database/db'; 
 
 const tableName = 'bookings';
@@ -5,22 +6,23 @@ const tableName = 'bookings';
 //Filter by userId
 async function getBookingHistory(userId?: string) {
   try {
-    let query = `SELECT id, userId, hotelName, checkInDate, checkOutDate, status, imageUrl, createdAt, bookingAddress FROM ${tableName}`;
+    if (!userId) {
+      console.log('No userId provided to getBookingHistory');
+      return [];
+    }
+
+    let query = `SELECT id, userId, hotelName, checkInDate, checkOutDate, status, imageUrl, createdAt, hotelAddress, numberOfNights, numberOfRooms, adults, children, totalAmount FROM ${tableName}`;
     let params: any[] = [];
     
-    if (userId) {
-      query += ` WHERE userId = ?`;
-      params.push(userId);
-    }
-    
+    query += ` WHERE userId = ?`;
+    params.push(userId);
     query += ` ORDER BY createdAt DESC`;
     
     const [rows] = await pool.query(query, params);
     return rows;
   } catch (error) {
     console.error('Error fetching booking history:', error);
-    return [];
+    throw new Error('Failed to fetch bookings');
   }
 }
-
 export { getBookingHistory };

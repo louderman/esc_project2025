@@ -60,7 +60,7 @@ const HotelImageGallery = ({ images, hotelName }: HotelImageGalleryProps) => {
   }
 
   return (
-    <div className="relative">
+    <div className="relative" data-cy="hotel-images">
       <div className="aspect-[4/3] overflow-hidden rounded-lg">
         <img 
           src={galleryImages[currentImage]} 

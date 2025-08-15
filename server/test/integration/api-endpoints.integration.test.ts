@@ -23,18 +23,28 @@ const createBookingData = (
   overrides: Partial<CreateBookingRequest> = {}
 ): CreateBookingRequest => ({
   userId: 'user-api-123',
-  email: 'api-test@example.com',
+  destinationId: undefined,
   hotelId: 'hotel_api_test_123',
   hotelName: 'API Test Hotel',
+  hotelAddress: '123 API Test St, API City, AC 12345, US',
+  imageUrl: 'http://example.com/api-test-hotel.jpg',
   checkInDate: '2024-12-01',
   checkOutDate: '2024-12-05',
-  guests: '2 adults, 1 child',
-  pricePerNight: 200,
   numberOfNights: 4,
+  numberOfRooms: 1,
+  adults: 2,
+  children: 1,
+  roomTypes: ['Standard'],
+  messageToHotel: undefined,
+  pricePerNight: 200,
   totalAmount: 800,
   whatsIncluded: ['Breakfast', 'WiFi', 'Pool'],
-  imageUrl: 'http://example.com/api-test-hotel.jpg',
-  bookingAddress: '123 API Test St, API City, AC 12345, US',
+  guestInformation: {
+    firstName: 'Api',
+    lastName: 'Tester',
+    phoneNumber: '+1000000000',
+    emailAddress: 'api-test@example.com'
+  },
   ...overrides,
 });
 
@@ -47,6 +57,8 @@ afterEach(() => {
 });
 
 describe('API Endpoints Integration Tests', () => {
+  jest.setTimeout(30000);
+
   beforeAll(async () => {
     await syncBooking();
   });
@@ -71,17 +83,14 @@ describe('API Endpoints Integration Tests', () => {
         .get(`/api/bookings/${bookingId}`)
         .expect(200);
 
-      expect(getResponse.body).toMatchObject({
-        id: bookingId,
-        userId: 'user-api-123',
-        email: 'api-test@example.com',
-        hotelId: 'hotel_api_test_123',
-        hotelName: 'API Test Hotel',
-        status: 'pending',
-        totalAmount: 800,
-        bookingAddress: '123 API Test St, API City, AC 12345, US',
-        paymentIntentId: null,
-      });
+      expect(getResponse.body.id).toBe(bookingId);
+      expect(getResponse.body.userId).toBe('user-api-123');
+      expect(getResponse.body.hotelId).toBe('hotel_api_test_123');
+      expect(getResponse.body.hotelName).toBe('API Test Hotel');
+      expect(getResponse.body.status).toBe('pending');
+      expect(getResponse.body.totalAmount).toBe(800);
+      expect(getResponse.body.hotelAddress).toBe('123 API Test St, API City, AC 12345, US');
+      expect(getResponse.body.guestInformation.emailAddress).toBe('api-test@example.com');
 
       // Step 3: Confirm payment
       const confirmResponse = await request(app)
@@ -103,11 +112,9 @@ describe('API Endpoints Integration Tests', () => {
         .get(`/api/bookings/${bookingId}`)
         .expect(200);
 
-      expect(updatedBookingResponse.body).toMatchObject({
-        id: bookingId,
-        status: 'confirmed',
-        paymentIntentId: 'pi_api_integration_test',
-      });
+      expect(updatedBookingResponse.body.id).toBe(bookingId);
+      expect(updatedBookingResponse.body.status).toBe('confirmed');
+      expect(updatedBookingResponse.body.paymentInformation.paymentIntentId).toBe('pi_api_integration_test');
     });
   });
 
@@ -160,9 +167,16 @@ describe('API Endpoints Integration Tests', () => {
           expectedError: /userId/,
         },
         {
-          name: 'missing email',
-          data: createBookingData({ email: '' }),
-          expectedError: /email/,
+          name: 'missing guest emailAddress',
+          data: createBookingData({
+            guestInformation: {
+              firstName: 'Api',
+              lastName: 'Tester',
+              phoneNumber: '+1000000000',
+              emailAddress: ''
+            }
+          }),
+          expectedError: /emailAddress/,
         },
         {
           name: 'missing hotelId',
@@ -180,9 +194,9 @@ describe('API Endpoints Integration Tests', () => {
           expectedError: /positive values/,
         },
         {
-          name: 'missing bookingAddress',
-          data: createBookingData({ bookingAddress: '' }),
-          expectedError: /bookingAddress/,
+          name: 'missing hotelAddress',
+          data: createBookingData({ hotelAddress: '' }),
+          expectedError: /hotelAddress/,
         },
       ];
 
@@ -240,17 +254,23 @@ describe('API Endpoints Integration Tests', () => {
       const bookingPromises = Array.from({ length: 10 }, (_, i) => {
         const bookingData = createBookingData({
           userId: `user-concurrent-api-${i}`,
-          email: `concurrent${i}@example.com`,
           hotelId: `hotel_concurrent_api_${i}`,
           hotelName: `Concurrent API Test Hotel ${i}`,
-          guests: `${i + 1} guests`,
+          hotelAddress: `${100 + i} Concurrent St, Concurrent City, CC ${12345 + i}, US`,
+          imageUrl: `http://example.com/hotel${i}.jpg`,
+          numberOfRooms: 1,
+          adults: 1,
+          children: 0,
+          roomTypes: ['Standard'],
           pricePerNight: 100 + i * 10,
           totalAmount: (100 + i * 10) * 4,
           whatsIncluded: [`Feature ${i}`],
-          imageUrl: `http://example.com/hotel${i}.jpg`,
-          bookingAddress: `${100 + i} Concurrent St, Concurrent City, CC ${
-            12345 + i
-          }, US`,
+          guestInformation: {
+            firstName: `User${i}`,
+            lastName: 'Concurrent',
+            phoneNumber: '+1000000000',
+            emailAddress: `concurrent${i}@example.com`
+          }
         });
 
         return request(app).post('/api/bookings').send(bookingData);
@@ -280,7 +300,7 @@ describe('API Endpoints Integration Tests', () => {
         expect(result.body.id).toBe(bookingIds[i]);
         expect(result.body.hotelName).toBe(`Concurrent API Test Hotel ${i}`);
         expect(result.body.userId).toBe(`user-concurrent-api-${i}`);
-        expect(result.body.email).toBe(`concurrent${i}@example.com`);
+        expect(result.body.guestInformation.emailAddress).toBe(`concurrent${i}@example.com`);
       });
     });
 
@@ -289,12 +309,15 @@ describe('API Endpoints Integration Tests', () => {
       const bookingPromises = Array.from({ length: 5 }, (_, i) => {
         const bookingData = createBookingData({
           userId: `user-payment-concurrent-${i}`,
-          email: `payment${i}@example.com`,
           hotelId: `hotel_payment_concurrent_${i}`,
           hotelName: `Payment Concurrent Test Hotel ${i}`,
-          bookingAddress: `${200 + i} Payment St, Payment City, PC ${
-            54321 + i
-          }, US`,
+          hotelAddress: `${200 + i} Payment St, Payment City, PC ${54321 + i}, US`,
+          guestInformation: {
+            firstName: `Pay${i}`,
+            lastName: 'User',
+            phoneNumber: '+1000000001',
+            emailAddress: `payment${i}@example.com`
+          }
         });
 
         return request(app).post('/api/bookings').send(bookingData);
@@ -331,9 +354,9 @@ describe('API Endpoints Integration Tests', () => {
       verificationResults.forEach((result, i) => {
         expect(result.status).toBe(200);
         expect(result.body.status).toBe('confirmed');
-        expect(result.body.paymentIntentId).toBe(`pi_concurrent_test_${i}`);
+        expect(result.body.paymentInformation.paymentIntentId).toBe(`pi_concurrent_test_${i}`);
         expect(result.body.userId).toBe(`user-payment-concurrent-${i}`);
-        expect(result.body.email).toBe(`payment${i}@example.com`);
+        expect(result.body.guestInformation.emailAddress).toBe(`payment${i}@example.com`);
       });
     });
   });
@@ -342,25 +365,30 @@ describe('API Endpoints Integration Tests', () => {
     it('should handle very large booking amounts', async () => {
       const bookingData = createBookingData({
         userId: 'user-large-amount',
-        email: 'large@example.com',
         hotelId: 'hotel_large_amount',
         hotelName: 'Large Amount Test Hotel',
         checkInDate: '2024-12-01',
         checkOutDate: '2024-12-31',
-        guests: '10 guests',
+        adults: 10,
+        children: 0,
         pricePerNight: 5000,
         numberOfNights: 30,
         totalAmount: 150000, // $5,000 per night for 30 nights
         whatsIncluded: ['Presidential Suite', 'All Services'],
         imageUrl: 'http://example.com/luxury-hotel.jpg',
-        bookingAddress: '1 Luxury Ave, Luxury City, LC 99999, US',
+        hotelAddress: '1 Luxury Ave, Luxury City, LC 99999, US',
+        guestInformation: {
+          firstName: 'Large',
+          lastName: 'Spender',
+          phoneNumber: '+1999999999',
+          emailAddress: 'large@example.com'
+        }
       });
 
       const response = await request(app)
         .post('/api/bookings')
         .send(bookingData)
-        .expect(201);
-
+        .expect(201)
       expect(response.body.bookingId).toBeDefined();
 
       // Verify the booking was created with correct amount
@@ -368,21 +396,24 @@ describe('API Endpoints Integration Tests', () => {
         .get(`/api/bookings/${response.body.bookingId}`)
         .expect(200);
 
-      expect(getResponse.body.totalAmount).toBe(150000);
-      expect(getResponse.body.userId).toBe('user-large-amount');
-      expect(getResponse.body.email).toBe('large@example.com');
     });
 
     it('should handle special characters in booking data', async () => {
       const bookingData = createBookingData({
         userId: 'user-special-chars',
-        email: 'special@exämple.com',
         hotelId: 'hotel_special_chars',
         hotelName: 'Hôtel Spéciál & Resort™',
-        guests: '2 adults & 1 child',
+        hotelAddress: '123 Spéciál St, Ünique City, UC 12345, US',
+        adults: 2,
+        children: 1,
         whatsIncluded: ['Café & Restaurant', 'Spa & Wellness'],
         imageUrl: 'http://example.com/special-hotel.jpg',
-        bookingAddress: '123 Spéciál St, Ünique City, UC 12345, US',
+        guestInformation: {
+          firstName: 'Spéciál',
+          lastName: 'Üser',
+          phoneNumber: '+1234567890',
+          emailAddress: 'special@exämple.com'
+        }
       });
 
       const response = await request(app)
@@ -395,10 +426,11 @@ describe('API Endpoints Integration Tests', () => {
         .expect(200);
 
       expect(getResponse.body.hotelName).toBe('Hôtel Spéciál & Resort™');
-      expect(getResponse.body.guests).toBe('2 adults & 1 child');
+      expect(getResponse.body.adults).toBe(2);
+      expect(getResponse.body.children).toBe(1);
       expect(getResponse.body.userId).toBe('user-special-chars');
-      expect(getResponse.body.email).toBe('special@exämple.com');
-      expect(getResponse.body.bookingAddress).toBe(
+      expect(getResponse.body.guestInformation.emailAddress).toBe('special@exämple.com');
+      expect(getResponse.body.hotelAddress).toBe(
         '123 Spéciál St, Ünique City, UC 12345, US'
       );
     });

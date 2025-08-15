@@ -165,7 +165,7 @@ const HotelInfo = ({ hotel }: HotelInfoProps) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-cy="hotel-info">
       {/* Hotel Overview */}
       <Card>
         <CardHeader>
