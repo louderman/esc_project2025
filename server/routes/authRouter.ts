@@ -1,5 +1,6 @@
 import express from 'express';
 import { insertUser, findByEmail, deleteById } from '../models/userModel';
+import bcrypt from 'bcrypt';
 
 const router = express.Router();
 
@@ -13,13 +14,14 @@ router.post('/register', function (req, res) {
   }
 
   findByEmail(email.trim())
-    .then((existingUser) => {
+    .then(async (existingUser) => {
+      // ugly async^
       if (existingUser) {
         res.status(400).json({ message: 'Email already exists.' });
         return null; // stop chain
       }
 
-      return insertUser(name.trim(), email.trim(), password.trim());
+      return await insertUser(name.trim(), email.trim(), password.trim());
     })
     .then((result) => {
       if (result === null) return;
@@ -41,8 +43,9 @@ router.post('/login', function (req, res) {
   }
 
   findByEmail(email.trim())
-    .then((user) => {
-      if (!user || user.password !== password.trim()) {
+    .then(async (user) => {
+      // ugly async^
+      if (!user || (await bcrypt.compare(user.password, password.trim()))) {
         res.status(401).json({ message: 'Invalid email or password.' });
         return null;
       }
