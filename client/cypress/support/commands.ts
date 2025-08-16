@@ -9,6 +9,10 @@ Cypress.Commands.add(
   }
 );
 
+// Custom command to handle Stripe Elements
+Cypress.Commands.add('stripeElements', () => {
+  return cy.get('[data-testid="stripe-element"]').should('exist');
+});
 
 /// <reference types="cypress" />
 // ***********************************************

@@ -1,11 +1,11 @@
 import { Button } from "@/components/hotel/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/hotel/ui/card";
 import { Label } from "@/components/hotel/ui/label";
+import { getImageWithFallback } from "@/utils/imageFallbacks";
 import { Calendar as CalendarIcon, MapPin, Star, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Calendar, { type StayDatesState } from "./Calendar";
-import { getImageWithFallback } from "@/utils/imageFallbacks";
 
 interface AvailabilityInfo {
   requestedRooms: number;
@@ -543,11 +543,12 @@ const BookingCard = ({
       'hotel'
     );
 
-    // Prepare booking details
+    // Prepare booking details - ensure consistent data structure
     const bookingDetails = {
       selectedRoom: selectedRoom ? {
         id: selectedRoom.id,
-        room_type: selectedRoom.room_type,
+        room_type: selectedRoom.room_type, // Use room_type consistently
+        roomType: selectedRoom.room_type, // Also provide roomType for backward compatibility
         price: price / numberOfNights, // Price per night
         totalPrice: price, // Total price for the stay
         free_cancellation: selectedRoom.free_cancellation,
@@ -559,7 +560,8 @@ const BookingCard = ({
         image: selectedRoom.image // Add the image property from selectedRoom
       } : {
         id: hotelId || 'default',
-        room_type: 'Standard Room',
+        room_type: 'Standard Room', // Use room_type consistently
+        roomType: 'Standard Room', // Also provide roomType for backward compatibility
         price: price / numberOfNights, // Price per night
         totalPrice: price, // Total price for the stay
         free_cancellation: true,
@@ -577,11 +579,13 @@ const BookingCard = ({
       },
       numberOfNights: numberOfNights,
       numberOfRooms: rooms,
+      // Keep dates in YYYY-MM-DD format (no conversion needed)
       checkinDate: checkin,
       checkoutDate: checkout,
       totalAmount: totalAmount,
       pricePerNight: price / numberOfNights,
-      hotelImage: hotelImage // Add hotel image to booking details
+      hotelImage: hotelImage, // Single hotel image for backward compatibility
+      hotelImages: hotelImages // Array of hotel images
     };
 
     // Navigate to booking page with state
@@ -854,7 +858,6 @@ const BookingCard = ({
               className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-4 text-lg rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105" 
               size="lg"
               onClick={handleReserveNow}
-              data-cy="reserve-now-btn"
             >
               Reserve Now
             </Button>

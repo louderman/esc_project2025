@@ -101,6 +101,7 @@ export default function DestinationInput({
         placeholder='Destination'
         value={destination.name ?? ''}
         onChange={handleOnChange}
+        data-testid='destination-input'
       />
       {showSuggestions && (
         <ul className={styles.suggestionContainer}>
@@ -111,6 +112,7 @@ export default function DestinationInput({
                 setDestination({ id: dest.dest_id, name: dest.term })
               }
               className={styles.suggestionItem}
+              data-testid="destination-suggestions-dropdown"
             >
               <img src='/listing/destination_gray.svg' />
               <div className={styles.itemTextSection}>

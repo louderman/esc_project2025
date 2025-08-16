@@ -6,9 +6,18 @@
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
     "server": "cd server && npm run dev",
-    "client": "cd client && npm run dev"
+    "client": "cd client && npm run dev",
+    "start": "concurrently \"npm run start:server\" \"npm run start:client\"",
+    "start:server": "cd server && npm run start",
+    "start:client": "cd client && npm run preview",
+    "build": "concurrently \"npm run build:server\" \"npm run build:client\"",
+    "build:server": "cd server && npm run build",
+    "build:client": "cd client && npm run build"
   },
   "dependencies": {
     "concurrently": "^9.2.0"
+  },
+  "devDependencies": {
+    "cypress-plugin-stripe-elements": "^1.0.2"
   }
 }

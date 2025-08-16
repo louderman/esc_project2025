@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import type { CreateBookingRequest } from '../../../types/Booking';
 import type { Hotel } from '../../../types/Hotel';
 import type { Price } from '../../../types/Price';
 import BookingForm from '../components/booking/BookingForm';
@@ -15,7 +16,7 @@ export default function BookingPage() {
   const location = useLocation();
   const { user } = useAuth();
   
-  // Get data from navigation state
+  // Get data from navigation state - updated structure to match BookingCard
   const stateData = location.state as {
     bookingDetails?: {
       selectedRoom: any;
@@ -26,11 +27,12 @@ export default function BookingPage() {
       };
       numberOfNights: number;
       numberOfRooms: number;
-      checkinDate: string;
-      checkoutDate: string;
+      checkinDate: string; // Already in YYYY-MM-DD format from BookingCard
+      checkoutDate: string; // Already in YYYY-MM-DD format from BookingCard
       totalAmount: number;
       pricePerNight: number;
       hotelImage?: string;
+      hotelImages?: string[]; // Array of hotel images
     };
     hotel?: {
       id: string;
@@ -121,15 +123,23 @@ export default function BookingPage() {
   };
 
   // Initialize states with passed booking details if available
-  const [stayDates, setStayDates] = useState<StayDatesState>({
-    checkinDate: stateData.bookingDetails?.checkinDate ? new Date(stateData.bookingDetails.checkinDate) : null,
-    checkoutDate: stateData.bookingDetails?.checkoutDate ? new Date(stateData.bookingDetails.checkoutDate) : null,
+  // Keep dates as Date objects for internal state management, but use string format for API
+  const [stayDates, setStayDates] = useState<StayDatesState>(() => {
+    const checkinStr = stateData?.bookingDetails?.checkinDate;
+    const checkoutStr = stateData?.bookingDetails?.checkoutDate;
+    
+    return {
+      checkinDate: checkinStr ? new Date(checkinStr + 'T00:00:00') : null, // Add time to avoid timezone issues
+      checkoutDate: checkoutStr ? new Date(checkoutStr + 'T00:00:00') : null,
+    };
   });
+  
   const [occupancy, setOccupancy] = useState<OccupancyState>({
-    adults: stateData.bookingDetails?.numberOfGuests?.adults ?? 2,
-    children: stateData.bookingDetails?.numberOfGuests?.children ?? 0,
-    rooms: stateData.bookingDetails?.numberOfRooms ?? 1,
+    adults: stateData?.bookingDetails?.numberOfGuests?.adults ?? 2,
+    children: stateData?.bookingDetails?.numberOfGuests?.children ?? 0,
+    rooms: stateData?.bookingDetails?.numberOfRooms ?? 1,
   });
+  
   const [destination, setDestination] = useState<DestinationState>({
     id: '',
     name: '',
@@ -157,8 +167,8 @@ export default function BookingPage() {
     fetchDestination();
   }, []);
 
-  // Use passed booking details for calculations
-  const numberOfNights = stateData.bookingDetails?.numberOfNights ?? (
+  // Use passed booking details for calculations - prioritize passed data
+  const numberOfNights = stateData?.bookingDetails?.numberOfNights ?? (
     stayDates.checkinDate && stayDates.checkoutDate
       ? Math.ceil(
           (stayDates.checkoutDate.getTime() - stayDates.checkinDate.getTime()) /
@@ -170,11 +180,8 @@ export default function BookingPage() {
   // Get hotel images - prioritize from booking details, then from hotel data, then fallback
   const getHotelImages = (): string[] => {
     // Check if images are passed through booking details (from BookingCard)
-    if (stateData?.bookingDetails && 'hotelImages' in stateData.bookingDetails) {
-      const hotelImages = (stateData.bookingDetails as any).hotelImages;
-      if (Array.isArray(hotelImages) && hotelImages.length > 0) {
-        return hotelImages;
-      }
+    if (stateData?.bookingDetails?.hotelImages && Array.isArray(stateData.bookingDetails.hotelImages) && stateData.bookingDetails.hotelImages.length > 0) {
+      return stateData.bookingDetails.hotelImages;
     }
     
     // Check if hotel has image_details for multiple images
@@ -199,6 +206,25 @@ export default function BookingPage() {
 
   const hotelImages = getHotelImages();
 
+  // Helper function to format date for display
+  const formatDateForDisplay = (date: Date | null): string => {
+    if (!date) return 'N/A';
+    return date.toLocaleDateString('en-US', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
+  // Helper function to format date for API (YYYY-MM-DD)
+  const formatDateForAPI = (date: Date | null): string => {
+    if (!date) return 'N/A';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Consolidated bookingDetails object that serves both BookingReview and PaymentForm
   const bookingDetails = {
     // Hotel information
@@ -208,42 +234,30 @@ export default function BookingPage() {
     images: hotelImages,
     imageUrl: hotelImages[0], // Keep for backward compatibility with PaymentForm
     
-    // Date information
-    checkInDate: stayDates.checkinDate
-      ? stayDates.checkinDate.toLocaleDateString('en-US', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        })
-      : 'N/A',
-    checkOutDate: stayDates.checkoutDate
-      ? stayDates.checkoutDate.toLocaleDateString('en-US', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        })
-      : 'N/A',
+    // Date information - formatted for display
+    checkInDate: formatDateForDisplay(stayDates.checkinDate),
+    checkOutDate: formatDateForDisplay(stayDates.checkoutDate),
     
     // Guest and room information
     guests: `${occupancy.rooms} room${occupancy.rooms > 1 ? 's' : ''} · ${
       occupancy.adults + occupancy.children
     } guest${occupancy.adults + occupancy.children > 1 ? 's' : ''}`,
-    numberOfRooms: stateData.bookingDetails?.numberOfRooms ?? occupancy.rooms,
+    numberOfRooms: stateData?.bookingDetails?.numberOfRooms ?? occupancy.rooms,
     numberOfNights,
     
     // Pricing information
-    pricePerNight: Math.round((stateData.bookingDetails?.pricePerNight ?? hotel.price) * 100) / 100,
-    totalAmount: stateData.bookingDetails?.totalAmount ?? ((stateData.bookingDetails?.pricePerNight ?? hotel.price) * numberOfNights),
+    pricePerNight: Math.round((stateData?.bookingDetails?.pricePerNight ?? hotel.price) * 100) / 100,
+    totalAmount: stateData?.bookingDetails?.totalAmount ?? ((stateData?.bookingDetails?.pricePerNight ?? hotel.price) * numberOfNights),
     
     // User information
     userId: user ? String(user.id) : '',
     email: user ? user.email : '',
     
     // Additional booking information
-    whatsIncluded: stateData.bookingDetails?.selectedRoom?.amenities ?? Object.entries(hotel.amenities)
+    whatsIncluded: stateData?.bookingDetails?.selectedRoom?.amenities ?? Object.entries(hotel.amenities)
       .filter(([_, value]) => value)
       .map(([key]) => key.replace(/([A-Z])/g, ' $1').trim()),
-    selectedRoom: stateData.bookingDetails?.selectedRoom,
+    selectedRoom: stateData?.bookingDetails?.selectedRoom,
   };
 
   const handlePaymentSuccess = () => {
@@ -255,29 +269,48 @@ export default function BookingPage() {
     console.error('Payment failed:', error);
   };
 
+  // Create proper CreateBookingRequest format for PaymentForm
+  const createBookingRequestData: CreateBookingRequest = {
+    userId: bookingDetails.userId,
+    destinationId: destination.id || undefined, // Include destination ID from search context
+    hotelId: bookingDetails.hotelId,
+    hotelName: bookingDetails.hotelName,
+    hotelAddress: bookingDetails.hotelAddress,
+    imageUrl: bookingDetails.imageUrl,
+    // Use API format for dates (YYYY-MM-DD)
+    checkInDate: formatDateForAPI(stayDates.checkinDate),
+    checkOutDate: formatDateForAPI(stayDates.checkoutDate),
+    numberOfNights: bookingDetails.numberOfNights,
+    numberOfRooms: bookingDetails.numberOfRooms,
+    adults: occupancy.adults,
+    children: occupancy.children,
+    // Ensure roomTypes is always an array - extract room type from selectedRoom
+    roomTypes: bookingDetails.selectedRoom?.room_type ? [bookingDetails.selectedRoom.room_type] : 
+               bookingDetails.selectedRoom?.roomType ? [bookingDetails.selectedRoom.roomType] : 
+               ['Standard'],
+    messageToHotel: undefined, // Will be filled by guest's special requests in PaymentForm
+    pricePerNight: bookingDetails.pricePerNight,
+    totalAmount: bookingDetails.totalAmount,
+    whatsIncluded: bookingDetails.whatsIncluded,
+    // Initialize proper guestInformation structure - will be filled by PaymentForm
+    guestInformation: {
+      firstName: '',
+      lastName: '',
+      phoneNumber: '',
+      emailAddress: bookingDetails.email,
+      specialRequests: undefined
+    }
+  };
+
   const policyDetails = {
     guaranteePolicy: 'Credit Card is required at the time of booking.',
     cancelPolicy:
       'Reservation must be cancelled by 3pm local time 1 day before arrival to avoid penalty of 1 night room and tax.',
     costPerNight: bookingDetails.pricePerNight,
     numberOfNights: bookingDetails.numberOfNights,
-    bookingData: {
-      userId: bookingDetails.userId,
-      email: bookingDetails.email,
-      hotelId: bookingDetails.hotelId,
-      hotelName: bookingDetails.hotelName,
-      checkInDate: bookingDetails.checkInDate,
-      checkOutDate: bookingDetails.checkOutDate,
-      guests: bookingDetails.guests,
-      pricePerNight: bookingDetails.pricePerNight,
-      numberOfNights: bookingDetails.numberOfNights,
-      totalAmount: bookingDetails.totalAmount,
-      whatsIncluded: bookingDetails.whatsIncluded,
-      imageUrl: bookingDetails.imageUrl,
-      bookingAddress: bookingDetails.hotelAddress,
-    },
+    bookingData: createBookingRequestData,
     selectedRoom: bookingDetails.selectedRoom,
-    hotelImages: hotelImages, // Add hotel images array
+    hotelImages: hotelImages,
     onPaymentSuccess: handlePaymentSuccess,
     onPaymentError: handlePaymentError,
   };
