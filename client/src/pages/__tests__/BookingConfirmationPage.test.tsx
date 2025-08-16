@@ -1,7 +1,7 @@
-import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import BookingConfirmation from '.././BookingConfirmationPage';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { describe, expect, it, vi } from 'vitest';
+import BookingConfirmation from '.././BookingConfirmationPage';
 
 // Mock useLocation to provide test data
 vi.mock('react-router-dom', async () => {
@@ -19,8 +19,8 @@ vi.mock('react-router-dom', async () => {
           image_details: { prefix: '/img/', suffix: '.jpg' },
         },
         stayDates: {
-          checkinDate: new Date('2025-08-10'),
-          checkoutDate: new Date('2025-08-12'),
+          checkinDate: new Date('10 August 2025'),
+          checkoutDate: new Date('12 August 2025'),
         },
       },
     }),
@@ -37,7 +37,7 @@ describe('BookingConfirmationPage', () => {
       </MemoryRouter>
     );
     expect(screen.getByText('10 August 2025')).to.exist;
-    expect(screen.getByText('Check-in Date')).to.exist;
+    expect(screen.getByText('Check-in')).to.exist;
   });
 });
 
