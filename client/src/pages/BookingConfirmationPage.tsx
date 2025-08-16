@@ -234,8 +234,8 @@ export default function BookingConfirmation() {
           />
           {imageCount > 1 && (
             <>
-              <button onClick={goPrev} className={`${styles.carouselArrow} ${styles.leftArrow}`}>&#8592;</button>
-              <button onClick={goNext} className={`${styles.carouselArrow} ${styles.rightArrow}`}>&#8594;</button>
+              <button onClick={goPrev} className={`${styles.carouselArrow} ${styles.leftArrow}`}data-testid='leftbuttonclick'>&#8592;</button>
+              <button onClick={goNext} className={`${styles.carouselArrow} ${styles.rightArrow}`}data-testid='rightbuttonclick'>&#8594;</button>
               <div className={styles.carouselIndicator}>{currentIndex + 1} / {imageCount}</div>
             </>
           )}
