@@ -1,11 +1,9 @@
-// src/pages/__tests__/BookingPage.integration.test.tsx
+
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// --- Provide a safe Stripe context so BookingForm/PaymentForm won't crash on render
 vi.mock('@stripe/react-stripe-js', () => {
-  const React = require('react');
   return {
     Elements: ({ children }: any) => <div data-testid="Elements">{children}</div>,
     useStripe: () => ({ createPaymentMethod: vi.fn().mockResolvedValue({}) }),
@@ -14,9 +12,6 @@ vi.mock('@stripe/react-stripe-js', () => {
     loadStripe: vi.fn(),
   };
 });
-
-// IMPORTANT: do NOT mock BookingForm / SelectedRoomCard / BookingReview here.
-// We want to assert against the real DOM (your components render data-cy attributes).
 
 import BookingPage from '../BookingPage';
 
