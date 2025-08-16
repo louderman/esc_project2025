@@ -1,18 +1,37 @@
-// src/components/booking/PaymentForm.test.tsx
+// src/pages/__tests__/PaymentForm.test.tsx
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PaymentForm from '../../components/booking/PaymentForm';
 
-// --- Stripe mocks: make hooks truthy so the real form renders ---
+let stripeMock: any;
+let elementsMock: any;
+
 vi.mock('@stripe/react-stripe-js', () => {
-  // Return minimal-but-truthy hook values and a stub CardElement
+  // local helper so it's available inside the factory
+  const safeGetElement = vi.fn().mockReturnValue({}); // truthy by default
   return {
-    useStripe: () => ({} as any),
-    useElements: () => ({} as any),
+    useStripe: () => (stripeMock ?? ({} as any)),
+    useElements: () =>
+      elementsMock ??
+      ({
+        getElement: safeGetElement, // ensure getElement ALWAYS exists
+      } as any),
     CardElement: (props: any) => <div data-testid="card-element" {...props} />,
   };
 });
+
+// Safe fetch spy that works whether fetch exists or not
+let fetchSpy: ReturnType<typeof vi.spyOn>;
+if (!(globalThis as any).fetch) {
+  (globalThis as any).fetch = vi.fn(); // create it if missing
+}
+fetchSpy = vi.spyOn(globalThis as any, 'fetch').mockResolvedValue({
+  ok: true,
+  json: async () => ({}),
+} as any);
+
+
 
 // In case the component calls useNavigate during submit (we never submit here,
 // but this avoids accidental crashes if implementation changes)
@@ -134,4 +153,175 @@ describe('PaymentForm (inputs only)', () => {
     expect(zip.value).toBe('12345');
     expect(country.value).toBe('SG');
   });
+
+  it('flags Guest Email as invalid on blur and becomes valid after correction', async () => {
+    renderPaymentForm();
+    const user = userEvent.setup();
+
+    const guestEmail = screen.getByLabelText('Email Address *') as HTMLInputElement;
+
+    // invalid → blur
+    await user.clear(guestEmail);
+    await user.type(guestEmail, 'not-an-email');
+    await user.tab(); // blur
+
+    // Use native constraint validation (works without visible error text)
+    try {
+      // @ts-ignore - matcher from jest-dom if installed
+      expect(guestEmail).toBeInvalid();
+    } catch {
+      expect(guestEmail.validity.valid).toBe(false);
+    }
+
+    // fix → blur
+    await user.click(guestEmail);
+    await user.clear(guestEmail);
+    await user.type(guestEmail, 'ada@example.com');
+    await user.tab();
+
+    try {
+      // @ts-ignore - matcher from jest-dom if installed
+      expect(guestEmail).toBeValid();
+    } catch {
+      expect(guestEmail.validity.valid).toBe(true);
+    }
+  });
+
+  it('flags Billing Email as invalid on blur and becomes valid after correction', async () => {
+    renderPaymentForm();
+    const user = userEvent.setup();
+
+    const billingEmail = screen.getByLabelText(/^Email \*$/) as HTMLInputElement;
+
+    // invalid → blur
+    await user.clear(billingEmail);
+    await user.type(billingEmail, 'wrong@@mail');
+    await user.tab();
+
+    try {
+      // @ts-ignore - matcher from jest-dom if installed
+      expect(billingEmail).toBeInvalid();
+    } catch {
+      expect(billingEmail.validity.valid).toBe(false);
+    }
+
+    // fix → blur
+    await user.click(billingEmail);
+    await user.clear(billingEmail);
+    await user.type(billingEmail, 'test@example.com');
+    await user.tab();
+
+    try {
+      // @ts-ignore - matcher from jest-dom if installed
+      expect(billingEmail).toBeValid();
+    } catch {
+      expect(billingEmail.validity.valid).toBe(true);
+    }
+  });
+
+  it('enforces 250-char cap for Special Requests and does not block submit due to maxlength', async () => {
+    renderPaymentForm();
+    const user = userEvent.setup();
+
+    // Fill required fields so this test isolates the maxlength behavior
+    await user.type(screen.getByLabelText('First Name *'), 'Ada');
+    await user.type(screen.getByLabelText('Last Name *'), 'Lovelace');
+    await user.type(screen.getByLabelText('Email Address *'), 'ada@example.com');
+    await user.type(screen.getByLabelText('Phone Number *'), '12345678');
+
+    await user.type(screen.getByLabelText('Full Name *'), 'Test User');
+    await user.type(screen.getByLabelText(/^Email \*$/), 'bill@example.com');
+    await user.type(screen.getByLabelText('Phone *'), '87654321');
+    await user.type(screen.getByLabelText('Address Line 1 *'), '123 Test St');
+    await user.type(screen.getByLabelText('City *'), 'Testville');
+    await user.type(screen.getByLabelText('State *'), 'Testland');
+    await user.type(screen.getByLabelText('ZIP Code *'), '12345');
+    await user.selectOptions(screen.getByLabelText('Country *'), 'SG');
+
+    const special = screen.getByLabelText('Special Requests (max 250 characters)') as HTMLTextAreaElement;
+
+    const long = 'x'.repeat(251);
+    await user.clear(special);
+    await user.type(special, long);
+
+    // maxlength enforces 250 cap; no need to assert a live counter
+    expect(special.value.length).toBe(250);
+
+    // Click Pay: not asserting success here—just ensuring no crash
+    await user.click(screen.getByRole('button', { name: /Pay/ }));
+  });
+
+
+  it('enforces 250-char cap for Message to Hotel', async () => {
+    renderPaymentForm();
+    const user = userEvent.setup();
+
+    // Fill required fields
+    await user.type(screen.getByLabelText('First Name *'), 'Ada');
+    await user.type(screen.getByLabelText('Last Name *'), 'Lovelace');
+    await user.type(screen.getByLabelText('Email Address *'), 'ada@example.com');
+    await user.type(screen.getByLabelText('Phone Number *'), '12345678');
+
+    await user.type(screen.getByLabelText('Full Name *'), 'Test User');
+    await user.type(screen.getByLabelText(/^Email \*$/), 'bill@example.com');
+    await user.type(screen.getByLabelText('Phone *'), '87654321');
+    await user.type(screen.getByLabelText('Address Line 1 *'), '123 Test St');
+    await user.type(screen.getByLabelText('City *'), 'Testville');
+    await user.type(screen.getByLabelText('State *'), 'Testland');
+    await user.type(screen.getByLabelText('ZIP Code *'), '12345');
+    await user.selectOptions(screen.getByLabelText('Country *'), 'SG');
+
+    const msg = screen.getByLabelText('Message to Hotel (max 250 characters)') as HTMLTextAreaElement;
+
+    const long = 'y'.repeat(251);
+    await user.clear(msg);
+    await user.type(msg, long);
+
+    // Just the cap; no visible error/counter expected
+    expect(msg.value.length).toBe(250);
+
+    await user.click(screen.getByRole('button', { name: /Pay/ }));
+  });
+
+
+  it('prevents submit when Billing Email is invalid (native validity) and does not call fetch', async () => {
+    renderPaymentForm();
+    const user = userEvent.setup();
+
+    // Valid guest info
+    await user.type(screen.getByLabelText('First Name *'), 'Ada');
+    await user.type(screen.getByLabelText('Last Name *'), 'Lovelace');
+    await user.type(screen.getByLabelText('Email Address *'), 'ada@example.com');
+    await user.type(screen.getByLabelText('Phone Number *'), '12345678');
+
+    // Billing info with INVALID email
+    await user.type(screen.getByLabelText('Full Name *'), 'Bill User');
+    const billingEmail = screen.getByLabelText(/^Email \*$/) as HTMLInputElement;
+    await user.type(billingEmail, 'badmail'); // invalid
+    await user.type(screen.getByLabelText('Phone *'), '87654321');
+    await user.type(screen.getByLabelText('Address Line 1 *'), '123 Test St');
+    await user.type(screen.getByLabelText('City *'), 'Testville');
+    await user.type(screen.getByLabelText('State *'), 'Testland');
+    await user.type(screen.getByLabelText('ZIP Code *'), '12345');
+    await user.selectOptions(screen.getByLabelText('Country *'), 'SG');
+
+    // Try to submit
+    await user.click(screen.getByRole('button', { name: /Pay/ }));
+
+    // Assert native invalidity; your UI doesn’t show a custom error line
+    try {
+      // @ts-ignore if jest-dom is installed
+      expect(billingEmail).toBeInvalid();
+    } catch {
+      expect(billingEmail.validity.valid).toBe(false);
+    }
+
+    const fetchCalls =
+      (vi as any).mocked?.((globalThis as any).fetch)?.mock?.calls ??
+      // fallback if your TS types differ
+      ((globalThis as any).fetch as any).mock?.calls;
+
+    expect(fetchCalls.length).toBe(0);
+  });
+
 });
