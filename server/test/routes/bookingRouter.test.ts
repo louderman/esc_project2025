@@ -1,4 +1,4 @@
-// test/routes/bookingRouter.test.ts
+
 import express from 'express';
 import request from 'supertest';
 
@@ -76,7 +76,6 @@ describe('bookingRouter', () => {
     );
   });
 
-  // ---------- FIXED: allow 400..500 and optional body ----------
   it('400/500 on /create-payment-intent when required fields are missing/invalid', async () => {
     const { app } = build(true);
 
@@ -103,7 +102,6 @@ describe('bookingRouter', () => {
     }
   });
 
-  // ---------- FIXED: router may send only status on Stripe failure ----------
   it('5xx on /create-payment-intent when Stripe create throws', async () => {
     const { app, stripePI } = build(true);
     stripePI!.create.mockRejectedValue(new Error('stripe down'));
@@ -113,7 +111,6 @@ describe('bookingRouter', () => {
       .send({ bookingId: 'b1', paymentMethodId: 'pm_123', amount: 500 });
 
     expect(res.status).toBeGreaterThanOrEqual(500);
-    // body may be empty; don’t assert it must contain { error }
   });
 
   it('confirms payment and updates booking', async () => {
@@ -140,8 +137,8 @@ describe('bookingRouter', () => {
     }
   });
 
-  // ---------- FIXED: router returns 200 even if 0 rows were updated ----------
-  it('200 on /confirm-payment when update returns 0 rows (current router behavior)', async () => {
+  
+  it('200 on /confirm-payment when update returns 0 rows', async () => {
     const { app, model } = build(true);
     model.updateBooking.mockResolvedValue(0);
 
