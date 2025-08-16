@@ -599,7 +599,7 @@ const PaymentForm = ({
           <h4>Card Details</h4>
           <div className={styles.formGroup}>
             <label>Card Information</label>
-            <div className={styles.cardElement} data-cy="billing-card-info">
+            <div className={styles.cardElement} data-cy="billing-card-info" id="card-element">
               <CardElement 
                 options={{
                   hidePostalCode: true,

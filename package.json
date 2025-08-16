@@ -16,5 +16,8 @@
   },
   "dependencies": {
     "concurrently": "^9.2.0"
+  },
+  "devDependencies": {
+    "cypress-plugin-stripe-elements": "^1.0.2"
   }
 }
