@@ -7,16 +7,18 @@ import PaymentForm from '../../components/booking/PaymentForm';
 let stripeMock: any;
 let elementsMock: any;
 
+// Create default no-op fns once so references are stable
+const defaultGetElement = vi.fn().mockReturnValue({});      // truthy card element
+const defaultCreatePM = vi.fn().mockResolvedValue({});      // { error: undefined }
+
 vi.mock('@stripe/react-stripe-js', () => {
-  // local helper so it's available inside the factory
-  const safeGetElement = vi.fn().mockReturnValue({}); // truthy by default
   return {
-    useStripe: () => (stripeMock ?? ({} as any)),
+    useStripe: () =>
+      // always return an object that has createPaymentMethod
+      (stripeMock ?? { createPaymentMethod: defaultCreatePM }),
     useElements: () =>
-      elementsMock ??
-      ({
-        getElement: safeGetElement, // ensure getElement ALWAYS exists
-      } as any),
+      // always return an object that has getElement
+      (elementsMock ?? { getElement: defaultGetElement }),
     CardElement: (props: any) => <div data-testid="card-element" {...props} />,
   };
 });
