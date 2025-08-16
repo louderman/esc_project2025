@@ -138,6 +138,7 @@ describe('Booking Page & Booking Confirmation End to End Test', () => {
     cy.get('#lastName').clear().type('Mirza');
     cy.get('#guestEmail').clear().type('danielmirza02@gmail.com');
     cy.get('#guestPhone').clear().type('1234567890');
+    cy.get('#specialRequests').clear().type('Extra blankets please!');
 
     // ---- Billing fields (non-Stripe) ----
     cy.get('[data-cy="billing-full-name"]').clear().type('Daniel Mirza');
@@ -191,6 +192,7 @@ describe('Booking Page & Booking Confirmation End to End Test', () => {
     cy.get('#lastName').clear().type('Mirza');
     cy.get('#guestEmail').clear().type('danielmirza02@gmail.com');
     cy.get('#guestPhone').clear().type('1234567890');
+    cy.get('#specialRequests').clear().type('Extra blankets please!');
 
     // billing
     cy.get('[data-cy="billing-full-name"]').clear().type('Daniel Mirza');
@@ -244,52 +246,36 @@ describe('Booking Page & Booking Confirmation End to End Test', () => {
     // hotel echo section (below)
     cy.contains(/mira\s+moon/i);
     cy.contains(/388\s+jaffe\s+road,\s*causeway\s*bay/i);
-  });
-
-  it('shows Special Request on confirmation when provided', () => {
-    // go to booking page
-    cy.get('[data-cy="reserve-now-btn"]').click();
-
-    // guest incl. special request
-    cy.get('#firstName', { timeout: 30000 }).should('be.visible').clear().type('Daniel');
-    cy.get('#lastName').clear().type('Mirza');
-    cy.get('#guestEmail').clear().type('danielmirza02@gmail.com');
-    cy.get('#guestPhone').clear().type('1234567890');
-    cy.get('#specialRequests').clear().type('Extra blankets please!');
-
-    // billing
-    cy.get('[data-cy="billing-full-name"]').clear().type('Daniel Mirza');
-    cy.get('[data-cy="billing-email"]').clear().type('danielmirza02@gmail.com');
-    cy.get('[data-cy="billing-phone"]').clear().type('84752245');
-    cy.get('[data-cy="billing-addressLine1"]').clear().type('123 Tampines Street 11 #12-34');
-    cy.get('[data-cy="billing-addressLine2"]').clear().type('123 Main Street');
-    cy.get('[data-cy="billing-city"]').clear().type('Singapore');
-    cy.get('[data-cy="billing-state"]').clear().type('Singapore');
-    cy.get('[data-cy="billing-zip-code"]').clear().type('693440');
-
-    // stripe
-    const STRIPE_IFRAME = 'iframe[src*="js.stripe.com"]';
-    cy.get('#card-element', { timeout: 30000 }).should('be.visible').scrollIntoView();
-    cy.window({ timeout: 30000 }).its('Stripe').should('be.a', 'function');
-    cy.get('#card-element').find(STRIPE_IFRAME, { timeout: 30000 }).should('exist');
-    cy.get('#card-element').within(() => {
-      cy.fillElementsInput('cardNumber', '4242424242424242');
-      cy.fillElementsInput('cardExpiry',  '0127');
-      cy.fillElementsInput('cardCvc',     '123');
-    });
-
-    // pay
-    cy.get('[data-cy="create-submit-btn"]').should('be.visible').and('not.be.disabled').click();
-    cy.wait('@createBooking', { timeout: 30000 }).its('response.statusCode').should('eq', 200);
-    cy.wait('@confirmPayment', { timeout: 30000 }).its('response.statusCode').should('eq', 200);
-
-    // confirmation + special request appears
-    cy.location('pathname', { timeout: 20000 }).should('match', /\/booking\/(confirmation|success)$/i);
-    cy.contains(/booking\s+confirmed/i);
 
     cy.contains(/special\s*request/i)
       .parent()
       .should('contain.text', 'Extra blankets please!');
+    // Find the hotel image
+    cy.get('img[alt^="Hotel image"]')
+      .should('be.visible')
+    cy.get('[data-testid="rightbuttonclick"]').click().should('exist').and('be.visible');
+    cy.contains('2 / 5');
+    cy.get('img[alt^="Hotel image"]')
+      .should('be.visible') 
+    cy.get('[data-testid="rightbuttonclick"]').click();
+    cy.contains('3 / 5');
+    cy.get('img[alt^="Hotel image"]')
+      .should('be.visible') 
+    cy.get('[data-testid="rightbuttonclick"]').click();
+    cy.contains('4 / 5');
+    cy.get('img[alt^="Hotel image"]')
+      .should('be.visible') 
+    cy.get('[data-testid="rightbuttonclick"]').click();
+    cy.contains('5 / 5');
+    cy.get('img[alt^="Hotel image"]')
+      .should('be.visible') 
+    cy.get('[data-testid="leftbuttonclick"]').click();
+    cy.contains('4 / 5');
+    cy.get('img[alt^="Hotel image"]')
+      .should('be.visible') 
+    cy.get('[data-testid="leftbuttonclick"]').click();
+    cy.contains('3 / 5');
+    cy.get('img[alt^="Hotel image"]')
+      .should('be.visible')  
   });
-
 });
