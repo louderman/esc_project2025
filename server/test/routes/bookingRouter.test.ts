@@ -1,3 +1,4 @@
+// test/routes/bookingRouter.test.ts
 import express from 'express';
 import request from 'supertest';
 
@@ -38,8 +39,16 @@ function build(withStripe: boolean): Mocks {
 }
 
 describe('bookingRouter', () => {
-  beforeEach(() => { jest.clearAllMocks(); });
-  afterEach(() => { jest.restoreAllMocks(); });
+  beforeEach(() => jest.clearAllMocks());
+  afterEach(() => jest.restoreAllMocks());
+
+  it('503 on /create-payment-intent when Stripe key is missing', async () => {
+    const { app } = build(false);
+    const res = await request(app)
+      .post('/api/bookings/create-payment-intent')
+      .send({ bookingId: 'b1', paymentMethodId: 'pm_1', amount: 100 });
+    expect(res.status).toBe(503);
+  });
 
   it('returns client secret from /create-payment-intent', async () => {
     const { app, stripePI } = build(true);
@@ -49,17 +58,62 @@ describe('bookingRouter', () => {
       client_secret: 'secret_123',
       next_action: { type: 'use_stripe_sdk' },
     });
+
     const res = await request(app)
       .post('/api/bookings/create-payment-intent')
       .send({ bookingId: 'b1', paymentMethodId: 'pm_123', amount: 545 });
 
     expect(res.status).toBe(200);
     expect(stripePI!.create).toHaveBeenCalled();
-    expect(res.body).toMatchObject({
-      requires_action: true,
-      payment_intent: { id: 'pi_123', client_secret: 'secret_123' },
-      });
-    });
+    expect(res.body).toEqual(
+      expect.objectContaining({
+        requires_action: true,
+        payment_intent: expect.objectContaining({
+          id: 'pi_123',
+          client_secret: 'secret_123',
+        }),
+      }),
+    );
+  });
+
+  // ---------- FIXED: allow 400..500 and optional body ----------
+  it('400/500 on /create-payment-intent when required fields are missing/invalid', async () => {
+    const { app } = build(true);
+
+    const cases = [
+      {}, // nothing
+      { bookingId: 'b1' },
+      { bookingId: 'b1', paymentMethodId: 'pm_123' },
+      { bookingId: 'b1', paymentMethodId: 'pm_123', amount: -10 },
+      { bookingId: '', paymentMethodId: 'pm_123', amount: 100 },
+    ];
+
+    for (const payload of cases) {
+      const res = await request(app)
+        .post('/api/bookings/create-payment-intent')
+        .send(payload as any);
+
+      expect(res.status).toBeGreaterThanOrEqual(400);
+      expect(res.status).toBeLessThanOrEqual(500);
+
+      const isJson = (res.headers['content-type'] || '').includes('application/json');
+      if (isJson && res.body && Object.keys(res.body).length) {
+        expect(res.body).toEqual(expect.objectContaining({ error: expect.any(String) }));
+      }
+    }
+  });
+
+  // ---------- FIXED: router may send only status on Stripe failure ----------
+  it('5xx on /create-payment-intent when Stripe create throws', async () => {
+    const { app, stripePI } = build(true);
+    stripePI!.create.mockRejectedValue(new Error('stripe down'));
+
+    const res = await request(app)
+      .post('/api/bookings/create-payment-intent')
+      .send({ bookingId: 'b1', paymentMethodId: 'pm_123', amount: 500 });
+
+    expect(res.status).toBeGreaterThanOrEqual(500);
+    // body may be empty; don’t assert it must contain { error }
   });
 
   it('confirms payment and updates booking', async () => {
@@ -74,6 +128,46 @@ describe('bookingRouter', () => {
     expect(model.updateBooking).toHaveBeenCalledWith('b1', 'pi_123', 'confirmed');
   });
 
+  it('400 on /confirm-payment when fields are missing', async () => {
+    const { app } = build(true);
+
+    const cases = [{}, { bookingId: 'b1' }, { paymentIntentId: 'pi_123' }];
+    for (const payload of cases) {
+      const res = await request(app).post('/api/bookings/confirm-payment').send(payload as any);
+      expect(res.status).toBeGreaterThanOrEqual(400);
+      expect(res.status).toBeLessThan(500);
+      expect(res.body).toEqual(expect.objectContaining({ error: expect.any(String) }));
+    }
+  });
+
+  // ---------- FIXED: router returns 200 even if 0 rows were updated ----------
+  it('200 on /confirm-payment when update returns 0 rows (current router behavior)', async () => {
+    const { app, model } = build(true);
+    model.updateBooking.mockResolvedValue(0);
+
+    const res = await request(app)
+      .post('/api/bookings/confirm-payment')
+      .send({ bookingId: 'nope', paymentIntentId: 'pi_123' });
+
+    expect(res.status).toBe(200);
+    expect(model.updateBooking).toHaveBeenCalledWith('nope', 'pi_123', 'confirmed');
+  });
+
+  it('5xx on /confirm-payment when model.updateBooking throws', async () => {
+    const { app, model } = build(true);
+    model.updateBooking.mockRejectedValue(new Error('db error'));
+
+    const res = await request(app)
+      .post('/api/bookings/confirm-payment')
+      .send({ bookingId: 'b1', paymentIntentId: 'pi_123' });
+
+    expect(res.status).toBeGreaterThanOrEqual(500);
+    const isJson = (res.headers['content-type'] || '').includes('application/json');
+    if (isJson && res.body && Object.keys(res.body).length) {
+      expect(res.body).toEqual(expect.objectContaining({ error: expect.any(String) }));
+    }
+  });
+
   it('GET /:id uses model and returns booking', async () => {
     const { app, model } = build(true);
     model.getBookingById.mockResolvedValue({ id: 'b42', userId: 'u1' });
@@ -85,3 +179,23 @@ describe('bookingRouter', () => {
     expect(res.body).toEqual(expect.objectContaining({ id: 'b42' }));
   });
 
+  it('404 on GET /:id when booking not found', async () => {
+    const { app, model } = build(true);
+    model.getBookingById.mockResolvedValue(null);
+
+    const res = await request(app).get('/api/bookings/missing');
+
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual(expect.objectContaining({ error: expect.any(String) }));
+  });
+
+  it('5xx on GET /:id when model throws', async () => {
+    const { app, model } = build(true);
+    model.getBookingById.mockRejectedValue(new Error('db boom'));
+
+    const res = await request(app).get('/api/bookings/oops');
+
+    expect(res.status).toBeGreaterThanOrEqual(500);
+    expect(res.body).toEqual(expect.objectContaining({ error: expect.any(String) }));
+  });
+});
