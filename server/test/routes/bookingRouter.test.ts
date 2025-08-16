@@ -46,7 +46,7 @@ describe('bookingRouter', () => {
     const { app } = build(false);
     const res = await request(app)
       .post('/api/bookings/create-payment-intent')
-      .send({ bookingId: 'b1', paymentMethodId: 'pm_1', amount: 100 });
+      .send({ bookingId: 'b1', paymentIntentId: 'pm_1', amount: 100 });
     expect(res.status).toBe(503);
   });
 
@@ -61,7 +61,7 @@ describe('bookingRouter', () => {
 
     const res = await request(app)
       .post('/api/bookings/create-payment-intent')
-      .send({ bookingId: 'b1', paymentMethodId: 'pm_123', amount: 545 });
+      .send({ bookingId: 'b1', paymentIntentId: 'pm_123', amount: 545 });
 
     expect(res.status).toBe(200);
     expect(stripePI!.create).toHaveBeenCalled();
@@ -82,9 +82,9 @@ describe('bookingRouter', () => {
     const cases = [
       {}, // nothing
       { bookingId: 'b1' },
-      { bookingId: 'b1', paymentMethodId: 'pm_123' },
-      { bookingId: 'b1', paymentMethodId: 'pm_123', amount: -10 },
-      { bookingId: '', paymentMethodId: 'pm_123', amount: 100 },
+      { bookingId: 'b1', paymentIntentId: 'pm_123' },
+      { bookingId: 'b1', paymentIntentId: 'pm_123', amount: -10 },
+      { bookingId: '', paymentIntentId: 'pm_123', amount: 100 },
     ];
 
     for (const payload of cases) {
@@ -108,7 +108,7 @@ describe('bookingRouter', () => {
 
     const res = await request(app)
       .post('/api/bookings/create-payment-intent')
-      .send({ bookingId: 'b1', paymentMethodId: 'pm_123', amount: 500 });
+      .send({ bookingId: 'b1', paymentIntentId: 'pm_123', amount: 500 });
 
     expect(res.status).toBeGreaterThanOrEqual(500);
   });
