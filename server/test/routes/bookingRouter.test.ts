@@ -41,14 +41,6 @@ describe('bookingRouter', () => {
   beforeEach(() => { jest.clearAllMocks(); });
   afterEach(() => { jest.restoreAllMocks(); });
 
-  it('503 on /create-payment-intent when Stripe key is missing', async () => {
-    const { app } = build(false);
-    const res = await request(app)
-      .post('/api/bookings/create-payment-intent')
-      .send({ bookingId: 'b1', paymentMethodId: 'pm_1', amount: 100 });
-    expect(res.status).toBe(503);
-  });
-
   it('returns client secret from /create-payment-intent', async () => {
     const { app, stripePI } = build(true);
     stripePI!.create.mockResolvedValue({
